@@ -1,0 +1,103 @@
+<?php
+
+namespace PhpMake\Task\Types;
+
+use PhpMake\Task\BaseTask;
+
+/**
+ * DeleteTask Class
+ *
+ * Implements a task for deleting files and directories within PHPMake tool.
+ * Ensures proper handling of file and directory deletion while managing errors.
+ *
+ * @package    PHPMake
+ * @subpackage Task
+ */
+final class DeleteTask extends BaseTask
+{
+    /**
+     * Execute delete task.
+     *
+     * Determines if target is a file or directory and performs the appropriate delete operation.
+     *
+     * @param bool $debug  Enable debug mode for detailed logging.
+     * @param bool $silent Suppress output if enabled.
+     *
+     * @return bool Status of delete operation (true if successful, false otherwise).
+     *
+     * @throws \Exception If required parameters are missing.
+     */
+    protected function runTask(bool $debug, bool $silent): bool
+    {
+        $path = $this->params['path'] ?? '';
+
+        if (empty($path)) {
+            throw new \Exception("Missing 'path' parameter.");
+        }
+
+        if (!file_exists($path)) {
+            $this->logger->debug("Path '{$path}' does not exist.");
+            return true;
+        }
+
+        return is_dir($path) ? $this->deleteDirectory($path) : $this->deleteFile($path);
+    }
+
+    /**
+     * Delete a single file.
+     *
+     * Removes specified file from the system and logs operation.
+     *
+     * @param string $path File path to be deleted.
+     *
+     * @return bool Status of file deletion.
+     */
+    private function deleteFile(string $path): bool
+    {
+        if (unlink($path)) {
+            $this->logger->debug("Deleted file '{$path}'.");
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Delete an entire directory recursively.
+     *
+     * Removes directory and all of its contents.
+     *
+     * @param string $dir Directory path to be deleted.
+     *
+     * @return bool Status of directory deletion operation.
+     */
+    private function deleteDirectory(string $dir): bool
+    {
+        foreach (scandir($dir) as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+            $path = $dir . DIRECTORY_SEPARATOR . $item;
+            is_dir($path) ? $this->deleteDirectory($path) : $this->deleteFile($path);
+        }
+
+        if (rmdir($dir)) {
+            $this->logger->debug("Deleted directory '{$dir}'.");
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Get task type identifier.
+     *
+     * Returns string representation of task type.
+     *
+     * @return string The task type ('delete').
+     */
+    public function getType(): string
+    {
+        return 'delete';
+    }
+}
