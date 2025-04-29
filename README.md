@@ -2,7 +2,7 @@
 
 A PHP build automation tool using JSON configuration file.
 
-[![current version](https://img.shields.io/packagist/v/phpmake/phpmake.svg)](https://packagist.org/packages/phpmake/phpmake) [![PHP](https://img.shields.io/badge/PHP-7.4-617CBE)](https://php.net/) ![repo size](https://img.shields.io/github/repo-size/phpmake/phpmake) [![issues](https://img.shields.io/github/issues/phpmake/phpmake)](https://github.com/phpmake/phpmake/issues) [![GitHub license](https://img.shields.io/github/license/phpmake/phpmake)](LICENSE) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.txt)
+[![current version](https://img.shields.io/packagist/v/phpmake/phpmake.svg)](https://packagist.org/packages/phpmake/phpmake) [![PHP](https://img.shields.io/badge/PHP-7.4-617CBE)](https://php.net/) [![StyleCI](https://github.styleci.io/repos/974769272/shield?branch=main)](https://github.styleci.io/repos/974769272?branch=main) ![repo size](https://img.shields.io/github/repo-size/phpmake/phpmake) [![issues](https://img.shields.io/github/issues/phpmake/phpmake)](https://github.com/phpmake/phpmake/issues) [![GitHub license](https://img.shields.io/github/license/phpmake/phpmake)](LICENSE) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.txt)
 
 ## Contents
 
