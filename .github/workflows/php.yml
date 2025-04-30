@@ -1,0 +1,41 @@
+name: Build and Test
+'on':
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: null
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone project
+        uses: actions/checkout@v4
+      - name: Setup PHP environment
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 7.4
+          coverage: none
+          extensions: zip
+          tools: 'composer:v2'
+      - name: Validate manifest file
+        run: composer validate --strict
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist  --no-progress
+      - name: Lint project files
+        run: |
+          php -l $(find . -path ./vendor -prune -o -name "*.php" -print)
+      - name: Lint codes
+        run: composer lint
+      - name: Run tests
+        run: composer test
+      - name: Use tool
+        run: php bin/phpmake.php package
+      - name: Validate build.json
+        run: >-
+          php -r ' $config = json_decode(file_get_contents("build.json"), true);
+          if (!isset($config["targets"]["package"])) { echo "build.json missing
+          'package' target\n"; exit(1); }'
