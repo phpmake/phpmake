@@ -131,7 +131,6 @@ namespace PhpMake\Tests {
                 '.phplint.yml',
                 'build.json',
                 'build.json.example',
-                'build.log',
                 'CHANGELOG.txt',
                 'CODE_OF_CONDUCT.txt',
                 'composer.json',
