@@ -2,7 +2,7 @@
 
 A PHP build automation tool using JSON configuration file.
 
-[![current version](https://img.shields.io/packagist/v/phpmake/phpmake.svg)](https://packagist.org/packages/phpmake/phpmake) [![Build and Test](https://github.com/phpmake/phpmake/actions/workflows/php.yml/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/php.yml) 
+[![current version](https://img.shields.io/packagist/v/phpmake/phpmake.svg)](https://packagist.org/packages/phpmake/phpmake) [![Build and Test](https://github.com/phpmake/phpmake/actions/workflows/php.yml/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/php.yml) [![CodeQL](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql) [![Dependabot Updates](https://github.com/phpmake/phpmake/actions/workflows/dependabot/dependabot-updates/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/dependabot/dependabot-updates) 
 [![PHP](https://img.shields.io/badge/PHP-7.4-617CBE)](https://php.net/) [![issues](https://img.shields.io/github/issues/phpmake/phpmake)](https://github.com/phpmake/phpmake/issues) ![repo size](https://img.shields.io/github/repo-size/phpmake/phpmake) [![GitHub license](https://img.shields.io/github/license/phpmake/phpmake)](LICENSE) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.txt)
 
 ![Logo](resources/images/logo.png)
