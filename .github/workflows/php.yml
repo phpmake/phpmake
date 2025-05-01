@@ -1,5 +1,6 @@
 name: Build and Test
-'on':
+
+on:
   push:
     branches:
       - main
@@ -7,42 +8,57 @@ name: Build and Test
     branches:
       - main
   workflow_dispatch:
+
 jobs:
   build:
-    name: Build
+    name: Build & Test
     runs-on: ubuntu-latest
+
     steps:
       - name: Clone project
         uses: actions/checkout@v4
-      - name: Setup PHP environment
+
+      - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: 7.4
           coverage: none
           extensions: zip
           tools: composer:v2
+
       - name: Validate manifest file
         run: composer validate --strict
+
       - name: Cache dependencies
         uses: actions/cache@v3
         with:
           path: vendor
           key: ${{ runner.os }}-composer-${{ hashFiles('composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-composer-
+          restore-keys: ${{ runner.os }}-composer-
+
       - name: Install dependencies
         run: composer install --no-interaction --no-progress
+
       - name: Lint project files
         run: |
+          set -e  # Stop on error.
           find . -path ./vendor -prune -o -name "*.php" -print0 | xargs -0 -n 1 php -l
+
       - name: Lint codes
         run: composer lint
+
+      - name: Check coding convention
+        run: composer check
+
       - name: Security check
         run: composer audit
+
       - name: Run tests
         run: composer test
+
       - name: Use tool
         run: php bin/phpmake.php package
+
       - name: Validate build.json
         run: >-
           php -r ' $config = json_decode(file_get_contents("build.json"), true);
