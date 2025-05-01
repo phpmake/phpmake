@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace PhpMake\Tests\Unit;
+
 use PHPUnit\Framework\TestCase;
 use PhpMake\Build\BuildConfiguration;
 use PhpMake\Build\BuildExecutor;
@@ -21,9 +23,7 @@ final class BuildSmokeTest extends TestCase
      *
      * @return void
      */
-    public static function setUpBeforeClass(): void
-    {
-    }
+    public static function setUpBeforeClass(): void {}
 
     /**
      * This method is called after the last test method in the test class has been executed.

@@ -14,9 +14,7 @@ final class BuildValidatorTest extends TestCase
      *
      * @return void
      */
-    public static function setUpBeforeClass(): void
-    {
-    }
+    public static function setUpBeforeClass(): void {}
 
     /**
      * This method is called after the last test method in the test class has been executed.
