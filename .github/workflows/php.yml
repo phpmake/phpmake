@@ -25,6 +25,7 @@ jobs:
           coverage: none
           extensions: zip
           tools: composer:v2
+          ini-values: "memory_limit=128M"
 
       - name: Validate manifest file
         run: composer validate --strict
@@ -37,7 +38,7 @@ jobs:
           restore-keys: ${{ runner.os }}-composer-
 
       - name: Install dependencies
-        run: composer install --no-interaction --no-progress
+        run: composer install --ansi --no-interaction --no-progress --no-suggest --prefer-dist
 
       - name: Lint project files
         run: |
