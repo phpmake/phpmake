@@ -23,13 +23,13 @@
                 {
                     "type": "create_directory",
                     "params": {
-                        "dir": "artifacts"
+                        "name": "artifacts"
                     }
                 },
                 {
                     "type": "copy",
                     "params": {
-                        "src": "src/",
+                        "source": "src/",
                         "dest": "artifacts/"
                     }
                 },

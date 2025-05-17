@@ -23,13 +23,13 @@
                 {
                     "type": "create_directory",
                     "params": {
-                        "dir": "build"
+                        "name": "build"
                     }
                 },
                 {
                     "type": "copy",
                     "params": {
-                        "src": "src/",
+                        "source": "src/",
                         "dest": "build/"
                     }
                 },
