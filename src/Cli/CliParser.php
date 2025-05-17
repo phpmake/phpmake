@@ -2,6 +2,7 @@
 
 namespace PhpMake\Cli;
 
+use Exception;
 use PhpMake\Config;
 
 /**
@@ -35,47 +36,75 @@ final class CliParser
             'debug' => false,
             'silent' => false,
             'noLog' => false,
-            'init' => false
+            'init' => false,
+        ];
+
+        $knownFlags = [
+            '-h',
+            '--help',
+            '-v',
+            '--version',
+            '--diagnostics',
+            '--validate-build',
+            '-vb',
+            '-d',
+            '--debug',
+            '-s',
+            '--silent',
+            '-nl',
+            '--no-log',
+            '--init',
         ];
 
         foreach ($argv as $arg) {
-            switch ($arg) {
-                case '--help':
-                case '-h':
-                    $result['help'] = true;
-                    break;
-                case '--version':
-                case '-v':
-                    $result['showVersion'] = true;
-                    break;
-                case '--diagnostics':
-                    $result['diagnostics'] = true;
-                    break;
-                case '--validate-build':
-                case '-vb':
-                    $result['validateBuild'] = true;
-                    break;
-                case '--debug':
-                case '-d':
-                    $result['debug'] = true;
-                    break;
-                case '--silent':
-                case '-s':
-                    $result['silent'] = true;
-                    break;
-                case '--no-log':
-                case '-nl':
-                    $result['noLog'] = true;
-                    break;
-                case '--init':
-                    $result['init'] = true;
-                    break;
-                default:
-                    if (file_exists($arg)) {
-                        $result['buildFile'] = $arg;
-                    } else {
+            if (in_array($arg, $knownFlags)) {
+                // Handle known flags
+                switch ($arg) {
+                    case '--help':
+                    case '-h':
+                        $result['help'] = true;
+                        break;
+                    case '--version':
+                    case '-v':
+                        $result['showVersion'] = true;
+                        break;
+                    case '--diagnostics':
+                        $result['diagnostics'] = true;
+                        break;
+                    case '--validate-build':
+                    case '-vb':
+                        $result['validateBuild'] = true;
+                        break;
+                    case '--debug':
+                    case '-d':
+                        $result['debug'] = true;
+                        break;
+                    case '--silent':
+                    case '-s':
+                        $result['silent'] = true;
+                        break;
+                    case '--no-log':
+                    case '-nl':
+                        $result['noLog'] = true;
+                        break;
+                    case '--init':
+                        $result['init'] = true;
+                        break;
+                }
+            } else {
+                if ($arg === $argv[0]) {
+                    continue;
+                }
+                // Not a flag = assume it's a target or build file.
+                if ($arg[0] !== '-') {
+                    if ($result['target'] === null) {
                         $result['target'] = $arg;
+                    } else {
+                        throw new Exception("Error: Extra argument detected: '$arg'\n");
                     }
+                } else {
+                    throw new Exception("Unknown option: '$arg'\n");
+                }
             }
         }
 
@@ -100,7 +129,7 @@ final class CliParser
         -d, --debug             Enable debug logging.
         -s, --silent            Suppress all output except errors.
         -nl,--no-log            Disable file logging.
-            --init              Create a sample build.json file.
+            --init              Create a sample build.json.
 
         [target]                 Target to execute (default: build.json's default)
         HELP;

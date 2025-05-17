@@ -52,7 +52,7 @@ try {
     // Handle validation flag.
     if ($args['validateBuild']) {
         if (!file_exists('build.json')) {
-            fwrite(STDERR, "Error: Build file 'build.json' not found\n");
+            fwrite(STDERR, "Error: Build file 'build.json' not found.\n");
             exit(1);
         }
         $rawConfig = json_decode(file_get_contents('build.json'), true);
@@ -60,11 +60,11 @@ try {
         $errors = $validator->validate($rawConfig);
         if (!empty($errors)) {
             foreach ($errors as $error) {
-                echo "Validation Error: $error\n";
+                echo "Validation Error: {$error}.\n";
             }
             exit(1);
         } else {
-            echo "Build configuration is valid\n";
+            echo "Build configuration is valid.\n";
             exit(0);
         }
     }
@@ -79,10 +79,10 @@ try {
     $config = $loader->load();
 
     if (!$args['silent']) {
-        $logger->info("Project: " . $config->getName());
-        $logger->info("Version: " . $config->getVersion());
-        $logger->info("Description: " . $config->getDescription());
-        $logger->info("");
+        $logger->info('Project: ' . $config->getName());
+        $logger->info('Version: ' . $config->getVersion());
+        $logger->info('Description: ' . $config->getDescription());
+        $logger->info('');
     }
 
     $taskFactory = new TaskFactory($logger);
@@ -101,8 +101,8 @@ try {
 
     if (!$args['silent']) {
         $exitCode === 0
-            ? $logger->info("Build completed successfully")
-            : $logger->error("Build failed");
+            ? $logger->info('Build completed successfully.')
+            : $logger->error('Build failed.');
     }
 
     if ($args['init']) {
@@ -127,6 +127,6 @@ try {
 
     exit($exitCode);
 } catch (\Exception $e) {
-    $logger->error($e->getMessage());
+    echo $e->getMessage();
     exit(1);
 }
