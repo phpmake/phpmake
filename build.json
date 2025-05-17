@@ -29,7 +29,7 @@
                 {
                     "type": "copy",
                     "params": {
-                        "src": "src/",
+                        "source": "src/",
                         "dest": "artifacts/"
                     }
                 },
