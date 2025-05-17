@@ -64,10 +64,12 @@ final class Logger
     public function info(string $message): void
     {
         if (!$this->silent) {
-            echo "$message\n";
+            echo $message . PHP_EOL;
         }
 
-        $this->logToFile("INFO: $message");
+        if (!$this->noLog) {
+            $this->logToFile("INFO: {$message}");
+        }
     }
 
     /**
@@ -81,10 +83,12 @@ final class Logger
     public function debug(string $message): void
     {
         if ($this->debug && !$this->silent) {
-            echo "DEBUG: $message\n";
+            echo "DEBUG: {$message}" . PHP_EOL;
         }
 
-        $this->logToFile("DEBUG: $message");
+        if (!$this->noLog) {
+            $this->logToFile("DEBUG: {$message}");
+        }
     }
 
     /**
@@ -97,8 +101,11 @@ final class Logger
      */
     public function error(string $message): void
     {
-        fwrite(STDERR, "Error: $message\n");
-        $this->logToFile("ERROR: $message");
+        fwrite(STDERR, "Error: {$message}" . PHP_EOL);
+
+        if (!$this->noLog) {
+            $this->logToFile("ERROR: {$message}");
+        }
     }
 
     /**
@@ -110,13 +117,9 @@ final class Logger
      */
     private function logToFile(string $message): void
     {
-        if ($this->noLog) {
-            return;
-        }
-
         file_put_contents(
             $this->logFile,
-            date('Y-m-d H:i:s') . " $message\n",
+            date('Y-m-d H:i:s') . " {$message}" . PHP_EOL,
             FILE_APPEND
         );
     }
