@@ -2,7 +2,7 @@
 
 A PHP build automation tool using JSON configuration file.
 
-[![current version](https://img.shields.io/packagist/v/phpmake/phpmake.svg)](https://packagist.org/packages/phpmake/phpmake) [![Build and Test](https://github.com/phpmake/phpmake/actions/workflows/default.yml/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/default.yml) [![CodeQL](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql) [![Dependabot Updates](https://github.com/phpmake/phpmake/actions/workflows/dependabot/dependabot-updates/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/dependabot/dependabot-updates) 
+[![current version](https://img.shields.io/packagist/v/phpmake/phpmake.svg)](https://packagist.org/packages/phpmake/phpmake) [![Build and Test](https://github.com/phpmake/phpmake/actions/workflows/default.yml/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/default.yml) [![CodeQL](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql) [![Dependabot Updates](https://github.com/phpmake/phpmake/actions/workflows/dependabot/dependabot-updates/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/dependabot/dependabot-updates)
 [![PHP](https://img.shields.io/badge/PHP-7.4-617CBE)](https://php.net/) [![issues](https://img.shields.io/github/issues/phpmake/phpmake)](https://github.com/phpmake/phpmake/issues) ![repo size](https://img.shields.io/github/repo-size/phpmake/phpmake) [![GitHub license](https://img.shields.io/github/license/phpmake/phpmake)](LICENSE) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.txt)
 
 ![Logo](resources/images/logo.png)
@@ -28,7 +28,7 @@ A PHP build automation tool using JSON configuration file.
 
 ## Overview
 
-A lightweight PHP-based build automation tool inspired by CMake & Apache Ant, using JSON configuration files. It supports common tasks like file operations, command execution, and dependency management with cross-platform compatibility (Windows/Linux/macOS).
+A lightweight PHP-based build automation tool inspired by Linux Make & Apache Ant, using JSON configuration files. It supports common tasks like file operations, command execution, and dependency management with cross-platform compatibility (Windows/Linux/macOS).
 
 ## Features
 
@@ -152,27 +152,27 @@ composer global require phpmake/phpmake
 
 1. **Create a `build.json` file**:
 
-```json
-{
-    "name": "MyProject",
-    "description": "Sample project build configuration",
-    "version": "1.0.0.1",
-    "targets": {
-        "clean": {
-            "tasks": [{ "type": "delete", "params": { "path": "build" } }]
+    ```json
+    {
+        "name": "MyProject",
+        "description": "Sample project build configuration",
+        "version": "1.0.0.1",
+        "targets": {
+            "clean": {
+                "tasks": [{ "type": "delete", "params": { "path": "build" } }]
+            },
+            "build": {
+                "depends": ["clean"],
+                "tasks": [
+                    { "type": "create_directory", "params": { "dir": "build" } },
+                    { "type": "copy", "params": { "src": "src/", "dest": "build/" } },
+                    { "type": "exec", "params": { "command": "php compiler.php" } }
+                ]
+            }
         },
-        "build": {
-            "depends": ["clean"],
-            "tasks": [
-                { "type": "create_directory", "params": { "dir": "build" } },
-                { "type": "copy", "params": { "src": "src/", "dest": "build/" } },
-                { "type": "exec", "params": { "command": "php compiler.php" } }
-            ]
-        }
-    },
-    "default_target": "build"
-}
-```
+        "default_target": "build"
+    }
+    ```
 
 2. **Run the builder**:
 

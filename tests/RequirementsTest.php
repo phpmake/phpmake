@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace PhpMake\Tests {
+
     use PHPUnit\Framework\TestCase;
 
     /**
@@ -101,6 +102,7 @@ namespace PhpMake\Tests {
             $directories = [
                 'bin',
                 'resources',
+                'schema',
                 'src',
                 'tests',
                 'vendor',
@@ -127,6 +129,7 @@ namespace PhpMake\Tests {
                 '.mailmap',
                 '.php-cs-fixer.php',
                 '.phplint.yml',
+                '.styleci.yml',
                 'build.json',
                 'build.json.example',
                 'CHANGELOG.txt',
@@ -140,8 +143,9 @@ namespace PhpMake\Tests {
                 'NOTICE.txt',
                 'phpunit.xml',
                 'README.md',
+                'SECURITY.md',
                 'TODO.txt',
-                'VERSION.txt',
+                'VERSION.txt'
             ];
 
             foreach ($files as $file) {

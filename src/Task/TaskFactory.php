@@ -70,7 +70,7 @@ final class TaskFactory
             case 'archive':
                 return new ZipTask($params, $this->logger);
             default:
-                throw new \Exception("Unknown task type: $type");
+                throw new \Exception("Unknown task type '{$type}' in build configuration.");
         }
     }
 }
