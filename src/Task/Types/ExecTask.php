@@ -30,24 +30,23 @@ final class ExecTask extends BaseTask
     protected function runTask(bool $debug, bool $silent): bool
     {
         $command = $this->params['command'] ?? '';
-
         if (empty($command)) {
             throw new \Exception("Missing 'command' parameter.");
         }
 
+        // Sanitize command and arguments.
+        $command = escapeshellcmd($command);
         $output = [];
         $ret = 0;
-        exec($command, $output, $ret);
 
         if ($this->logger->isDebugEnabled()) {
-            $this->logger->debug("Executing command: {$command}.");
-            foreach ($output as $line) {
-                $this->logger->info("  $line");
-            }
-        } else {
-            foreach ($output as $line) {
-                $this->logger->info($line);
-            }
+            $this->logger->debug("Executing sanitized command: {$command}.");
+        }
+
+        exec($command, $output, $ret);
+
+        foreach ($output as $line) {
+            $this->logger->info($line);
         }
 
         return $ret === 0;
@@ -72,7 +71,7 @@ final class ExecTask extends BaseTask
      *
      * @throws \Exception If required 'command' parameter is missing.
      */
-    protected function validateParams()
+    protected function validateParams(): void
     {
         if (!isset($this->params['command'])) {
             throw new \Exception("Missing 'command' parameter for exec task.");
