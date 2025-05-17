@@ -31,7 +31,12 @@ final class BuildLoader
         }
 
         $rawContents = file_get_contents($buildFile);
-        $config = json_decode($rawContents, true);
+
+        if ($rawContents === false) {
+            throw new \Exception("Cannot read build file");
+        }
+
+        $config = json_decode($rawContents, true, 512, JSON_THROW_ON_ERROR);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
             throw new \Exception("Invalid JSON in build file: " . json_last_error_msg() . '.');
