@@ -73,7 +73,8 @@ final class ZipTask extends BaseTask
         if (is_dir($path)) {
             foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path)) as $file) {
                 if ($file->isFile()) {
-                    $relativePath = substr($file->getPathname(), strlen($path) + 1);
+                    $basePath = rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+                    $relativePath = substr($file->getPathname(), strlen($basePath));
                     $zip->addFile(
                         $file->getPathname(),
                         $baseDir . $relativePath,
