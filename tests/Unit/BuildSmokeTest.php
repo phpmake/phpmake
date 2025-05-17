@@ -7,6 +7,7 @@ namespace PhpMake\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use PhpMake\Build\BuildConfiguration;
 use PhpMake\Build\BuildExecutor;
+use PhpMake\Build\BuildValidator;
 use PhpMake\Target\DependencyResolver;
 use PhpMake\Task\TaskExecutor;
 use PhpMake\Task\TaskFactory;
@@ -114,7 +115,7 @@ final class BuildSmokeTest extends TestCase
             'default_target' => 'default',
         ];
         // Action
-        $validator = new PhpMake\Build\BuildValidator();
+        $validator = new BuildValidator();
         $errors = $validator->validate($configArray);
         // Assert
         $this->assertEmpty($errors, "Expected no errors for a valid build configuration.");
@@ -136,7 +137,7 @@ final class BuildSmokeTest extends TestCase
             'targets'        => [],
             'default_target' => 'nonexistent',
         ];
-        $validator = new PhpMake\Build\BuildValidator();
+        $validator = new BuildValidator();
         // Action
         $errors = $validator->validate($configArray);
         // Assert

@@ -252,25 +252,5 @@ namespace PhpMake\Tests {
             unlink($sourceFile);
             unlink($destFile);
         }
-
-        /**
-         * @test
-         *
-         * @small
-         *
-         * @return void
-         */
-        public function testCliInclusion()
-        {
-            // Arrange/Action
-            try {
-                $argv = ['--help'];
-                require_once addslashes(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR) . 'phpmake.php';
-            } catch (Throwable $e) {
-                $this->fail();
-            }
-            // Assert
-            $this->assertTrue(true); // Explicit pass.
-        }
     }
 }

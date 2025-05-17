@@ -70,7 +70,7 @@ final class TaskExecutionTest extends TestCase
     {
         // Arrange
         $tempDir = sys_get_temp_dir() . '/test_dir';
-        $params = ['dir' => $tempDir];
+        $params = ['name' => $tempDir];
         // Action
         $task = new CreateDirectoryTask($params, $this->logger);
         $result = $task->execute(false, true);

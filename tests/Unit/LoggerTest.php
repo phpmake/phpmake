@@ -76,7 +76,7 @@ final class LoggerTest extends TestCase
         $logger->info('Test info');
         $output = ob_get_clean();
         // Assert
-        $this->assertEquals("Test info\n", $output);
+        $this->assertEquals('Test info' . PHP_EOL, $output);
     }
 
     /**
@@ -93,10 +93,10 @@ final class LoggerTest extends TestCase
         $logger = new Logger(false, false, true);
         // Action
         ob_start();
-        $logger->info("Info Message");
+        $logger->info('Info Message');
         $output = ob_get_clean();
         // Assert
-        $this->assertStringContainsString("Info Message", $output);
+        $this->assertStringContainsString('Info Message', $output);
     }
 
     /**
@@ -151,7 +151,7 @@ final class LoggerTest extends TestCase
         // Assert
         $this->assertTrue($result);
         $output = ob_get_clean();
-        $this->assertStringContainsString("Echo test", $output);
+        $this->assertStringContainsString('Echo test', $output);
     }
 
     /**
@@ -217,6 +217,6 @@ final class LoggerTest extends TestCase
         $logger->debug('Test debug');
         $output = ob_get_clean();
         // Assert
-        $this->assertEquals("DEBUG: Test debug\n", $output);
+        $this->assertEquals('DEBUG: Test debug' . PHP_EOL, $output);
     }
 }

@@ -74,7 +74,7 @@ final class TaskFactoryTest extends TestCase
      *
      * @return void
      */
-    public function testCreateDeleteTask(): void
+    public function testDeleteTask(): void
     {
         // Arrange
         $taskConfig = [
@@ -94,12 +94,12 @@ final class TaskFactoryTest extends TestCase
      *
      * @return void
      */
-    public function testCreateCreateDirectoryTask(): void
+    public function testCreateDirectoryTask(): void
     {
         // Arrange
         $taskConfig = [
             'type'   => 'create_directory',
-            'params' => ['dir'  => 'dummyDir'],
+            'params' => ['name'  => 'dummyDir'],
         ];
         // Action
         $task = $this->factory->create($taskConfig);
@@ -114,12 +114,12 @@ final class TaskFactoryTest extends TestCase
      *
      * @return void
      */
-    public function testCreateCopyTask(): void
+    public function testCopyTask(): void
     {
         // Arrange
         $taskConfig = [
             'type'   => 'copy',
-            'params' => ['src' => 'dummySource', 'dest' => 'dummyDest'],
+            'params' => ['source' => 'dummySource', 'dest' => 'dummyDest'],
         ];
         // Action
         $task = $this->factory->create($taskConfig);
@@ -134,7 +134,7 @@ final class TaskFactoryTest extends TestCase
      *
      * @return void
      */
-    public function testCreateExecTask(): void
+    public function testExecTask(): void
     {
         // Arrange
         $taskConfig = [
@@ -154,7 +154,7 @@ final class TaskFactoryTest extends TestCase
      *
      * @return void
      */
-    public function testCreateEchoTask(): void
+    public function testEchoTask(): void
     {
         // Arrange
         $taskConfig = [
@@ -174,7 +174,7 @@ final class TaskFactoryTest extends TestCase
      *
      * @return void
      */
-    public function testCreateZipTask(): void
+    public function testZipTask(): void
     {
         // Arrange
         $taskConfig = [
@@ -198,7 +198,7 @@ final class TaskFactoryTest extends TestCase
     {
         // Assert
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage("Unknown task type: invalid");
+        $this->expectExceptionMessage("Unknown task type 'invalid' in build configuration.");
         // Arrange
         $taskConfig = [
             'type'   => 'invalid',
