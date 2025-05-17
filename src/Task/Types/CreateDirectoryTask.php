@@ -43,6 +43,13 @@ final class CreateDirectoryTask extends BaseTask
         return false;
     }
 
+    protected function validateParams(): void
+    {
+        if (!isset($this->params['name'])) {
+            throw new \Exception("Missing 'name' parameter for create_directory task.");
+        }
+    }
+
     /**
      * Get task type identifier.
      *

@@ -88,10 +88,7 @@ abstract class BaseTask implements TaskInterface
     /**
      * Validate task parameters.
      *
-     * Performs validation on the task parameters to ensure correct execution.
+     * Abstract method that performs validation on the task parameters to ensure correct execution.
      */
-    protected function validateParams()
-    {
-        // Validation logic.
-    }
+    abstract protected function validateParams();
 }

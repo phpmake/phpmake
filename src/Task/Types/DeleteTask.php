@@ -90,6 +90,20 @@ final class DeleteTask extends BaseTask
     }
 
     /**
+     * Validate required task parameters.
+     *
+     * Ensures presence of 'path' parameter before execution.
+     *
+     * @throws \Exception If required parameters are missing.
+     */
+    protected function validateParams(): void
+    {
+        if (!isset($this->params['path'])) {
+            throw new \Exception("Missing 'path' parameter for delete task.");
+        }
+    }
+
+    /**
      * Get task type identifier.
      *
      * Returns string representation of task type.
