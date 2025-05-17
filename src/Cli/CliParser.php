@@ -26,51 +26,60 @@ final class CliParser
      */
     public function parse(array $argv): array
     {
-        $target = null;
-        $showVersion = false;
-        $help = false;
-        $validateBuild = false;
-        $debug = false;
-        $silent = false;
-        $noLog = false;
-        $diagnostics = false;
-        $args = array_slice($argv, 1); // Skip script name.
+        $result = [
+            'help' => false,
+            'showVersion' => false,
+            'diagnostics' => false,
+            'validateBuild' => false,
+            'target' => null,
+            'debug' => false,
+            'silent' => false,
+            'noLog' => false,
+            'init' => false
+        ];
 
-        foreach ($args as $arg) {
-            if ($arg === '-h' || $arg === '--help') {
-                $help = true;
-            } elseif ($arg === '-v' || $arg === '--version') {
-                $showVersion = true;
-            } elseif ($arg === '--validate-build') {
-                $validateBuild = true;
-            } elseif ($arg === '-d' || $arg === '--debug') {
-                $debug = true;
-            } elseif ($arg === '--no-log') {
-                $noLog = true;
-            } elseif ($arg === '--diagnostics') {
-                $diagnostics = true;
-            } elseif ($arg === '--silent') {
-                $silent = true;
-            } elseif ($arg[0] !== '-') { // Non-flag argument is target.
-                if ($target === null) {
-                    $target = $arg;
-                } else {
-                    fwrite(STDERR, "Error: Extra arguments detected\n");
-                    exit(1);
-                }
+        foreach ($argv as $arg) {
+            switch ($arg) {
+                case '--help':
+                case '-h':
+                    $result['help'] = true;
+                    break;
+                case '--version':
+                case '-v':
+                    $result['showVersion'] = true;
+                    break;
+                case '--diagnostics':
+                    $result['diagnostics'] = true;
+                    break;
+                case '--validate-build':
+                case '-vb':
+                    $result['validateBuild'] = true;
+                    break;
+                case '--debug':
+                case '-d':
+                    $result['debug'] = true;
+                    break;
+                case '--silent':
+                case '-s':
+                    $result['silent'] = true;
+                    break;
+                case '--no-log':
+                case '-nl':
+                    $result['noLog'] = true;
+                    break;
+                case '--init':
+                    $result['init'] = true;
+                    break;
+                default:
+                    if (file_exists($arg)) {
+                        $result['buildFile'] = $arg;
+                    } else {
+                        $result['target'] = $arg;
+                    }
             }
         }
 
-        return compact(
-            'target',
-            'showVersion',
-            'help',
-            'validateBuild',
-            'debug',
-            'silent',
-            'noLog',
-            'diagnostics'
-        );
+        return $result;
     }
 
     /**
@@ -80,16 +89,21 @@ final class CliParser
      */
     public static function showHelp(): void
     {
-        echo "Usage: phpmake [options] [target]\n";
-        echo "Options:\n";
-        echo "  -h, --help           Show this help message\n";
-        echo "  -v, --version        Show tool version\n";
-        echo "  -vb, --validate-build Validate build.json configuration\n";
-        echo "  -d, --debug          Enable debug logging\n";
-        echo "  --no-log             Disable file logging\n";
-        echo "  --diagnostics        Show system diagnostics\n";
-        echo "  --silent             Suppress all output except errors\n";
-        echo "  [target]             Target to execute (default: build.json's default)\n";
+        echo <<<HELP
+        Usage: phpmake [Options] [target]
+
+        Options:
+        -h, --help              Show this help.
+        -v, --version           Show version.
+            --diagnostics       Show system diagnostics.
+        -vb, --validate-build   Validate build.json configuration.
+        -d, --debug             Enable debug logging.
+        -s, --silent            Suppress all output except errors.
+        -nl,--no-log            Disable file logging.
+            --init              Create a sample build.json file.
+
+        [target]                 Target to execute (default: build.json's default)
+        HELP;
     }
 
     /**

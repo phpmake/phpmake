@@ -235,14 +235,10 @@ vendor/bin/phpunit tests/
 | `phpmake --version`     | Show PHPMake version    |
 | `phpmake --validate`    | Validate build file     |
 | `phpmake --diagnostics` | Show system information |
-
-#### Options
-
-| Option           | Description                  |
-| ---------------- | ---------------------------- |
-| `-d`/`--debug`   | Enable debug/verbose logging |
-| `-nl`/`--no-log` | Disable file logging         |
-| `-s`/`--silent`  | Suppress console output      |
+| `phpmake -d/--debug`    | Enable debug/verbose logging |
+| `phpmake -nl--no-log`   | Disable file logging         |
+| `phpmake -s/--silent`   | Suppress console output      |
+| `phpmake --init`        | Create sample build.json file|
 
 ### Supported tasks
 

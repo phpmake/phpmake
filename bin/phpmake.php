@@ -105,6 +105,26 @@ try {
             : $logger->error("Build failed");
     }
 
+    if ($args['init']) {
+        $sampleFile = 'build.json.example';
+        $destFile = getcwd() . '/build.json';
+        if (file_exists($destFile)) {
+            fwrite(STDERR, "Error: '{$destFile}' already exists.\n");
+            exit(1);
+        }
+        if (!file_exists($sampleFile)) {
+            fwrite(STDERR, "Error: Sample config '{$sampleFile}' not found.\n");
+            exit(1);
+        }
+        if (copy($sampleFile, $destFile)) {
+            echo "Sample build.json created successfully.\n";
+            exit(0);
+        } else {
+            fwrite(STDERR, "Error: Failed to create build.json.\n");
+            exit(1);
+        }
+    }
+
     exit($exitCode);
 } catch (\Exception $e) {
     $logger->error($e->getMessage());
