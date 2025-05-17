@@ -117,11 +117,29 @@ final class Logger
      */
     private function logToFile(string $message): void
     {
+        $this->rotateLogs();
         file_put_contents(
             $this->logFile,
             date('Y-m-d H:i:s') . " {$message}" . PHP_EOL,
             FILE_APPEND
         );
+    }
+
+    private function rotateLogs(): void
+    {
+        $maxSize = 10 * 1024 * 1024; // 10MB.
+        $maxFiles = 5;
+
+        if (file_exists($this->logFile) && filesize($this->logFile) >= $maxSize) {
+            for ($i = $maxFiles - 1; $i >= 1; $i--) {
+                $old = "{$this->logFile}.{$i}";
+                $new = "{$this->logFile}." . ($i + 1);
+                if (file_exists($old)) {
+                    rename($old, $new);
+                }
+            }
+            rename($this->logFile, "{$this->logFile}.1");
+        }
     }
 
     /**
