@@ -164,8 +164,8 @@ composer global require phpmake/phpmake
             "build": {
                 "depends": ["clean"],
                 "tasks": [
-                    { "type": "create_directory", "params": { "dir": "build" } },
-                    { "type": "copy", "params": { "src": "src/", "dest": "build/" } },
+                    { "type": "create_directory", "params": { "name": "build" } },
+                    { "type": "copy", "params": { "source": "src/", "dest": "build/" } },
                     { "type": "exec", "params": { "command": "php compiler.php" } }
                 ]
             }
