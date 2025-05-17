@@ -145,7 +145,7 @@ namespace PhpMake\Tests {
                 'README.md',
                 'SECURITY.md',
                 'TODO.txt',
-                'VERSION.txt'
+                'VERSION.txt',
             ];
 
             foreach ($files as $file) {

@@ -79,3 +79,4 @@ composer.lock
 *.cache
 *.log
 /artifacts/
+*-cache

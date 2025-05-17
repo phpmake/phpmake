@@ -244,9 +244,9 @@ vendor/bin/phpunit tests/
 
 | Task type          | Parameters                      | Description            |
 | ------------------ | ------------------------------- | ---------------------- |
-| `create_directory` | `dir` (string)                  | Create directory       |
+| `create_directory` | `name` (string)                  | Create directory       |
 | `delete`           | `path` (string)                 | Delete file/directory  |
-| `copy`             | `src` (string), `dest` (string) | Copy files/directories |
+| `copy`             | `source` (string), `dest` (string) | Copy files/directories |
 | `exec`             | `command` (string)              | Execute shell command  |
 | `echo`             | `message` (string)              | Output message         |
 | `archive`          | `dir` (string)                  | Archive a directory    |

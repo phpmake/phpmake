@@ -241,7 +241,7 @@ namespace PhpMake\Tests {
             // Create a destination path and ensure it does not exist.
             $destFile = tempnam(sys_get_temp_dir(), 'dest_');
             unlink($destFile);
-            $copyTask = new CopyTask(['src' => $sourceFile, 'dest' => $destFile], $this->logger);
+            $copyTask = new CopyTask(['source' => $sourceFile, 'dest' => $destFile], $this->logger);
             // Action
             $result = $copyTask->execute(false, true);
             // Assert

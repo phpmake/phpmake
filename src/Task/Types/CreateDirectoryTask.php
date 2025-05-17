@@ -25,18 +25,18 @@ final class CreateDirectoryTask extends BaseTask
      *
      * @return bool Status of directory creation operation (true if successful, false otherwise).
      *
-     * @throws \Exception If required 'dir' parameter is missing.
+     * @throws \Exception If required 'name' parameter is missing.
      */
     protected function runTask(bool $debug, bool $silent): bool
     {
-        $dir = $this->params['dir'] ?? '';
+        $dirName = $this->params['name'] ?? '';
 
-        if (empty($dir)) {
-            throw new \Exception("Missing 'dir' parameter.");
+        if (empty($dirName)) {
+            throw new \Exception("Missing 'name' parameter.");
         }
 
-        if (mkdir($dir, 0777, true)) {
-            $this->logger->debug("Created directory '{$dir}'.");
+        if (mkdir($dirName, 0777, true)) {
+            $this->logger->debug("Created directory '{$dirName}'.");
             return true;
         }
 

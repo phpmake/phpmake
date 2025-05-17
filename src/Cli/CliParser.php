@@ -100,10 +100,10 @@ final class CliParser
                     if ($result['target'] === null) {
                         $result['target'] = $arg;
                     } else {
-                        throw new Exception("Error: Extra argument detected: '$arg'\n");
+                        throw new Exception("Error: Extra argument detected: '{$arg}'\n");
                     }
                 } else {
-                    throw new Exception("Unknown option: '$arg'\n");
+                    throw new Exception("Unknown option: '{$arg}'\n");
                 }
             }
         }
@@ -119,20 +119,20 @@ final class CliParser
     public static function showHelp(): void
     {
         echo <<<HELP
-        Usage: phpmake [Options] [target]
+            Usage: phpmake [Options] [target]
 
-        Options:
-        -h, --help              Show this help.
-        -v, --version           Show version.
-            --diagnostics       Show system diagnostics.
-        -vb, --validate-build   Validate build.json configuration.
-        -d, --debug             Enable debug logging.
-        -s, --silent            Suppress all output except errors.
-        -nl,--no-log            Disable file logging.
-            --init              Create a sample build.json.
+            Options:
+            -h, --help              Show this help.
+            -v, --version           Show version.
+                --diagnostics       Show system diagnostics.
+            -vb, --validate-build   Validate build.json configuration.
+            -d, --debug             Enable debug logging.
+            -s, --silent            Suppress all output except errors.
+            -nl,--no-log            Disable file logging.
+                --init              Create a sample build.json.
 
-        [target]                 Target to execute (default: build.json's default)
-        HELP;
+            [target]                 Target to execute (default: build.json's default)
+            HELP;
     }
 
     /**

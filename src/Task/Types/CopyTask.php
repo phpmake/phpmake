@@ -29,19 +29,19 @@ final class CopyTask extends BaseTask
      */
     protected function runTask(bool $debug, bool $silent): bool
     {
-        $src = $this->params['src'] ?? '';
+        $source = $this->params['source'] ?? '';
         $dest = $this->params['dest'] ?? '';
 
-        if (empty($src) || empty($dest)) {
-            throw new \Exception("Missing 'src' or 'dest' parameter.");
+        if (empty($source) || empty($dest)) {
+            throw new \Exception("Missing 'source' or 'dest' parameter.");
         }
 
-        if (!file_exists($src)) {
-            $this->logger->debug("Source '{$src}' does not exist. Skipping copy.");
+        if (!file_exists($source)) {
+            $this->logger->debug("Source '{$source}' does not exist. Skipping copy.");
             return true;
         }
 
-        return is_dir($src) ? $this->copyDirectory($src, $dest) : $this->copyFile($src, $dest);
+        return is_dir($source) ? $this->copyDirectory($source, $dest) : $this->copyFile($source, $dest);
     }
 
     /**
@@ -49,15 +49,15 @@ final class CopyTask extends BaseTask
      *
      * Performs a file copy operation and logs success.
      *
-     * @param string $src  Source file path.
+     * @param string $source  Source file path.
      * @param string $dest Destination file path.
      *
      * @return bool Status of the file copy operation.
      */
-    private function copyFile(string $src, string $dest): bool
+    private function copyFile(string $source, string $dest): bool
     {
-        if (copy($src, $dest)) {
-            $this->logger->debug("Copied file '{$src}' → '{$dest}'.");
+        if (copy($source, $dest)) {
+            $this->logger->debug("Copied file '{$source}' → '{$dest}'.");
             return true;
         }
 
@@ -69,27 +69,27 @@ final class CopyTask extends BaseTask
      *
      * Create destination directory if it does not exist and copies all files recursively.
      *
-     * @param string $src  Source directory path.
+     * @param string $source  Source directory path.
      * @param string $dest Destination directory path.
      *
      * @return bool Status of directory copy operation.
      */
-    private function copyDirectory(string $src, string $dest): bool
+    private function copyDirectory(string $source, string $dest): bool
     {
         if (!is_dir($dest)) {
             mkdir($dest, 0777, true);
         }
 
-        foreach (scandir($src) as $item) {
+        foreach (scandir($source) as $item) {
             if ($item === '.' || $item === '..') {
                 continue;
             }
-            $s = $src . DIRECTORY_SEPARATOR . $item;
+            $s = $source . DIRECTORY_SEPARATOR . $item;
             $d = $dest . DIRECTORY_SEPARATOR . $item;
             is_dir($s) ? $this->copyDirectory($s, $d) : $this->copyFile($s, $d);
         }
 
-        $this->logger->debug("Copied directory '{$src}' → '{$dest}'.");
+        $this->logger->debug("Copied directory '{$source}' → '{$dest}'.");
         return true;
     }
 
@@ -108,14 +108,14 @@ final class CopyTask extends BaseTask
     /**
      * Validate required task parameters.
      *
-     * Ensures presence of 'src' and 'dest' parameters before execution.
+     * Ensures presence of 'source' and 'dest' parameters before execution.
      *
      * @throws \Exception If required parameters are missing.
      */
     protected function validateParams()
     {
-        if (!isset($this->params['src']) || !isset($this->params['dest'])) {
-            throw new \Exception("Missing 'src' or 'dest' parameter for copy task.");
+        if (!isset($this->params['source']) || !isset($this->params['dest'])) {
+            throw new \Exception("Missing 'source' or 'dest' parameter for copy task.");
         }
     }
 }
