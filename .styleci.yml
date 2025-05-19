@@ -1,0 +1,14 @@
+version: 7.4
+preset: psr12
+risky: true
+monolithic: true
+tab-width: 4
+use-tabs: false
+finder:
+   exclude:
+    - ".github"
+    - "resources"
+    - "schema"
+    - "vendor"
+   name:
+      - "*.php"

@@ -1,0 +1,76 @@
+{
+    "name": "PHPMake",
+    "description": "A PHP build automation tool using JSON configuration file.",
+    "version": "1.0.0",
+    "targets": {
+        "clean": {
+            "description": "Remove artifacts directory",
+            "tasks": [
+                {
+                    "type": "delete",
+                    "params": {
+                        "path": "artifacts"
+                    }
+                }
+            ]
+        },
+        "build": {
+            "description": "Build project files",
+            "depends": [
+                "clean"
+            ],
+            "tasks": [
+                {
+                    "type": "create_directory",
+                    "params": {
+                        "name": "artifacts"
+                    }
+                },
+                {
+                    "type": "copy",
+                    "params": {
+                        "source": "src/",
+                        "dest": "artifacts/"
+                    }
+                },
+                {
+                    "type": "echo",
+                    "params": {
+                        "message": "Build completed successfully"
+                    }
+                }
+            ]
+        },
+        "test": {
+            "description": "Run tests",
+            "depends": [
+                "build"
+            ],
+            "tasks": [
+                {
+                    "type": "exec",
+                    "params": {
+                        "command": "composer test"
+                    }
+                }
+            ]
+        },
+        "package": {
+            "description": "Create distributable package",
+            "depends": [
+                "test"
+            ],
+            "tasks": [
+                {
+                    "type": "archive",
+                    "params": {
+                        "source": "artifacts/",
+                        "output": "artifacts/phpmake.zip",
+                        "compression": 8
+                    }
+                }
+            ]
+        }
+    },
+    "default_target": "build"
+}

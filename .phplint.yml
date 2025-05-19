@@ -1,0 +1,17 @@
+path:
+  - bin/
+  - src/
+  - tests/
+extensions:
+  - php
+exclude:
+  - .git/
+  - .github/
+  - resources/
+  - schema/
+  - vendor/
+jobs: 1
+warning: true
+memory-limit: -1
+no-cache: true
+progress: PROGRESS

@@ -1,0 +1,192 @@
+{
+    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$id": "https://github.com/phpmake/schemas/build-schema.json ",
+    "title": "PHPMake Build Configuration Schema",
+    "description": "Schema for validating build.json files used by PHPMake, a PHP-based build automation tool.",
+    "type": "object",
+    "required": [
+        "name",
+        "version",
+        "targets"
+    ],
+    "properties": {
+        "name": {
+            "type": "string",
+            "description": "The name of the project being built."
+        },
+        "description": {
+            "type": "string",
+            "description": "A short description of the build configuration or project."
+        },
+        "version": {
+            "type": "string",
+            "description": "The version of the project. Follows semantic versioning (e.g., '1.0.0')."
+        },
+        "default_target": {
+            "type": "string",
+            "description": "The target to run if none is specified on the command line."
+        },
+        "targets": {
+            "type": "object",
+            "description": "A map of target names to their configurations.",
+            "patternProperties": {
+                "^\\w+$": {
+                    "type": "object",
+                    "required": [
+                        "tasks"
+                    ],
+                    "properties": {
+                        "description": {
+                            "type": "string"
+                        },
+                        "depends": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "tasks": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "description": "Type of task to execute.",
+                                        "enum": [
+                                            "create_directory",
+                                            "delete",
+                                            "copy",
+                                            "exec",
+                                            "echo",
+                                            "archive"
+                                        ]
+                                    },
+                                    "params": {
+                                        "type": "object",
+                                        "oneOf": [
+                                            {
+                                                "$ref": "#/definitions/create_directory"
+                                            },
+                                            {
+                                                "$ref": "#/definitions/delete"
+                                            },
+                                            {
+                                                "$ref": "#/definitions/copy"
+                                            },
+                                            {
+                                                "$ref": "#/definitions/exec"
+                                            },
+                                            {
+                                                "$ref": "#/definitions/echo"
+                                            },
+                                            {
+                                                "$ref": "#/definitions/archive"
+                                            }
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "type",
+                                    "params"
+                                ]
+                            }
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "definitions": {
+        "create_directory": {
+            "type": "object",
+            "required": [
+                "dir"
+            ],
+            "properties": {
+                "dir": {
+                    "type": "string",
+                    "description": "Path to the directory to create."
+                }
+            }
+        },
+        "delete": {
+            "type": "object",
+            "required": [
+                "path"
+            ],
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "Path to the file or directory to delete."
+                }
+            }
+        },
+        "copy": {
+            "type": "object",
+            "required": [
+                "src",
+                "dest"
+            ],
+            "properties": {
+                "src": {
+                    "type": "string",
+                    "description": "Source path to copy from."
+                },
+                "dest": {
+                    "type": "string",
+                    "description": "Destination path to copy to."
+                }
+            }
+        },
+        "exec": {
+            "type": "object",
+            "required": [
+                "command"
+            ],
+            "properties": {
+                "command": {
+                    "type": "string",
+                    "description": "Shell command to execute."
+                }
+            }
+        },
+        "echo": {
+            "type": "object",
+            "required": [
+                "message"
+            ],
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "description": "Message to output to the console."
+                }
+            }
+        },
+        "archive": {
+            "type": "object",
+            "required": [
+                "source",
+                "output"
+            ],
+            "properties": {
+                "source": {
+                    "type": "string",
+                    "description": "Directory or file to archive."
+                },
+                "output": {
+                    "type": "string",
+                    "description": "Path to the output archive file."
+                },
+                "compression": {
+                    "type": "integer",
+                    "description": "Compression level (0 = no compression, 8 = max).",
+                    "minimum": 0,
+                    "maximum": 9
+                }
+            }
+        }
+    }
+}

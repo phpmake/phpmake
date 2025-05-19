@@ -1,0 +1,82 @@
+{
+    "name": "MyProject",
+    "description": "Sample build file demonstrating PHPMake build tool capabilities.",
+    "version": "1.0.0",
+    "targets": {
+        "clean": {
+            "description": "Remove build artifacts",
+            "tasks": [
+                {
+                    "type": "delete",
+                    "params": {
+                        "path": "build"
+                    }
+                }
+            ]
+        },
+        "build": {
+            "description": "Build project files",
+            "depends": [
+                "clean"
+            ],
+            "tasks": [
+                {
+                    "type": "create_directory",
+                    "params": {
+                        "name": "build"
+                    }
+                },
+                {
+                    "type": "copy",
+                    "params": {
+                        "source": "src/",
+                        "dest": "build/"
+                    }
+                },
+                {
+                    "type": "exec",
+                    "params": {
+                        "command": "php compiler.php"
+                    }
+                },
+                {
+                    "type": "echo",
+                    "params": {
+                        "message": "Build completed successfully"
+                    }
+                }
+            ]
+        },
+        "test": {
+            "description": "Run unit tests",
+            "depends": [
+                "build"
+            ],
+            "tasks": [
+                {
+                    "type": "exec",
+                    "params": {
+                        "command": "vendor/bin/phpunit tests/"
+                    }
+                }
+            ]
+        },
+        "package": {
+            "description": "Create distributable package",
+            "depends": [
+                "test"
+            ],
+            "tasks": [
+                {
+                    "type": "archive",
+                    "params": {
+                        "source": "build/",
+                        "output": "dist/project.zip",
+                        "compression": 8
+                    }
+                }
+            ]
+        }
+    },
+    "default_target": "build"
+}

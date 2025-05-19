@@ -1,0 +1,63 @@
+Frequently Asked Questions (FAQs)
+
+Q: How do I install PHPMake?
+A: Install via Composer:
+composer require phpmake/phpmake
+
+Q: What is the basic structure of `build.json`?
+A:
+{
+  "name": "Project Name",
+  "description": "Project description.",
+  "version": "1.0.0",
+  "targets": {
+    "target_name": {
+      "depends": ["dependency1", "dependency2"],
+      "tasks": [
+        {"type": "task_type", "params": { ... }}
+      ]
+    }
+  },
+  "default_target": "default_target_name"
+}
+
+Q: How do I run a specific target?
+A: Use the target name as an argument:
+phpmake <target_name>
+
+Q: What tasks are supported?
+A:
+- `create_directory`: Create directories
+- `delete`: Remove files/directories
+- `copy`: Copy files/directories
+- `exec`: Execute shell commands
+- `echo`: Output messages
+- `archive`: Archive/Compress a directory.
+
+Q: How do I enable debug/verbose logging?
+A: Add the `--debug` flag:
+phpmake --debug
+
+Q: What does the `--diagnostics` flag do?
+A: Shows system info like PHP version, OS, and loaded extensions.
+
+Q: How do I handle circular dependencies?
+A: The tool detects cycles and throws an error.
+
+Q: Does this work on Microsoft Windows?
+A: Yes.
+
+Q: How do I create a custom task?
+A:
+1. Create a new class in `src/Task` extending `BaseTask`.
+2. Implement `runTask()` and `getType()`.
+3. Update `TaskFactory` to map the new task type.
+
+Q: Where are logs stored?
+A: By default, logs are in project's root in `build.log` file, unless `--no-log` is used.
+
+Q: Why does the build stop abruptly?
+A: The tool stops on first failed task by default. Use `--debug` for detailed error info.
+
+Q: Can I use PHPMake in CI/CD pipelines?
+A: Yes, it's designed to work with any environment supporting PHP.

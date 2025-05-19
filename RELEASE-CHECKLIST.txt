@@ -1,0 +1,14 @@
+* Checkout target Git branch.
+* Cleanup junk/cache/trash/temp/log files.
+* Update VERSION.txt file.
+* Update README.md file. (Badge, requirements, version)
+* Update /src/Config.php file.
+* Check/Update composer.json file.
+* Check/Update .github/workflows/default.yml
+* Check/Update .styleci.yml
+* Check/Update .php-cs-fixer.php
+* Check/Update rector.php
+* Update CHANGELOG.txt file.
+* Commit changes with message: Release Major.Minor.Micro.Build
+* Create a new version tag.
+* Create a new release on Git host.
