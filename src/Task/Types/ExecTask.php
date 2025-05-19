@@ -59,6 +59,7 @@ final class ExecTask extends BaseTask
      *
      * @return string The task type ('exec').
      */
+    #[\Override]
     public function getType(): string
     {
         return 'exec';

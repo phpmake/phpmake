@@ -11,7 +11,7 @@ namespace PhpMake\Build;
  * @package    PHPMake
  * @subpackage Build
  */
-final class BuildConfiguration
+final readonly class BuildConfiguration
 {
     /**
      * @var string Name of build project.

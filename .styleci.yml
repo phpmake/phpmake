@@ -1,14 +1,14 @@
-version: 7.4
+version: 8.3
 preset: psr12
 risky: true
 monolithic: true
 tab-width: 4
 use-tabs: false
 finder:
-   exclude:
+  exclude:
     - ".github"
     - "resources"
     - "schema"
     - "vendor"
-   name:
-      - "*.php"
+  name:
+    - "*.php"

@@ -1,7 +1,7 @@
 {
     "name": "PHPMake",
     "description": "A PHP build automation tool using JSON configuration file.",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "targets": {
         "clean": {
             "description": "Remove artifacts directory",

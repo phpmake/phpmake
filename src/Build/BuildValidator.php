@@ -63,14 +63,14 @@ final class BuildValidator
 
                         break;
                     case 'create_directory':
-                        if (!isset($task['params']['dir'])) {
-                            $errors[] = sprintf("CreateDirectory task in target '%s' missing 'dir' parameter.", $targetName);
+                        if (!isset($task['params']['name'])) {
+                            $errors[] = sprintf("CreateDirectory task in target '%s' missing 'name' parameter.", $targetName);
                         }
 
                         break;
                     case 'copy':
-                        if (!isset($task['params']['src']) || !isset($task['params']['dest'])) {
-                            $errors[] = sprintf("Copy task in target '%s' missing 'src' or 'dest'.", $targetName);
+                        if (!isset($task['params']['source']) || !isset($task['params']['dest'])) {
+                            $errors[] = sprintf("Copy task in target '%s' missing 'source' or 'dest'.", $targetName);
                         }
 
                         break;

@@ -9,6 +9,6 @@
 
 ## Reporting a Vulnerability
 
-If you have found any issues that might have security implications, please send a report privately to phpmake.github@gmail.com
+If you have found any issues that might have security implications, please send a report privately to <phpmake.github@gmail.com>
 
 Do not report security reports publicly.

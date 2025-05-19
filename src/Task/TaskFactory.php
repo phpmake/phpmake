@@ -21,13 +21,8 @@ use PhpMake\Utilities\Logger;
  * @package    PHPMake
  * @subpackage Task
  */
-final class TaskFactory
+final readonly class TaskFactory
 {
-    /**
-     * @var Logger Logger instance for handling task output.
-     */
-    private Logger $logger;
-
     /**
      * Constructor
      *
@@ -35,10 +30,7 @@ final class TaskFactory
      *
      * @param Logger $logger Logger instance.
      */
-    public function __construct(Logger $logger)
-    {
-        $this->logger = $logger;
-    }
+    public function __construct(private Logger $logger) {}
 
     /**
      * Create a task instance.
@@ -56,21 +48,14 @@ final class TaskFactory
         $type = $taskConfig['type'];
         $params = $taskConfig['params'] ?? [];
 
-        switch ($type) {
-            case 'delete':
-                return new DeleteTask($params, $this->logger);
-            case 'create_directory':
-                return new CreateDirectoryTask($params, $this->logger);
-            case 'copy':
-                return new CopyTask($params, $this->logger);
-            case 'exec':
-                return new ExecTask($params, $this->logger);
-            case 'echo':
-                return new EchoTask($params, $this->logger);
-            case 'archive':
-                return new ZipTask($params, $this->logger);
-            default:
-                throw new \Exception(sprintf("Unknown task type '%s' in build configuration.", $type));
-        }
+        return match ($type) {
+            'delete' => new DeleteTask($params, $this->logger),
+            'create_directory' => new CreateDirectoryTask($params, $this->logger),
+            'copy' => new CopyTask($params, $this->logger),
+            'exec' => new ExecTask($params, $this->logger),
+            'echo' => new EchoTask($params, $this->logger),
+            'archive' => new ZipTask($params, $this->logger),
+            default => throw new \Exception(sprintf("Unknown task type '%s' in build configuration.", $type)),
+        };
     }
 }

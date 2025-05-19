@@ -74,7 +74,7 @@ final class ZipTask extends BaseTask
             foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path)) as $file) {
                 if ($file->isFile()) {
                     $basePath = rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-                    $relativePath = substr($file->getPathname(), strlen($basePath));
+                    $relativePath = substr((string) $file->getPathname(), strlen($basePath));
                     $zip->addFile(
                         $file->getPathname(),
                         $baseDir . $relativePath,
@@ -94,6 +94,7 @@ final class ZipTask extends BaseTask
      *
      * @return string The task type ('archive').
      */
+    #[\Override]
     public function getType(): string
     {
         return 'archive';

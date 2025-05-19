@@ -35,7 +35,7 @@ final class CreateDirectoryTask extends BaseTask
             throw new \Exception("Missing 'name' parameter.");
         }
 
-        if (mkdir($dirName, 0777, true)) {
+        if (mkdir($dirName, 0o777, true)) {
             $this->logger->debug(sprintf("Created directory '%s'.", $dirName));
             return true;
         }
@@ -57,6 +57,7 @@ final class CreateDirectoryTask extends BaseTask
      *
      * @return string The task type ('create_directory').
      */
+    #[\Override]
     public function getType(): string
     {
         return 'create_directory';

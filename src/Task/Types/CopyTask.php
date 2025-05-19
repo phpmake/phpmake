@@ -77,7 +77,7 @@ final class CopyTask extends BaseTask
     private function copyDirectory(string $source, string $dest): bool
     {
         if (!is_dir($dest)) {
-            mkdir($dest, 0777, true);
+            mkdir($dest, 0o777, true);
         }
 
         foreach (scandir($source) as $item) {
@@ -101,6 +101,7 @@ final class CopyTask extends BaseTask
      *
      * @return string The task type ('copy').
      */
+    #[\Override]
     public function getType(): string
     {
         return 'copy';

@@ -67,7 +67,7 @@ final class BuildValidatorTest extends TestCase
         $validConfig = [
             'name' => 'TestProject',
             'description' => 'Test description',
-            'version' => '1.0.0',
+            'version' => '2.0.0',
             'targets' => [
                 'clean' => [
                     'tasks' => [['type' => 'delete', 'params' => ['path' => 'test']]],
@@ -117,7 +117,7 @@ final class BuildValidatorTest extends TestCase
         $invalidConfig = [
             'name' => 'TestProject',
             'description' => 'Test',
-            'version' => '1.0.0',
+            'version' => '2.0.0',
             'targets' => [
                 'invalid' => [
                     'tasks' => [['type' => 'unknown', 'params' => []]],

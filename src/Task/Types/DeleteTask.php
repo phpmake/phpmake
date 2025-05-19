@@ -111,6 +111,7 @@ final class DeleteTask extends BaseTask
      *
      * @return string The task type ('delete').
      */
+    #[\Override]
     public function getType(): string
     {
         return 'delete';

@@ -16,16 +16,6 @@ use PhpMake\Utilities\Logger;
 abstract class BaseTask implements TaskInterface
 {
     /**
-     * @var array Parameters required for executing task.
-     */
-    protected array $params;
-
-    /**
-     * @var Logger Logger instance for handling task output and errors.
-     */
-    protected Logger $logger;
-
-    /**
      * Constructor
      *
      * Initializes task with provided parameters and a logger.
@@ -33,10 +23,8 @@ abstract class BaseTask implements TaskInterface
      * @param array  $params Task parameters.
      * @param Logger $logger Logger instance.
      */
-    public function __construct(array $params, Logger $logger)
+    public function __construct(protected array $params, protected Logger $logger)
     {
-        $this->params = $params;
-        $this->logger = $logger;
         $this->validateParams();
     }
 

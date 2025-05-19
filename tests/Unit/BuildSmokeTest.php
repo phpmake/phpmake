@@ -83,14 +83,14 @@ final class BuildSmokeTest extends TestCase
         $config = new BuildConfiguration(
             'My Project',
             'A sample project',
-            '1.0.0',
+            '2.0.0',
             $targets,
             'default'
         );
         // Action/Assert
         $this->assertSame('My Project', $config->getName());
         $this->assertSame('A sample project', $config->getDescription());
-        $this->assertSame('1.0.0', $config->getVersion());
+        $this->assertSame('2.0.0', $config->getVersion());
         $this->assertSame($targets, $config->getTargets());
         $this->assertSame('default', $config->getDefaultTarget());
     }
@@ -108,7 +108,7 @@ final class BuildSmokeTest extends TestCase
         $configArray = [
             'name'           => 'My Project',
             'description'    => 'Valid test project',
-            'version'        => '1.0.0',
+            'version'        => '2.0.0',
             'targets'        => [
                 'default' => ['tasks' => []],
             ],
@@ -166,7 +166,7 @@ final class BuildSmokeTest extends TestCase
             ],
         ];
         // Action
-        $config = new BuildConfiguration('My Project', 'Test', '1.0.0', $targets, 'default');
+        $config = new BuildConfiguration('My Project', 'Test', '2.0.0', $targets, 'default');
         $resolver = new DependencyResolver();
         $order = $resolver->resolve($config, 'default');
         // Assert
@@ -196,7 +196,7 @@ final class BuildSmokeTest extends TestCase
                 'depends' => [],
             ],
         ];
-        $config = new BuildConfiguration('My Project', 'Test', '1.0.0', $targets, 'a');
+        $config = new BuildConfiguration('My Project', 'Test', '2.0.0', $targets, 'a');
         $resolver = new DependencyResolver();
         // Action
         $order = $resolver->resolve($config, 'a');
@@ -232,7 +232,7 @@ final class BuildSmokeTest extends TestCase
                 'depends' => ['a'],
             ],
         ];
-        $config = new BuildConfiguration('My Project', 'Test', '1.0.0', $targets, 'a');
+        $config = new BuildConfiguration('My Project', 'Test', '2.0.0', $targets, 'a');
         $resolver = new DependencyResolver();
         // Action
         $resolver->resolve($config, 'a');
@@ -262,7 +262,7 @@ final class BuildSmokeTest extends TestCase
         $config = new BuildConfiguration(
             'Test Project',
             'Test project for BuildExecutor',
-            '1.0.0',
+            '2.0.0',
             $targets,
             'test'
         );

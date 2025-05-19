@@ -17,5 +17,5 @@ final class Config
      *
      * Represents version number of PHPMake.
      */
-    public const TOOL_VERSION = '1.0.0';
+    public const string TOOL_VERSION = '2.0.0';
 }

@@ -13,7 +13,7 @@ final class BuildValidatorMissingTargetTest extends TestCase
     {
         $config = [
             'name' => 'Test',
-            'version' => '1.0.0',
+            'version' => '2.0.0',
             'targets' => [],
             'default_target' => 'missing',
         ];

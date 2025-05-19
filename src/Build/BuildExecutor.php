@@ -17,23 +17,8 @@ use PhpMake\Task\TaskExecutor;
  * @package    PHPMake
  * @subpackage Build
  */
-final class BuildExecutor
+final readonly class BuildExecutor
 {
-    /**
-     * @var TaskFactory Factory for creating tasks.
-     */
-    private TaskFactory $taskFactory;
-
-    /**
-     * @var DependencyResolver Resolves dependencies between tasks.
-     */
-    private DependencyResolver $dependencyResolver;
-
-    /**
-     * @var TaskExecutor Executes tasks in correct order.
-     */
-    private TaskExecutor $taskExecutor;
-
     /**
      * Constructor
      *
@@ -43,15 +28,7 @@ final class BuildExecutor
      * @param DependencyResolver $dependencyResolver Resolves dependencies between tasks.
      * @param TaskExecutor       $taskExecutor       Executes tasks in the correct order.
      */
-    public function __construct(
-        TaskFactory $taskFactory,
-        DependencyResolver $dependencyResolver,
-        TaskExecutor $taskExecutor
-    ) {
-        $this->taskFactory = $taskFactory;
-        $this->dependencyResolver = $dependencyResolver;
-        $this->taskExecutor = $taskExecutor;
-    }
+    public function __construct(private TaskFactory $taskFactory, private DependencyResolver $dependencyResolver, private TaskExecutor $taskExecutor) {}
 
     /**
      * Execute build tasks.

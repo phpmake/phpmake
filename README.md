@@ -2,8 +2,8 @@
 
 A PHP build automation tool using JSON configuration file.
 
-[![current version](https://img.shields.io/packagist/v/phpmake/phpmake.svg)](https://packagist.org/packages/phpmake/phpmake) [![Build and Test](https://github.com/phpmake/phpmake/actions/workflows/default.yml/badge.svg?branch=main-php7.4)](https://github.com/phpmake/phpmake/actions/workflows/default.yml) [![CodeQL](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main-php7.4)](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql) [![Dependabot Updates](https://github.com/phpmake/phpmake/actions/workflows/dependabot/dependabot-updates/badge.svg?branch=main-php7.4)](https://github.com/phpmake/phpmake/actions/workflows/dependabot/dependabot-updates)
-[![PHP](https://img.shields.io/badge/PHP-7.4-617CBE)](https://php.net/) [![issues](https://img.shields.io/github/issues/phpmake/phpmake)](https://github.com/phpmake/phpmake/issues) ![repo size](https://img.shields.io/github/repo-size/phpmake/phpmake) [![GitHub license](https://img.shields.io/github/license/phpmake/phpmake)](LICENSE) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.txt)
+[![current version](https://img.shields.io/packagist/v/phpmake/phpmake.svg)](https://packagist.org/packages/phpmake/phpmake) [![Build and Test](https://github.com/phpmake/phpmake/actions/workflows/default.yml/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/default.yml) [![CodeQL](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql) [![Dependabot Updates](https://github.com/phpmake/phpmake/actions/workflows/dependabot/dependabot-updates/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/dependabot/dependabot-updates)
+[![PHP](https://img.shields.io/badge/PHP-8.3-617CBE)](https://php.net/) [![issues](https://img.shields.io/github/issues/phpmake/phpmake)](https://github.com/phpmake/phpmake/issues) ![repo size](https://img.shields.io/github/repo-size/phpmake/phpmake) [![GitHub license](https://img.shields.io/github/license/phpmake/phpmake)](LICENSE) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.txt)
 
 ![Logo](resources/images/logo.png)
 
@@ -55,7 +55,7 @@ A lightweight PHP-based build automation tool inspired by Linux Make & Apache An
 
 ## Requirements
 
-1. PHP >= 7.4
+1. PHP >= 8.3
 2. Composer >= 2
 
 ### Versions
@@ -63,8 +63,8 @@ A lightweight PHP-based build automation tool inspired by Linux Make & Apache An
 | Package version | Branch        | PHP version | Status         |
 |-----------------|---------------|-------------|----------------|
 | dev-main        | `main`        | 8.3         | Active         |
-| 2.x             | `main`        | 8.3         | Active         |
-| 1.x             | `main-php7.4` | 7.4         | Active         |
+| 2.*             | `main`        | 8.3         | Active         |
+| 1.*             | `main-php7.4` | 7.4         | Active         |
 
 * **Active**: Full support
 * **Maintenance**: Bug/Security fixes only
@@ -157,7 +157,7 @@ composer global require phpmake/phpmake
     {
         "name": "MyProject",
         "description": "Sample project build configuration",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "targets": {
             "clean": {
                 "tasks": [{ "type": "delete", "params": { "path": "build" } }]

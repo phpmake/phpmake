@@ -26,18 +26,18 @@
         "source": "https://github.com/phpmake/phpmake"
     },
     "require": {
-        "php": "7.4.*",
+        "php": "8.3.*",
         "ext-json": "*",
         "ext-zip": "*"
     },
     "require-dev": {
         "ergebnis/composer-normalize": "2.47.*",
         "friendsofphp/php-cs-fixer": "3.75.*",
-        "icanhazstring/composer-unused": "0.8.*",
-        "maglnet/composer-require-checker": "3.8.*",
-        "overtrue/phplint": "3.4.*",
-        "phpunit/phpunit": "9.6.*",
-        "rector/rector": "2.*"
+        "icanhazstring/composer-unused": "0.9.*",
+        "maglnet/composer-require-checker": "4.16.*",
+        "overtrue/phplint": "9.6.*",
+        "phpunit/phpunit": "12.1.*",
+        "rector/rector": "2.0.*"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

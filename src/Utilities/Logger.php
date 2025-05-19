@@ -15,21 +15,6 @@ namespace PhpMake\Utilities;
 final class Logger
 {
     /**
-     * @var bool Enable debug mode for detailed logging.
-     */
-    private bool $debug;
-
-    /**
-     * @var bool Suppress output if enabled.
-     */
-    private bool $silent;
-
-    /**
-     * @var bool Disable file logging if enabled.
-     */
-    private bool $noLog;
-
-    /**
      * @var string Path to the log file ('build.log' by default).
      */
     private string $logFile = 'build.log';
@@ -43,15 +28,7 @@ final class Logger
      * @param bool $silent Suppress output mode.
      * @param bool $noLog  Disable file logging.
      */
-    public function __construct(
-        bool $debug,
-        bool $silent,
-        bool $noLog
-    ) {
-        $this->debug = $debug;
-        $this->silent = $silent;
-        $this->noLog = $noLog;
-    }
+    public function __construct(private readonly bool $debug, private readonly bool $silent, private readonly bool $noLog) {}
 
     /**
      * Log an informational message.
