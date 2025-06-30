@@ -36,8 +36,8 @@
         "icanhazstring/composer-unused": "0.9.*",
         "maglnet/composer-require-checker": "4.16.*",
         "overtrue/phplint": "9.6.*",
-        "phpunit/phpunit": "12.1.*",
-        "rector/rector": "2.0.*"
+        "phpunit/phpunit": "12.2.*",
+        "rector/rector": "2.1.*"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
