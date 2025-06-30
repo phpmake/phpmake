@@ -1,3 +1,4 @@
+---
 name: Build and Test
 
 permissions:
@@ -38,13 +39,19 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Lint YAML files
-        run: find . -type f -name "*.yml" -exec yamllint {} \;
+        run: |
+          find . -type f -name "*.yml" -not -path "./vendor/*" \
+            -not -path "./.git/*" -exec yamllint {} +
 
       - name: Lint XML files
-        run: find . -type f -name "*.xml" -exec xmllint --noout {} \;
+        run: |
+          find . -type f -name "*.xml" -not -path "./vendor/*" \
+            -not -path "./.git/*" -exec xmllint --noout {} \;
 
       - name: Lint JSON files
-        run: find . -type f -name "*.json" -not -path "./vendor/*" -exec sh -c 'jq empty "$0"' {} \;
+        run: |
+          find . -type f -name "*.json" -not -path "./vendor/*" \
+            -not -path "./.git/*" -exec sh -c 'jq empty "$0"' {} \;
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -53,12 +60,17 @@ jobs:
           coverage: none
           extensions: zip
           tools: composer:v2
-          ini-values: memory_limit=256M, zend.assertions=1, error_reporting=-1, display_errors=On
+          ini-values: memory_limit=256M, zend.assertions=1, \
+            error_reporting=-1, display_errors=On
 
       - name: Lint PHP files
         run: |
-          set -e  # Stop on error.
-          find . -path ./vendor -prune -o -name "*.php" -print0 | xargs -0 -n 1 php -l
+          set -e
+          set -o nounset
+          set -o errexit
+          set -o pipefail
+          find . -path ./vendor -prune -o -name "*.php" -print0 \
+            | xargs -0 -n 1 php -l
 
       - name: Validate manifest file
         run: composer validate --strict
@@ -71,7 +83,7 @@ jobs:
           restore-keys: ${{ runner.os }}-composer-
 
       - name: Install dependencies
-        run: composer install --ansi --no-interaction --no-progress --no-suggest --prefer-dist
+        run: composer install --no-interaction --no-progress --prefer-dist
 
       - name: Lint codes
         run: composer lint
