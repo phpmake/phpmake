@@ -15,4 +15,18 @@
             <directory>tests</directory>
         </testsuite>
     </testsuites>
+
+    <source>
+        <include>
+            <directory>bin</directory>
+            <directory>src</directory>
+        </include>
+        <exclude>
+            <directory>.git</directory>
+            <directory>.github</directory>
+            <directory>resources</directory>
+            <directory>schema</directory>
+            <directory>vendor</directory>
+        </exclude>
+    </source>
 </phpunit>
