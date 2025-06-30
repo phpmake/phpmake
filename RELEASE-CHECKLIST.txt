@@ -9,6 +9,6 @@
 * Check/Update .php-cs-fixer.php
 * Check/Update rector.php
 * Update CHANGELOG.txt file.
-* Commit changes with message: Release Major.Minor.Micro.Build
+* Commit changes with message: Release Major.Minor.Micro
 * Create a new version tag.
 * Create a new release on Git host.
