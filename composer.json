@@ -37,7 +37,7 @@
         "maglnet/composer-require-checker": "4.16.*",
         "overtrue/phplint": "9.6.*",
         "phpunit/phpunit": "12.4.*",
-        "rector/rector": "2.1.* || 2.2.*"
+        "rector/rector": "2.2.*"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
