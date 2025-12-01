@@ -31,7 +31,7 @@
         "ext-zip": "*"
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "3.89.*",
+        "friendsofphp/php-cs-fixer": "3.89.* || 3.91.*",
         "ergebnis/composer-normalize": "2.48.*",
         "icanhazstring/composer-unused": "0.9.*",
         "maglnet/composer-require-checker": "4.16.*",
