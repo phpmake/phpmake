@@ -35,7 +35,7 @@
         "ergebnis/composer-normalize": "2.48.*",
         "icanhazstring/composer-unused": "0.9.*",
         "maglnet/composer-require-checker": "4.16.*",
-        "overtrue/phplint": "9.6.*",
+        "overtrue/phplint": "9.6.* || 9.7.*",
         "phpunit/phpunit": "12.4.*",
         "rector/rector": "2.2.*"
     },
