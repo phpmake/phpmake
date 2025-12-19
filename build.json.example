@@ -71,8 +71,7 @@
                     "type": "archive",
                     "params": {
                         "source": "build/",
-                        "output": "dist/project.zip",
-                        "compression": 8
+                        "output": "dist/project.zip"
                     }
                 }
             ]

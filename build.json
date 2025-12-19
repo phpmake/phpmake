@@ -65,8 +65,7 @@
                     "type": "archive",
                     "params": {
                         "source": "artifacts/",
-                        "output": "artifacts/phpmake.zip",
-                        "compression": 8
+                        "output": "artifacts/phpmake.zip"
                     }
                 }
             ]

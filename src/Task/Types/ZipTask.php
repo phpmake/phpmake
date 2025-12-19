@@ -9,7 +9,7 @@ use ZipArchive;
  * ZipTask Class
  *
  * Implements a task for archiving files and directories into a ZIP archive
- * within PHPMake tool. Supports compression and structured directory inclusion.
+ * within PHPMake tool.
  *
  * @package    PHPMake
  * @subpackage Task
@@ -19,7 +19,7 @@ final class ZipTask extends BaseTask
     /**
      * Execute archive task.
      *
-     * Creates a ZIP archive from specified source and applies compression if provided.
+     * Creates a ZIP archive from specified source.
      *
      * @param bool $debug  Enable debug mode for detailed logging.
      * @param bool $silent Suppress output if enabled.
@@ -32,7 +32,6 @@ final class ZipTask extends BaseTask
     {
         $source = $this->params['source'] ?? '';
         $output = $this->params['output'] ?? '';
-        $compressionMethod = $this->params['compression'] ?? ZipArchive::CM_STORE;
 
         if (empty($source) || empty($output)) {
             throw new \Exception("Missing 'source' or 'output' parameter for zip task.");
@@ -48,7 +47,7 @@ final class ZipTask extends BaseTask
             throw new \Exception(sprintf("Failed to create ZIP file '%s'.", $output));
         }
 
-        $this->addFilesToZip($zip, $source, $compressionMethod);
+        $this->addFilesToZip($zip, $source);
         $zip->close();
 
         if ($debug) {
@@ -65,10 +64,9 @@ final class ZipTask extends BaseTask
      *
      * @param ZipArchive $zip               The ZIP archive instance.
      * @param string     $path              Source path to archive.
-     * @param int        $compressionMethod Compression method (default: CM_STORE).
      * @param string     $baseDir           Base directory inside archive.
      */
-    private function addFilesToZip(ZipArchive $zip, string $path, int $compressionMethod, string $baseDir = ''): void
+    private function addFilesToZip(ZipArchive $zip, string $path, string $baseDir = ''): void
     {
         if (is_dir($path)) {
             foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path)) as $file) {
@@ -77,13 +75,12 @@ final class ZipTask extends BaseTask
                     $relativePath = substr((string) $file->getPathname(), strlen($basePath));
                     $zip->addFile(
                         $file->getPathname(),
-                        $baseDir . $relativePath,
-                        $compressionMethod
+                        $baseDir . $relativePath
                     );
                 }
             }
         } else {
-            $zip->addFile($path, basename($path), $compressionMethod);
+            $zip->addFile($path, basename($path));
         }
     }
 
@@ -110,7 +107,7 @@ final class ZipTask extends BaseTask
     protected function validateParams()
     {
         if (!isset($this->params['source']) || !isset($this->params['output'])) {
-            throw new \Exception("Missing required parameters for zip task.");
+            throw new \Exception('Missing required parameters for zip task.');
         }
     }
 }

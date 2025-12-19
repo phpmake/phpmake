@@ -179,12 +179,6 @@
                 "output": {
                     "type": "string",
                     "description": "Path to the output archive file."
-                },
-                "compression": {
-                    "type": "integer",
-                    "description": "Compression level (0 = no compression, 8 = max).",
-                    "minimum": 0,
-                    "maximum": 9
                 }
             }
         }

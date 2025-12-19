@@ -94,21 +94,6 @@ final class ZipTaskTest extends TestCase
      *
      * @return void
      */
-    public function testCompressionConstants(): void
-    {
-        // AAA
-        // Ensure valid compression values are used (from ZipArchive).
-        $this->assertSame(0, ZipArchive::CM_STORE);
-        $this->assertSame(8, ZipArchive::CM_DEFLATE);
-    }
-
-    /**
-     * @test
-     *
-     * @small
-     *
-     * @return void
-     */
     public function testValidateParamsMethod(): void
     {
         // Arrange

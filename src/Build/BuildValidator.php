@@ -91,13 +91,6 @@ final class BuildValidator
                             $errors[] = sprintf("Archive task in target '%s' missing required parameters.", $targetName);
                         }
 
-                        if (isset($task['params']['compression'])) {
-                            $compression = $task['params']['compression'];
-                            if (!in_array($compression, [ZipArchive::CM_STORE, ZipArchive::CM_DEFLATE])) {
-                                $errors[] = sprintf("Invalid compression value '%s' for archive task.", $compression);
-                            }
-                        }
-
                         break;
                     default:
                         $errors[] = sprintf("Unknown task type '%s' in target '%s'.", $task['type'], $targetName);
