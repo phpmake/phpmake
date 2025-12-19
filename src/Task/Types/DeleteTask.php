@@ -93,14 +93,22 @@ final class DeleteTask extends BaseTask
     /**
      * Validate required task parameters.
      *
-     * Ensures presence of 'path' parameter before execution.
-     *
-     * @throws \Exception If required parameters are missing.
+     * @throws \Exception On any issue.
      */
     protected function validateParams(): void
     {
         if (!isset($this->params['path'])) {
             throw new \Exception("Missing 'path' parameter for delete task.");
+        }
+
+        $path = trim($this->params['path']);
+        $absolutePath = realpath($path) ?: $path;
+
+        // Critical safety checks.
+        $blacklisted = ['', '/', '.', '..', DIRECTORY_SEPARATOR];
+
+        if (in_array($path, $blacklisted) || in_array($absolutePath, $blacklisted)) {
+            throw new \Exception(sprintf("Safety Violation: Attempted to delete a protected or root directory: '%s'", $path));
         }
     }
 
