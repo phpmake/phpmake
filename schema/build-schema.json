@@ -103,10 +103,10 @@
         "create_directory": {
             "type": "object",
             "required": [
-                "dir"
+                "name"
             ],
             "properties": {
-                "dir": {
+                "name": {
                     "type": "string",
                     "description": "Path to the directory to create."
                 }
