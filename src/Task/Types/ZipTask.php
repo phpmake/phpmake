@@ -66,21 +66,38 @@ final class ZipTask extends BaseTask
      * @param string     $path              Source path to archive.
      * @param string     $baseDir           Base directory inside archive.
      */
-    private function addFilesToZip(ZipArchive $zip, string $path, string $baseDir = ''): void
+    private function addFilesToZip(ZipArchive $zip, string $source, string $baseDir = ''): void
     {
-        if (is_dir($path)) {
-            foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path)) as $file) {
-                if ($file->isFile()) {
-                    $basePath = rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-                    $relativePath = substr((string) $file->getPathname(), strlen($basePath));
-                    $zip->addFile(
-                        $file->getPathname(),
-                        $baseDir . $relativePath
-                    );
-                }
+        $source = realpath($source);
+
+        if ($source === false) {
+            throw new \Exception("Invalid source path: cannot resolve realpath.");
+        }
+
+        if (is_file($source)) {
+            $zip->addFile($source, basename($source));
+            return;
+        }
+
+        $source = rtrim($source, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($source, \FilesystemIterator::SKIP_DOTS)
+        );
+
+        foreach ($iterator as $file) {
+            if (!$file->isFile()) {
+                continue;
             }
-        } else {
-            $zip->addFile($path, basename($path));
+
+            $absolutePath = $file->getRealPath();
+            if ($absolutePath === false) {
+                continue; // skip unreadable files.
+            }
+
+            // Compute relative path inside archive.
+            $relativePath = substr((string) $absolutePath, strlen($source));
+            $archivePath = ltrim($baseDir . str_replace(DIRECTORY_SEPARATOR, '/', $relativePath), '/');
+            $zip->addFile($absolutePath, $archivePath);
         }
     }
 
