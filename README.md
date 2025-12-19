@@ -27,7 +27,9 @@ A PHP build automation tool using JSON configuration file.
 
 ## Overview
 
-A lightweight PHP-based build automation tool inspired by Linux Make & Apache Ant, using JSON configuration files. It supports common tasks like file operations, command execution, and dependency management with cross-platform compatibility (Windows/Linux/macOS).
+A lightweight PHP-based build automation tool inspired by Linux Make & Apache Ant, using JSON configuration files. It supports common tasks like file operations, command execution, and dependency management with cross-platform compatibility. (Windows/Linux/macOS)
+
+PHPMake is a well-architected, modern PHP build tool that follows best practices in design and implementation. Its modular structure, good testing, and clean API make it both robust and extendable. 
 
 ## Features
 
@@ -63,7 +65,7 @@ A lightweight PHP-based build automation tool inspired by Linux Make & Apache An
 |-----------------|---------------|-------------|----------------|
 | dev-main        | `main`        | 8.3         | Active         |
 | 2.*             | `main`        | 8.3         | Active         |
-| 1.*             | `main-php7.4` | 7.4         | Active         |
+| 1.*             | `main-php7.4` | 7.4         | Maintenance         |
 
 * **Active**: Full support
 * **Maintenance**: Bug/Security fixes only
