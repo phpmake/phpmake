@@ -12,7 +12,6 @@ A PHP build automation tool using JSON configuration file.
 * [Overview](#overview)
 * [Features](#features)
 * [Requirements](#requirements)
-* [Diagrams](#diagrams)
 * [Installation](#installation)
 * [Usage](#usage)
 * [FAQ](#faq)
@@ -32,26 +31,26 @@ A lightweight PHP-based build automation tool inspired by Linux Make & Apache An
 
 ## Features
 
-* **Dependency-free**: No dependency-hell and even dependency-free!
-* **JSON configuration**: Define build processes in human-readable JSON
-* **Task dependencies**: Specify execution order with dependencies
-* **Cross-platform**: Works on Microsoft Windows & GNU+Linux
-* **Built-in tasks**:
+* No dependency-hell and even dependency-free!
+* Define build processes in human-readable JSON
+* Specify execution order with dependencies
+* Works on Microsoft Windows & GNU+Linux
+* Built-in tasks:
   * `create_directory` (create directories)
   * `delete` (remove files/directories)
   * `copy` (file/directory copying)
   * `exec` (execute shell commands)
   * `echo` (output messages)
   * `archive` (archive/compress a file or directory)
-* **Logging options**:
+* Logging options:
   * `-d`/`--debug` for detailed logs
   * `--no-log` to disable file logging
   * `-s`/`--silent` for minimal output
-* **Validation**: `--validate-build` to check configuration syntax
-* **System diagnostics**: `--diagnostics` to show environment info
-* **DevOps ready**: CI/CD pipeline integration
-* **Supported PHP:** 7.4 & 8.3
-* **Supported platforms:** Microsoft Windows, GNU+Linux, Apple MacOS
+* `--validate-build` to check configuration syntax
+* `--diagnostics` to show environment info
+* CI/CD pipeline integration
+* 7.4 & 8.3
+* Microsoft Windows, GNU+Linux, Apple MacOS
 
 ## Requirements
 
@@ -69,71 +68,6 @@ A lightweight PHP-based build automation tool inspired by Linux Make & Apache An
 * **Active**: Full support
 * **Maintenance**: Bug/Security fixes only
 * **EOL**: Unsupported
-
-## Diagrams
-
-### Component diagram
-
-```sh
-+--------------------+      +-------------------+
-| Build Configuration|<----+| CLI Parser        |
-| (build.json schema)|      | (Parses arguments)|
-+--------------------+-|    +-------------------+
-           ^           |           |
-           |           |           v
-           |           |  +-------------------+
-           |           +->| Build Executor    |
-           |              | (Runs targets)    |
-           |              +-------------------+
-           |                      |
-           |                      v
-           |              +---------------------+
-           +------------->| Task Factory        |
-                          | (Instantiates tasks)|
-                          +---------------------+
-                                |
-                                v
-                          +-----------------------------+
-                          | Tasks (delete/copy/exec/...)|
-                          +-----------------------------+
-                                |
-                                v
-                          +----------------------+
-                          | Logger               |
-                          | (Handles output/logs)|
-                          +----------------------+
-                                ^
-                                |
-                          +-------------------------+
-                          | Validator               |
-                          | (Checks config validity)|
-                          +-------------------------+
-```
-
-### Workflow diagram
-
-```sh
-+-------------------+
-| 1. CLI Input      |
-| * Parse arguments |
-+-------v----------+
-| 2. Load/Validate  |
-| * Read build.json |
-| * Validate schema |
-+-------v----------+
-| 3. Dependency     |
-|  Resolution       |
-| * Determine order |
-+-------v----------+
-| 4. Execute Tasks  |
-| * Run tasks       |
-| * Handle errors   |
-+-------v----------+
-| 5. Output Results |
-| * Show logs       |
-| * Exit status     |
-+-------------------+
-```
 
 ## Installation
 
