@@ -2,8 +2,6 @@
 
 namespace PhpMake\Build;
 
-use ZipArchive;
-
 /**
  * BuildValidator Class
  *

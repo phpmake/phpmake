@@ -9,7 +9,7 @@ use ZipArchive;
  * ZipTask Class
  *
  * Implements a task for archiving files and directories into a ZIP archive
- * within PHPMake tool.
+ *  within PHPMake tool.
  *
  * @package    PHPMake
  * @subpackage Task
@@ -24,7 +24,7 @@ final class ZipTask extends BaseTask
      * @param bool $debug  Enable debug mode for detailed logging.
      * @param bool $silent Suppress output if enabled.
      *
-     * @return bool Status of ZIP archive creation (true if successful, false otherwise).
+     * @return bool Status of ZIP archive creation. (true if successful, false otherwise)
      *
      * @throws \Exception If required parameters are missing or if ZIP creation fails.
      */

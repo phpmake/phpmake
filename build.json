@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "targets": {
         "clean": {
-            "description": "Remove artifacts directory",
+            "description": "Remove artifacts directory.",
             "tasks": [
                 {
                     "type": "delete",
@@ -15,7 +15,7 @@
             ]
         },
         "build": {
-            "description": "Build project files",
+            "description": "Build project files.",
             "depends": [
                 "clean"
             ],
@@ -36,7 +36,7 @@
                 {
                     "type": "echo",
                     "params": {
-                        "message": "Build completed successfully"
+                        "message": "Build completed successfully."
                     }
                 }
             ]
@@ -56,7 +56,7 @@
             ]
         },
         "package": {
-            "description": "Create distributable package",
+            "description": "Create distributable package.",
             "depends": [
                 "test"
             ],

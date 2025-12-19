@@ -5,7 +5,6 @@ namespace PhpMake\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use PhpMake\Task\Types\ZipTask;
 use PhpMake\Task\BaseTask;
-use ZipArchive;
 
 final class ZipTaskTest extends TestCase
 {

@@ -12,19 +12,19 @@
     "properties": {
         "name": {
             "type": "string",
-            "description": "The name of the project being built."
+            "description": "The name of project being built."
         },
         "description": {
             "type": "string",
-            "description": "A short description of the build configuration or project."
+            "description": "A short description of build configuration or project."
         },
         "version": {
             "type": "string",
-            "description": "The version of the project. Follows semantic versioning (e.g., '2.0.0')."
+            "description": "The version of project. Follows semantic versioning (e.g., '2.0.0')."
         },
         "default_target": {
             "type": "string",
-            "description": "The target to run if none is specified on the command line."
+            "description": "The target to run if none is specified on command line."
         },
         "targets": {
             "type": "object",
