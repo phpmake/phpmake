@@ -29,7 +29,7 @@ A PHP build automation tool using JSON configuration file.
 
 A lightweight PHP-based build automation tool inspired by Linux Make & Apache Ant, using JSON configuration files. It supports common tasks like file operations, command execution, and dependency management with cross-platform compatibility. (Windows/Linux/macOS)
 
-PHPMake is a well-architected, modern PHP build tool that follows best practices in design and implementation. Its modular structure, good testing, and clean API make it both robust and extendable. 
+PHPMake is a well-architected, modern PHP build tool that follows best practices in design and implementation. Its modular structure, good testing, and clean API make it both robust and extendable.
 
 ## Features
 
@@ -181,7 +181,7 @@ vendor/bin/phpunit tests/
 
 | Task type          | Parameters                      | Description            |
 | ------------------ | ------------------------------- | ---------------------- |
-| `create_directory` | `name` (string)                  | Create directory       |
+| `create_directory` | `name` (string)                 | Create directory       |
 | `delete`           | `path` (string)                 | Delete file/directory  |
 | `copy`             | `source` (string), `dest` (string) | Copy files/directories |
 | `exec`             | `command` (string)              | Execute shell command  |
