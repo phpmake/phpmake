@@ -60,36 +60,46 @@ final class BuildValidator
                         }
 
                         break;
+
                     case 'create_directory':
                         if (!isset($task['params']['name'])) {
                             $errors[] = sprintf("CreateDirectory task in target '%s' missing 'name' parameter.", $targetName);
                         }
 
                         break;
+
                     case 'copy':
                         if (!isset($task['params']['source']) || !isset($task['params']['dest'])) {
                             $errors[] = sprintf("Copy task in target '%s' missing 'source' or 'dest'.", $targetName);
+                        } elseif (!file_exists($task['params']['source'])) {
+                            $errors[] = sprintf("Source path '%s' in target '%s' does not exist.", $task['params']['source'], $targetName);
                         }
 
                         break;
+
                     case 'exec':
                         if (!isset($task['params']['command'])) {
                             $errors[] = sprintf("Exec task in target '%s' missing 'command'.", $targetName);
                         }
 
                         break;
+
                     case 'echo':
                         if (!isset($task['params']['message'])) {
                             $errors[] = sprintf("Echo task in target '%s' missing 'message'.", $targetName);
                         }
 
                         break;
+
                     case 'archive':
                         if (!isset($task['params']['source']) || !isset($task['params']['output'])) {
                             $errors[] = sprintf("Archive task in target '%s' missing required parameters.", $targetName);
+                        } elseif (!file_exists($task['params']['source'])) {
+                            $errors[] = sprintf("Source path '%s' in target '%s' does not exist.", $task['params']['source'], $targetName);
                         }
 
                         break;
+
                     default:
                         $errors[] = sprintf("Unknown task type '%s' in target '%s'.", $task['type'], $targetName);
                 }
