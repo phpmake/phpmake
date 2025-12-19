@@ -37,7 +37,7 @@ jobs:
         run: sudo apt-get install -y libxml2-utils yamllint jq
 
       - name: Clone project
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Lint YAML files
         run: |
