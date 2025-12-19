@@ -93,7 +93,7 @@ composer global require phpmake/phpmake
     {
         "name": "MyProject",
         "description": "Sample project build configuration",
-        "version": "2.0.0",
+        "version": "2.0.1",
         "targets": {
             "clean": {
                 "tasks": [{ "type": "delete", "params": { "path": "build" } }]

@@ -20,7 +20,7 @@
         },
         "version": {
             "type": "string",
-            "description": "The version of project. Follows semantic versioning (e.g., '2.0.0')."
+            "description": "The version of project. Follows semantic versioning."
         },
         "default_target": {
             "type": "string",

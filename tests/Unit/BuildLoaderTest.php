@@ -21,7 +21,7 @@ final class BuildLoaderTest extends TestCase
                 {
                   "name": "TestProject",
                   "description": "Test",
-                  "version": "2.0.0",
+                  "version": "2.0.1",
                   "targets": {
                     "test_target": {
                       "tasks": [
