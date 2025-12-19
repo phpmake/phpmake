@@ -30,20 +30,30 @@ final class ExecTask extends BaseTask
     protected function runTask(bool $debug, bool $silent): bool
     {
         $command = $this->params['command'] ?? '';
+        $args = $this->params['args'] ?? [];
+
         if (empty($command)) {
             throw new \Exception("Missing 'command' parameter.");
         }
 
-        // Sanitize command and arguments.
-        $command = escapeshellcmd($command);
+        // Escape the base command.
+        $sanitizedCommand = escapeshellcmd($command);
+
+        // Escape each argument individually and append to command.
+        if (is_array($args)) {
+            foreach ($args as $arg) {
+                $sanitizedCommand .= ' ' . escapeshellarg((string) $arg);
+            }
+        }
+
         $output = [];
         $ret = 0;
 
         if ($this->logger->isDebugEnabled()) {
-            $this->logger->debug(sprintf('Executing sanitized command: %s.', $command));
+            $this->logger->debug(sprintf('Executing command: %s', $sanitizedCommand));
         }
 
-        exec($command, $output, $ret);
+        exec($sanitizedCommand, $output, $ret);
 
         foreach ($output as $line) {
             $this->logger->info($line);
