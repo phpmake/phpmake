@@ -7,16 +7,14 @@ use Rector\ValueObject\PhpVersion;
 
 return RectorConfig::configure()
     ->withPaths([
-        __DIR__ . '/bin',
-        __DIR__ . '/src',
-        __DIR__ . '/tests',
+        __DIR__ . '/.'
     ])
     ->withSkip([
         __DIR__ . '/.git',
         __DIR__ . '/.github',
+        __DIR__ . '/vendor',
         __DIR__ . '/resources',
         __DIR__ . '/schema',
-        __DIR__ . '/vendor',
     ])
     ->withRootFiles()
     ->withIndent(' ', 4)
