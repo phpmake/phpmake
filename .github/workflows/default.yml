@@ -95,6 +95,9 @@ jobs:
       - name: Check coding style
         run: composer format-check
 
+      - name: Clear packages cache
+        run: composer clear-cache
+
       - name: Security check
         run: composer audit
 
