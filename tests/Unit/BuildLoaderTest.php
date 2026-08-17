@@ -12,7 +12,7 @@ final class BuildLoaderTest extends TestCase
 {
     private string $buildFile = __DIR__ . '/build.json';
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         // Create a valid build.json
         file_put_contents(
@@ -35,7 +35,7 @@ final class BuildLoaderTest extends TestCase
         );
     }
 
-    public function tearDown(): void
+    protected function tearDown(): void
     {
         unlink($this->buildFile);
     }
