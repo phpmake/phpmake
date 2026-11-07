@@ -1,3 +1,14 @@
+PHPMake 2.0.2 - 2026-11-07
+-------------------------
+* Fix Composer autoload path discovery for installed packages.
+* Fix --init: run before loading build.json; resolve sample from package path.
+* Fix create_directory: treat already-existing directory as success.
+* Fix JSON schema copy task parameter name (source, not src).
+* Add path safety checks for filesystem tasks (project CWD boundary).
+* Harden Logger rotation with file locking and max-file cleanup.
+* Sync README/FAQ task parameters and CLI flags with runtime behavior.
+* Update tests for path safety and in-project temp paths.
+
 PHPMake 2.0.1 - 2025-5-18
 -------------------------
 * Fix compression bug.
