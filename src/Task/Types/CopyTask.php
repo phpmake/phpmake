@@ -56,6 +56,11 @@ final class CopyTask extends BaseTask
      */
     private function copyFile(string $source, string $dest): bool
     {
+        $destDir = dirname($dest);
+        if ($destDir !== '.' && !is_dir($destDir)) {
+            mkdir($destDir, 0o777, true);
+        }
+
         if (copy($source, $dest)) {
             $this->logger->debug(sprintf("Copied file '%s' → '%s'.", $source, $dest));
             return true;
@@ -119,5 +124,8 @@ final class CopyTask extends BaseTask
         if (!isset($this->params['source']) || !isset($this->params['dest'])) {
             throw new \Exception("Missing 'source' or 'dest' parameter for copy task.");
         }
+
+        $this->assertSafePath((string) $this->params['source'], 'copy source');
+        $this->assertSafePath((string) $this->params['dest'], 'copy dest');
     }
 }

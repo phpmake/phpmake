@@ -19,6 +19,7 @@ final class CreateDirectoryTask extends BaseTask
      * Execute directory creation task.
      *
      * Creates specified directory with appropriate permissions.
+     * Treats an already-existing directory as success.
      *
      * @param bool $debug  Enable debug mode for detailed logging.
      * @param bool $silent Suppress output if enabled.
@@ -35,7 +36,12 @@ final class CreateDirectoryTask extends BaseTask
             throw new \Exception("Missing 'name' parameter.");
         }
 
-        if (mkdir($dirName, 0o777, true)) {
+        if (is_dir($dirName)) {
+            $this->logger->debug(sprintf("Directory '%s' already exists.", $dirName));
+            return true;
+        }
+
+        if (mkdir($dirName, 0o777, true) || is_dir($dirName)) {
             $this->logger->debug(sprintf("Created directory '%s'.", $dirName));
             return true;
         }
@@ -48,6 +54,8 @@ final class CreateDirectoryTask extends BaseTask
         if (!isset($this->params['name'])) {
             throw new \Exception("Missing 'name' parameter for create_directory task.");
         }
+
+        $this->assertSafePath((string) $this->params['name'], 'create_directory name');
     }
 
     /**

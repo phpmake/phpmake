@@ -41,6 +41,11 @@ final class ZipTask extends BaseTask
             throw new \Exception(sprintf("Source '%s' does not exist.", $source));
         }
 
+        $outputDir = dirname($output);
+        if ($outputDir !== '.' && !is_dir($outputDir)) {
+            mkdir($outputDir, 0o777, true);
+        }
+
         $zip = new ZipArchive();
 
         if (!$zip->open($output, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
@@ -62,9 +67,9 @@ final class ZipTask extends BaseTask
      *
      * Traverses directories and includes files in archive.
      *
-     * @param ZipArchive $zip               The ZIP archive instance.
-     * @param string     $path              Source path to archive.
-     * @param string     $baseDir           Base directory inside archive.
+     * @param ZipArchive $zip     The ZIP archive instance.
+     * @param string     $source  Source path to archive.
+     * @param string     $baseDir Base directory inside archive.
      */
     private function addFilesToZip(ZipArchive $zip, string $source, string $baseDir = ''): void
     {
@@ -91,10 +96,9 @@ final class ZipTask extends BaseTask
 
             $absolutePath = $file->getRealPath();
             if ($absolutePath === false) {
-                continue; // skip unreadable files.
+                continue;
             }
 
-            // Compute relative path inside archive.
             $relativePath = substr((string) $absolutePath, strlen($source));
             $archivePath = ltrim($baseDir . str_replace(DIRECTORY_SEPARATOR, '/', $relativePath), '/');
             $zip->addFile($absolutePath, $archivePath);
@@ -126,5 +130,8 @@ final class ZipTask extends BaseTask
         if (!isset($this->params['source']) || !isset($this->params['output'])) {
             throw new \Exception('Missing required parameters for zip task.');
         }
+
+        $this->assertSafePath((string) $this->params['source'], 'archive source');
+        $this->assertSafePath((string) $this->params['output'], 'archive output');
     }
 }
