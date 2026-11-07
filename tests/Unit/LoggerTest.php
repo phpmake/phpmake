@@ -195,11 +195,14 @@ final class LoggerTest extends TestCase
     public function testZipTask(): void
     {
         // Arrange — paths must stay inside the project directory.
-        $tempDir = $this->makeTestDir('zipDir');
-        $fileInDir = $tempDir . DIRECTORY_SEPARATOR . 'file.txt';
+        // Keep source dir and output zip as siblings so the archive is not written into the source tree.
+        $baseDir = $this->makeTestDir('zip');
+        $sourceDir = $baseDir . DIRECTORY_SEPARATOR . 'src';
+        mkdir($sourceDir);
+        $fileInDir = $sourceDir . DIRECTORY_SEPARATOR . 'file.txt';
         file_put_contents($fileInDir, 'zip content');
-        $zipFile = $tempDir . DIRECTORY_SEPARATOR . 'out.zip';
-        $task = new ZipTask(['source' => $tempDir, 'output' => $zipFile], $this->logger);
+        $zipFile = $baseDir . DIRECTORY_SEPARATOR . 'out.zip';
+        $task = new ZipTask(['source' => $sourceDir, 'output' => $zipFile], $this->logger);
         // Action
         $result = $task->execute(false, true);
         // Assert
@@ -208,7 +211,8 @@ final class LoggerTest extends TestCase
         // Cleanup.
         unlink($zipFile);
         unlink($fileInDir);
-        rmdir($tempDir);
+        rmdir($sourceDir);
+        rmdir($baseDir);
     }
 
     /**
