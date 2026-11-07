@@ -19,6 +19,10 @@ final class Logger
      */
     private string $logFile = 'build.log';
 
+    private const int MAX_SIZE = 10 * 1024 * 1024; // 10MB.
+
+    private const int MAX_FILES = 5;
+
     /**
      * Constructor
      *
@@ -86,37 +90,98 @@ final class Logger
     }
 
     /**
-     * Write log message to file.
+     * Write log message to file under an exclusive lock.
      *
-     * Appends message to log file unless no-log mode is enabled.
+     * Rotates the log when size exceeds the limit, keeps at most MAX_FILES
+     * rotated files, and deletes older ones.
      *
      * @param string $message The message to log.
      */
     private function logToFile(string $message): void
     {
-        $this->rotateLogs();
-        file_put_contents(
-            $this->logFile,
-            date('Y-m-d H:i:s') . (' ' . $message) . PHP_EOL,
-            FILE_APPEND
-        );
-    }
+        $line = date('Y-m-d H:i:s') . ' ' . $message . PHP_EOL;
 
-    private function rotateLogs(): void
-    {
-        $maxSize = 10 * 1024 * 1024; // 10MB.
-        $maxFiles = 5;
+        $fp = @fopen($this->logFile, 'c+');
+        if ($fp === false) {
+            return;
+        }
 
-        if (file_exists($this->logFile) && filesize($this->logFile) >= $maxSize) {
-            for ($i = $maxFiles - 1; $i >= 1; $i--) {
-                $old = sprintf('%s.%d', $this->logFile, $i);
-                $new = $this->logFile . '.' . ($i + 1);
-                if (file_exists($old)) {
-                    rename($old, $new);
+        try {
+            if (!flock($fp, LOCK_EX)) {
+                return;
+            }
+
+            // Move to end to measure current size accurately under lock.
+            fseek($fp, 0, SEEK_END);
+            $size = ftell($fp);
+
+            if ($size !== false && $size >= self::MAX_SIZE) {
+                flock($fp, LOCK_UN);
+                fclose($fp);
+                $this->rotateLogs();
+
+                $fp = @fopen($this->logFile, 'a');
+                if ($fp === false) {
+                    return;
+                }
+                if (!flock($fp, LOCK_EX)) {
+                    fclose($fp);
+                    return;
                 }
             }
 
-            rename($this->logFile, $this->logFile . '.1');
+            fwrite($fp, $line);
+            fflush($fp);
+            flock($fp, LOCK_UN);
+        } finally {
+            if (is_resource($fp)) {
+                fclose($fp);
+            }
+        }
+    }
+
+    /**
+     * Rotate log files under a lock file to avoid concurrent corruption.
+     * Keeps at most MAX_FILES rotated copies; deletes the oldest.
+     */
+    private function rotateLogs(): void
+    {
+        $lockFile = $this->logFile . '.rotate.lock';
+        $lockFp = @fopen($lockFile, 'c');
+        if ($lockFp === false) {
+            return;
+        }
+
+        try {
+            if (!flock($lockFp, LOCK_EX)) {
+                return;
+            }
+
+            // Re-check size after acquiring rotate lock (another process may have rotated).
+            if (!file_exists($this->logFile) || filesize($this->logFile) < self::MAX_SIZE) {
+                return;
+            }
+
+            // Drop the oldest rotated file beyond the limit.
+            $oldest = $this->logFile . '.' . self::MAX_FILES;
+            if (file_exists($oldest)) {
+                @unlink($oldest);
+            }
+
+            // Shift: .(n) -> .(n+1)
+            for ($i = self::MAX_FILES - 1; $i >= 1; $i--) {
+                $from = $this->logFile . '.' . $i;
+                $to = $this->logFile . '.' . ($i + 1);
+                if (file_exists($from)) {
+                    @rename($from, $to);
+                }
+            }
+
+            @rename($this->logFile, $this->logFile . '.1');
+        } finally {
+            flock($lockFp, LOCK_UN);
+            fclose($lockFp);
+            @unlink($lockFile);
         }
     }
 

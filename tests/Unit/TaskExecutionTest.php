@@ -68,8 +68,8 @@ final class TaskExecutionTest extends TestCase
      */
     public function testCreateDirectoryTask(): void
     {
-        // Arrange
-        $tempDir = sys_get_temp_dir() . '/test_dir';
+        // Arrange — path must stay inside the project directory.
+        $tempDir = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-test-dir-' . uniqid('', true);
         $params = ['name' => $tempDir];
         // Action
         $task = new CreateDirectoryTask($params, $this->logger);

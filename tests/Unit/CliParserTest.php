@@ -115,6 +115,24 @@ final class CliParserTest extends TestCase
      *
      * @return void
      */
+    public function testParseInitFlag(): void
+    {
+        // Arrange
+        $args = ['script.php', '--init'];
+        $parser = new CliParser();
+        // Action
+        $result = $parser->parse($args);
+        // Assert
+        $this->assertTrue((bool) $result['init']);
+    }
+
+    /**
+     * @test
+     *
+     * @small
+     *
+     * @return void
+     */
     public function testParseTarget(): void
     {
         // Arrange

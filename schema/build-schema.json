@@ -127,11 +127,11 @@
         "copy": {
             "type": "object",
             "required": [
-                "src",
+                "source",
                 "dest"
             ],
             "properties": {
-                "src": {
+                "source": {
                     "type": "string",
                     "description": "Source path to copy from."
                 },

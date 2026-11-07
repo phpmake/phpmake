@@ -61,6 +61,17 @@ final class LoggerTest extends TestCase
     }
 
     /**
+     * Create a unique directory under the project CWD for safe filesystem tests.
+     */
+    private function makeTestDir(string $prefix): string
+    {
+        $dir = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-test-' . $prefix . '-' . uniqid('', true);
+        mkdir($dir, 0o777, true);
+
+        return $dir;
+    }
+
+    /**
      * @test
      *
      * @small
@@ -108,9 +119,9 @@ final class LoggerTest extends TestCase
      */
     public function testDeleteTask(): void
     {
-        // Arrange
-        // Test file deletion.
-        $tempFile = tempnam(sys_get_temp_dir(), 'del_');
+        // Arrange — paths must stay inside the project directory.
+        $baseDir = $this->makeTestDir('del');
+        $tempFile = $baseDir . DIRECTORY_SEPARATOR . 'file.txt';
         file_put_contents($tempFile, 'to be deleted');
         $deleteTask = new DeleteTask(['path' => $tempFile], $this->logger);
         // Action
@@ -118,10 +129,9 @@ final class LoggerTest extends TestCase
         // Assert
         $this->assertTrue($result);
         $this->assertFileDoesNotExist($tempFile);
-        // Arrange
-        // Test directory deletion.
-        $tempDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . uniqid('delDir_');
-        mkdir($tempDir);
+
+        // Arrange — directory deletion
+        $tempDir = $this->makeTestDir('delDir');
         $fileInDir = $tempDir . DIRECTORY_SEPARATOR . 'file.txt';
         file_put_contents($fileInDir, 'content');
         $deleteTaskDir = new DeleteTask(['path' => $tempDir], $this->logger);
@@ -130,6 +140,9 @@ final class LoggerTest extends TestCase
         // Assert
         $this->assertTrue($resultDir);
         $this->assertDirectoryDoesNotExist($tempDir);
+
+        // Cleanup base dir from first case
+        @rmdir($baseDir);
     }
 
     /**
@@ -181,15 +194,15 @@ final class LoggerTest extends TestCase
      */
     public function testZipTask(): void
     {
-        // Arrange
-        // Create a temporary directory with a file.
-        $tempDir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . uniqid('zipDir_');
-        mkdir($tempDir);
-        $fileInDir = $tempDir . DIRECTORY_SEPARATOR . 'file.txt';
+        // Arrange — paths must stay inside the project directory.
+        // Keep source dir and output zip as siblings so the archive is not written into the source tree.
+        $baseDir = $this->makeTestDir('zip');
+        $sourceDir = $baseDir . DIRECTORY_SEPARATOR . 'src';
+        mkdir($sourceDir);
+        $fileInDir = $sourceDir . DIRECTORY_SEPARATOR . 'file.txt';
         file_put_contents($fileInDir, 'zip content');
-        // Specify a temporary zip file output.
-        $zipFile = tempnam(sys_get_temp_dir(), 'zip_') . '.zip';
-        $task = new ZipTask(['source' => $tempDir, 'output' => $zipFile], $this->logger);
+        $zipFile = $baseDir . DIRECTORY_SEPARATOR . 'out.zip';
+        $task = new ZipTask(['source' => $sourceDir, 'output' => $zipFile], $this->logger);
         // Action
         $result = $task->execute(false, true);
         // Assert
@@ -198,7 +211,8 @@ final class LoggerTest extends TestCase
         // Cleanup.
         unlink($zipFile);
         unlink($fileInDir);
-        rmdir($tempDir);
+        rmdir($sourceDir);
+        rmdir($baseDir);
     }
 
     /**

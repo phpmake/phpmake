@@ -44,14 +44,16 @@ PHPMake is a well-architected, modern PHP build tool that follows best practices
   * `exec` (execute shell commands)
   * `echo` (output messages)
   * `archive` (archive/compress a file or directory)
+* Filesystem tasks are restricted to paths inside the project directory (CWD)
 * Logging options:
   * `-d`/`--debug` for detailed logs
-  * `--no-log` to disable file logging
+  * `-nl`/`--no-log` to disable file logging
   * `-s`/`--silent` for minimal output
-* `--validate-build` to check configuration syntax
+* `-vb`/`--validate-build` to check configuration syntax
 * `--diagnostics` to show environment info
+* `--init` to create a sample `build.json`
 * CI/CD pipeline integration
-* 7.4 & 8.3
+* PHP 8.3 (active) and 7.4 (maintenance branch)
 * Microsoft Windows, GNU+Linux, Apple MacOS
 
 ## Requirements
@@ -87,7 +89,13 @@ composer global require phpmake/phpmake
 
 ## Usage
 
-1. **Create a `build.json` file**:
+1. **Create a `build.json` file** (or generate a sample):
+
+    ```sh
+    php vendor/bin/phpmake --init
+    ```
+
+    Example configuration:
 
     ```json
     {
@@ -135,7 +143,7 @@ Or
 
 ```sh
 # Validate configuration.
-php vendor/bin/phpmake --validate
+php vendor/bin/phpmake --validate-build
 
 # Run default target with debug logging.
 php vendor/bin/phpmake --debug
@@ -164,29 +172,31 @@ vendor/bin/phpunit tests/
 
 ### Commands
 
-| Command                 | Description             |
-| ----------------------- | ----------------------- |
-| `phpmake`               | Run default target      |
-| `phpmake <target>`      | Run specific target     |
-| `phpmake --help`        | Show help menu          |
-| `phpmake --version`     | Show PHPMake version    |
-| `phpmake --validate`    | Validate build file     |
-| `phpmake --diagnostics` | Show system information |
-| `phpmake -d/--debug`    | Enable debug/verbose logging |
-| `phpmake -nl--no-log`   | Disable file logging         |
-| `phpmake -s/--silent`   | Suppress console output      |
-| `phpmake --init`        | Create sample build.json file|
+| Command                      | Description                      |
+| ---------------------------- | -------------------------------- |
+| `phpmake`                    | Run default target               |
+| `phpmake <target>`           | Run specific target              |
+| `phpmake --help` / `-h`      | Show help menu                   |
+| `phpmake --version` / `-v`   | Show PHPMake version             |
+| `phpmake --validate-build` / `-vb` | Validate build file        |
+| `phpmake --diagnostics`      | Show system information          |
+| `phpmake -d` / `--debug`     | Enable debug/verbose logging     |
+| `phpmake -nl` / `--no-log`   | Disable file logging             |
+| `phpmake -s` / `--silent`    | Suppress console output          |
+| `phpmake --init`             | Create sample build.json file    |
 
 ### Supported tasks
 
-| Task type          | Parameters                      | Description            |
-| ------------------ | ------------------------------- | ---------------------- |
-| `create_directory` | `name` (string)                 | Create directory       |
-| `delete`           | `path` (string)                 | Delete file/directory  |
-| `copy`             | `source` (string), `dest` (string) | Copy files/directories |
-| `exec`             | `command` (string)              | Execute shell command  |
-| `echo`             | `message` (string)              | Output message         |
-| `archive`          | `dir` (string)                  | Archive a directory    |
+| Task type          | Parameters                                   | Description            |
+| ------------------ | -------------------------------------------- | ---------------------- |
+| `create_directory` | `name` (string)                              | Create directory       |
+| `delete`           | `path` (string)                              | Delete file/directory  |
+| `copy`             | `source` (string), `dest` (string)           | Copy files/directories |
+| `exec`             | `command` (string)                           | Execute shell command  |
+| `echo`             | `message` (string)                           | Output message         |
+| `archive`          | `source` (string), `output` (string)         | Archive a file/directory to ZIP |
+
+Filesystem task paths must resolve inside the project working directory. Paths that escape the project (for example via `..` or absolute paths outside CWD) are rejected.
 
 ### Example build file
 

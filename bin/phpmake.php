@@ -16,7 +16,26 @@
  * @throws \Exception If an error occurs during execution.
  */
 
-require __DIR__ . '/../vendor/autoload.php';
+// Support both development (package root) and Composer-installed layouts.
+$autoloadCandidates = [
+    __DIR__ . '/../vendor/autoload.php', // development: package/vendor/autoload.php
+    __DIR__ . '/../../autoload.php',     // installed:   vendor/autoload.php
+];
+
+$autoload = null;
+foreach ($autoloadCandidates as $candidate) {
+    if (file_exists($candidate)) {
+        $autoload = $candidate;
+        break;
+    }
+}
+
+if ($autoload === null) {
+    fwrite(STDERR, "Error: Unable to locate Composer autoloader.\n");
+    exit(1);
+}
+
+require $autoload;
 
 use PhpMake\Utilities\Logger;
 use PhpMake\Cli\CliParser;
@@ -47,6 +66,43 @@ try {
     if ($args['diagnostics']) {
         CliParser::showDiagnostics();
         exit(0);
+    }
+
+    // Handle --init early (must not require an existing build.json).
+    if ($args['init']) {
+        // Prefer sample shipped with the package.
+        $sampleCandidates = [
+            __DIR__ . '/../build.json.example', // development / installed package
+            getcwd() . '/build.json.example',  // fallback: current directory
+        ];
+
+        $sampleFile = null;
+        foreach ($sampleCandidates as $candidate) {
+            if (file_exists($candidate)) {
+                $sampleFile = $candidate;
+                break;
+            }
+        }
+
+        $destFile = getcwd() . DIRECTORY_SEPARATOR . 'build.json';
+
+        if (file_exists($destFile)) {
+            fwrite(STDERR, "Error: '{$destFile}' already exists.\n");
+            exit(1);
+        }
+
+        if ($sampleFile === null) {
+            fwrite(STDERR, "Error: Sample config 'build.json.example' not found.\n");
+            exit(1);
+        }
+
+        if (copy($sampleFile, $destFile)) {
+            echo "Sample build.json created successfully.\n";
+            exit(0);
+        }
+
+        fwrite(STDERR, "Error: Failed to create build.json.\n");
+        exit(1);
     }
 
     // Handle validation flag.
@@ -103,26 +159,6 @@ try {
         $exitCode === 0
             ? $logger->info('Build completed successfully.')
             : $logger->error('Build failed.');
-    }
-
-    if ($args['init']) {
-        $sampleFile = 'build.json.example';
-        $destFile = getcwd() . '/build.json';
-        if (file_exists($destFile)) {
-            fwrite(STDERR, "Error: '{$destFile}' already exists.\n");
-            exit(1);
-        }
-        if (!file_exists($sampleFile)) {
-            fwrite(STDERR, "Error: Sample config '{$sampleFile}' not found.\n");
-            exit(1);
-        }
-        if (copy($sampleFile, $destFile)) {
-            echo "Sample build.json created successfully.\n";
-            exit(0);
-        } else {
-            fwrite(STDERR, "Error: Failed to create build.json.\n");
-            exit(1);
-        }
     }
 
     exit($exitCode);
