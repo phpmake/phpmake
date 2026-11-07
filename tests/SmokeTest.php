@@ -240,13 +240,16 @@ namespace PhpMake\Tests {
          */
         public function testCopyTask(): void
         {
-            // Arrange
-            // Create a temporary source file.
-            $sourceFile = tempnam(sys_get_temp_dir(), 'src_');
+            // Arrange — use paths under CWD so path-safety checks allow them.
+            $baseDir = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-test';
+            if (!is_dir($baseDir)) {
+                mkdir($baseDir, 0o777, true);
+            }
+
+            $sourceFile = $baseDir . DIRECTORY_SEPARATOR . 'src_' . uniqid('', true) . '.txt';
+            $destFile = $baseDir . DIRECTORY_SEPARATOR . 'dest_' . uniqid('', true) . '.txt';
             file_put_contents($sourceFile, 'Test copy');
-            // Create a destination path and ensure it does not exist.
-            $destFile = tempnam(sys_get_temp_dir(), 'dest_');
-            unlink($destFile);
+
             $copyTask = new CopyTask(['source' => $sourceFile, 'dest' => $destFile], $this->logger);
             // Action
             $result = $copyTask->execute(false, true);
@@ -255,8 +258,9 @@ namespace PhpMake\Tests {
             $this->assertFileExists($destFile);
             $this->assertEquals('Test copy', file_get_contents($destFile));
             // Cleanup
-            unlink($sourceFile);
-            unlink($destFile);
+            @unlink($sourceFile);
+            @unlink($destFile);
+            @rmdir($baseDir);
         }
     }
 }
