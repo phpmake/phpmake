@@ -178,7 +178,7 @@ final class LoggerTest extends TestCase
     {
         // Arrange
         // Execute a simple echo command.
-        $task = new ExecTask(['command' => 'echo Hello'], $this->logger);
+        $task = new ExecTask(['command' => PHP_BINARY, 'args' => ['-r', 'echo "Hello";']], $this->logger);
         // Action
         $result = $task->execute(false, true);
         // Assert
