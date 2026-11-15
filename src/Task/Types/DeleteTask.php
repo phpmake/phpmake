@@ -63,7 +63,20 @@ final class DeleteTask extends BaseTask
         if (!isset($this->params['path']) || !is_string($this->params['path'])) {
             throw new \InvalidArgumentException("Delete task requires a string 'path' parameter.");
         }
-        $this->assertSafePath($this->params['path'], 'delete path');
+        $path = $this->params['path'];
+
+        // Deleting a symlink removes the link, not its target. Validate its
+        // parent directory instead of resolving the final symlink target.
+        if (is_link($path)) {
+            $parent = dirname($path);
+            if ($parent === '.') {
+                $parent = getcwd();
+            }
+            $this->assertSafePath($parent, 'delete path parent');
+            return;
+        }
+
+        $this->assertSafePath($path, 'delete path');
     }
 
     #[\Override]
