@@ -137,7 +137,9 @@ final class PathSafetyTest extends TestCase
         } finally {
             unlink($source . DIRECTORY_SEPARATOR . 'linked');
             rmdir($source);
-            if (is_dir($dest)) rmdir($dest);
+            if (is_dir($dest)) {
+                rmdir($dest);
+            }
             unlink($outside . DIRECTORY_SEPARATOR . 'secret.txt');
             rmdir($outside);
         }
