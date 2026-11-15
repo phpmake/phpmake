@@ -4,8 +4,10 @@ namespace PhpMake\Task;
 
 use PhpMake\Build\BuildConfiguration;
 
+    /** Executes the tasks belonging to targets in dependency order. */
 final class TaskExecutor
 {
+    /** Runs each target task and returns a process-style exit code. */
     public function executeTasks(
         BuildConfiguration $config,
         array $executionOrder,
