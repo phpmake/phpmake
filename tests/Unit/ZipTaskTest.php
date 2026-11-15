@@ -138,9 +138,15 @@ final class ZipTaskTest extends TestCase
             $this->assertSame('input.txt', $zip->getNameIndex(0));
             $zip->close();
         } finally {
-            if (file_exists($output)) unlink($output);
-            if (file_exists($root . DIRECTORY_SEPARATOR . 'input.txt')) unlink($root . DIRECTORY_SEPARATOR . 'input.txt');
-            if (is_dir($root)) rmdir($root);
+            if (file_exists($output)) {
+                unlink($output);
+            }
+            if (file_exists($root . DIRECTORY_SEPARATOR . 'input.txt')) {
+                unlink($root . DIRECTORY_SEPARATOR . 'input.txt');
+            }
+            if (is_dir($root)) {
+                rmdir($root);
+            }
         }
     }
 }
