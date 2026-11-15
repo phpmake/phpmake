@@ -19,7 +19,7 @@ final class ZipTask extends BaseTask
         }
 
         $outputDir = dirname($output);
-        if (!is_dir($outputDir) && !@mkdir($outputDir, 0777, true) && !is_dir($outputDir)) {
+        if (!is_dir($outputDir) && !@mkdir($outputDir, 0o777, true) && !is_dir($outputDir)) {
             throw new \RuntimeException(sprintf("Unable to create archive directory '%s'.", $outputDir));
         }
 
