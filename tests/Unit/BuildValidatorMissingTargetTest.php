@@ -7,8 +7,10 @@ namespace PhpMake\Tests\Unit;
 use PhpMake\Build\BuildValidator;
 use PHPUnit\Framework\TestCase;
 
+    /** Tests validation of a default target that is not defined. */
 final class BuildValidatorMissingTargetTest extends TestCase
 {
+    /** Reports an error when the configured default target is missing. */
     public function testInvalidDefaultTarget(): void
     {
         $config = [
