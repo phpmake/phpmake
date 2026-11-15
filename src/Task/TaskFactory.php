@@ -45,8 +45,14 @@ final readonly class TaskFactory
      */
     public function create(array $taskConfig): BaseTask
     {
-        $type = $taskConfig['type'];
+        $type = $taskConfig['type'] ?? null;
         $params = $taskConfig['params'] ?? [];
+        if (!is_string($type) || $type === '') {
+            throw new \\InvalidArgumentException("Task configuration requires a non-empty string 'type'.");
+        }
+        if (!is_array($params)) {
+            throw new \\InvalidArgumentException(sprintf("Parameters for task '%s' must be an array.", $type));
+        }
 
         return match ($type) {
             'delete' => new DeleteTask($params, $this->logger),
