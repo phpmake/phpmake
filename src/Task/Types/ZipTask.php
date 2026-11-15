@@ -86,7 +86,10 @@ final class ZipTask extends BaseTask
     }
 
     #[\Override]
-    public function getType(): string { return 'archive'; }
+    public function getType(): string
+    {
+        return 'archive';
+    }
 
     protected function validateParams(): void
     {
