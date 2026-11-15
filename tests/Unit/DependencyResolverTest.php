@@ -119,7 +119,7 @@ final class DependencyResolverTest extends TestCase
             ['build' => ['depends' => ['missing'], 'tasks' => []]],
             'build'
         );
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         (new DependencyResolver())->resolve($config, 'build');
     }
 }
