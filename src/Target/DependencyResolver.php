@@ -56,8 +56,14 @@ final class DependencyResolver
 
         $this->visited[] = $target;
         $targets = $config->getTargets();
-        $targetConfig = $targets[$target] ?? [];
+        if (!array_key_exists($target, $targets)) {
+            throw new \\InvalidArgumentException(sprintf("Target '%s' does not exist.", $target));
+        }
+        $targetConfig = $targets[$target];
         $depends = $targetConfig['depends'] ?? [];
+        if (!is_array($depends)) {
+            throw new \\InvalidArgumentException(sprintf("Dependencies for target '%s' must be an array.", $target));
+        }
         $order = [];
 
         foreach ($depends as $dep) {
