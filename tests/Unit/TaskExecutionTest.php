@@ -91,7 +91,7 @@ final class TaskExecutionTest extends TestCase
     public function testExecTask(): void
     {
         // Arrange
-        $params = ['command' => 'echo "Test"'];
+        $params = ['command' => PHP_BINARY, 'args' => ['-r', 'echo "Test";']];
         $task = new ExecTask($params, $this->logger);
         // Action
         $result = $task->execute(false, true);
