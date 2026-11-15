@@ -4,128 +4,84 @@ namespace PhpMake\Task\Types;
 
 use PhpMake\Task\BaseTask;
 
-/**
- * CopyTask Class
- *
- * Implements a task for copying files and directories within PHPMake tool.
- * It ensures files and directories are copied efficiently while handling errors.
- *
- * @package    PHPMake
- * @subpackage Task
- */
 final class CopyTask extends BaseTask
 {
-    /**
-     * Execute copy task.
-     *
-     * Determines if source is a file or directory and performs the appropriate copy operation.
-     *
-     * @param bool $debug  Enable debug mode for detailed logging.
-     * @param bool $silent Suppress output if enabled.
-     *
-     * @return bool Status of copy operation (true if successful, false otherwise).
-     *
-     * @throws \Exception If required parameters are missing.
-     */
     protected function runTask(bool $debug, bool $silent): bool
     {
-        $source = $this->params['source'] ?? '';
-        $dest = $this->params['dest'] ?? '';
-
-        if (empty($source) || empty($dest)) {
-            throw new \Exception("Missing 'source' or 'dest' parameter.");
+        $source = (string) ($this->params['source'] ?? '');
+        $dest = (string) ($this->params['dest'] ?? '');
+        if ($source === '' || $dest === '') {
+            throw new \InvalidArgumentException("Missing 'source' or 'dest' parameter.");
         }
-
-        if (!file_exists($source)) {
-            $this->logger->debug(sprintf("Source '%s' does not exist. Skipping copy.", $source));
-            return true;
+        if (is_link($source) || (!file_exists($source))) {
+            $this->logger->error(sprintf("Copy source '%s' does not exist or is a symlink.", $source));
+            return false;
         }
-
         return is_dir($source) ? $this->copyDirectory($source, $dest) : $this->copyFile($source, $dest);
     }
 
-    /**
-     * Copy a single file.
-     *
-     * Performs a file copy operation and logs success.
-     *
-     * @param string $source  Source file path.
-     * @param string $dest Destination file path.
-     *
-     * @return bool Status of the file copy operation.
-     */
     private function copyFile(string $source, string $dest): bool
     {
+        if (is_link($source)) {
+            $this->logger->error(sprintf("Refusing to copy symlink '%s'.", $source));
+            return false;
+        }
         $destDir = dirname($dest);
-        if ($destDir !== '.' && !is_dir($destDir)) {
-            mkdir($destDir, 0o777, true);
+        if (!is_dir($destDir) && !@mkdir($destDir, 0777, true) && !is_dir($destDir)) {
+            $this->logger->error(sprintf("Unable to create destination directory '%s'.", $destDir));
+            return false;
         }
-
-        if (copy($source, $dest)) {
-            $this->logger->debug(sprintf("Copied file '%s' → '%s'.", $source, $dest));
-            return true;
+        if (!@copy($source, $dest)) {
+            $this->logger->error(sprintf("Failed to copy '%s' to '%s'.", $source, $dest));
+            return false;
         }
-
-        return false;
+        $this->logger->debug(sprintf("Copied file '%s' → '%s'.", $source, $dest));
+        return true;
     }
 
-    /**
-     * Copy an entire directory recursively.
-     *
-     * Create destination directory if it does not exist and copies all files recursively.
-     *
-     * @param string $source  Source directory path.
-     * @param string $dest Destination directory path.
-     *
-     * @return bool Status of directory copy operation.
-     */
     private function copyDirectory(string $source, string $dest): bool
     {
-        if (!is_dir($dest)) {
-            mkdir($dest, 0o777, true);
+        if (is_link($source)) {
+            $this->logger->error(sprintf("Refusing to traverse symlink directory '%s'.", $source));
+            return false;
         }
-
-        foreach (scandir($source) as $item) {
+        if (!is_dir($dest) && !@mkdir($dest, 0777, true) && !is_dir($dest)) {
+            $this->logger->error(sprintf("Unable to create destination directory '%s'.", $dest));
+            return false;
+        }
+        $items = @scandir($source);
+        if ($items === false) {
+            $this->logger->error(sprintf("Unable to read source directory '%s'.", $source));
+            return false;
+        }
+        foreach ($items as $item) {
             if ($item === '.' || $item === '..') {
                 continue;
             }
-
-            $s = $source . DIRECTORY_SEPARATOR . $item;
-            $d = $dest . DIRECTORY_SEPARATOR . $item;
-            is_dir($s) ? $this->copyDirectory($s, $d) : $this->copyFile($s, $d);
+            $src = $source . DIRECTORY_SEPARATOR . $item;
+            $target = $dest . DIRECTORY_SEPARATOR . $item;
+            if (is_link($src)) {
+                $this->logger->error(sprintf("Refusing to copy symlink '%s'.", $src));
+                return false;
+            }
+            $ok = is_dir($src) ? $this->copyDirectory($src, $target) : $this->copyFile($src, $target);
+            if (!$ok) {
+                return false;
+            }
         }
-
         $this->logger->debug(sprintf("Copied directory '%s' → '%s'.", $source, $dest));
         return true;
     }
 
-    /**
-     * Get task type identifier.
-     *
-     * Returns string representation of task type.
-     *
-     * @return string The task type ('copy').
-     */
     #[\Override]
-    public function getType(): string
-    {
-        return 'copy';
-    }
+    public function getType(): string { return 'copy'; }
 
-    /**
-     * Validate required task parameters.
-     *
-     * Ensures presence of 'source' and 'dest' parameters before execution.
-     *
-     * @throws \Exception If required parameters are missing.
-     */
-    protected function validateParams()
+    protected function validateParams(): void
     {
-        if (!isset($this->params['source']) || !isset($this->params['dest'])) {
-            throw new \Exception("Missing 'source' or 'dest' parameter for copy task.");
+        if (!isset($this->params['source'], $this->params['dest']) || !is_string($this->params['source']) || !is_string($this->params['dest'])) {
+            throw new \InvalidArgumentException("Copy task requires string 'source' and 'dest' parameters.");
         }
-
-        $this->assertSafePath((string) $this->params['source'], 'copy source');
-        $this->assertSafePath((string) $this->params['dest'], 'copy dest');
+        $this->assertSafePath($this->params['source'], 'copy source');
+        $this->assertSafePath($this->params['dest'], 'copy dest');
     }
 }
