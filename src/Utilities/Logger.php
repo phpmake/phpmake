@@ -14,8 +14,7 @@ final class Logger
         private readonly bool $debug,
         private readonly bool $silent,
         private readonly bool $noLog
-    ) {
-    }
+    ) {}
 
     public function info(string $message): void
     {
