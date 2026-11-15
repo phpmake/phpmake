@@ -5,6 +5,7 @@ namespace PhpMake\Tests\Unit;
 use PhpMake\Cli\CliParser;
 use PHPUnit\Framework\TestCase;
 
+    /** Tests parsing of command-line flags and target arguments. */
 final class CliParserTest extends TestCase
 {
     /**
