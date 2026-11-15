@@ -67,5 +67,8 @@ final class DeleteTask extends BaseTask
     }
 
     #[\Override]
-    public function getType(): string { return 'delete'; }
+    public function getType(): string
+    {
+        return 'delete';
+    }
 }
