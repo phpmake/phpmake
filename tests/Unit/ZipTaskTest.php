@@ -5,6 +5,7 @@ namespace PhpMake\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use PhpMake\Task\Types\ZipTask;
 use PhpMake\Task\BaseTask;
+use PhpMake\Utilities\Logger;
 
 final class ZipTaskTest extends TestCase
 {
@@ -129,7 +130,7 @@ final class ZipTaskTest extends TestCase
         file_put_contents($root . DIRECTORY_SEPARATOR . 'input.txt', 'content');
         $output = $root . DIRECTORY_SEPARATOR . 'archive.zip';
         try {
-            $task = new ZipTask(['source' => $root, 'output' => $output], new \PhpMake\Utilities\Logger(false, true, true));
+            $task = new ZipTask(['source' => $root, 'output' => $output], new Logger(false, true, true));
             $this->assertTrue($task->execute(false, true));
             $zip = new \ZipArchive();
             $this->assertTrue($zip->open($output));
