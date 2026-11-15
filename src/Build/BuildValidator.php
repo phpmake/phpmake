@@ -13,6 +13,12 @@ final class BuildValidator
             }
         }
 
+        foreach (['name', 'description', 'version'] as $field) {
+            if (!isset($config[$field]) || !is_string($config[$field]) || trim($config[$field]) === '') {
+                $errors[] = sprintf("Field '%s' must be a non-empty string.", $field);
+            }
+        }
+
         if (!is_array($config['targets'] ?? null)) {
             $errors[] = "Field 'targets' must be an object/array.";
             return $errors;
