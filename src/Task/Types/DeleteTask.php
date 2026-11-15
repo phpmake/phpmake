@@ -4,8 +4,10 @@ namespace PhpMake\Task\Types;
 
 use PhpMake\Task\BaseTask;
 
+    /** Deletes a file or directory tree without following symbolic links. */
 final class DeleteTask extends BaseTask
 {
+    /** Deletes the configured path or reports success when it is absent. */
     protected function runTask(bool $debug, bool $silent): bool
     {
         $path = (string) ($this->params['path'] ?? '');
@@ -20,6 +22,7 @@ final class DeleteTask extends BaseTask
         return is_link($path) || !is_dir($path) ? $this->deleteFile($path) : $this->deleteDirectory($path);
     }
 
+    /** Unlinks a file or symbolic link and reports failures. */
     private function deleteFile(string $path): bool
     {
         if (!@unlink($path)) {
@@ -30,6 +33,7 @@ final class DeleteTask extends BaseTask
         return true;
     }
 
+    /** Recursively deletes a directory and propagates child failures. */
     private function deleteDirectory(string $dir): bool
     {
         if (is_link($dir)) {
@@ -58,6 +62,7 @@ final class DeleteTask extends BaseTask
         return true;
     }
 
+    /** Validates the deletion path while preserving safe symlink-unlink behavior. */
     protected function validateParams(): void
     {
         if (!isset($this->params['path']) || !is_string($this->params['path'])) {
@@ -80,6 +85,7 @@ final class DeleteTask extends BaseTask
     }
 
     #[\Override]
+    /** Returns the delete task identifier. */
     public function getType(): string
     {
         return 'delete';
