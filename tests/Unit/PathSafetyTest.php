@@ -107,7 +107,7 @@ final class PathSafetyTest extends TestCase
             $this->markTestSkipped('Symlink creation is not permitted on this platform.');
         }
         try {
-            $this->expectException(\\InvalidArgumentException::class);
+            $this->expectException(\InvalidArgumentException::class);
             $this->expectExceptionMessage('Safety Violation');
             new DeleteTask(['path' => $link . DIRECTORY_SEPARATOR . 'victim.txt'], $this->logger);
         } finally {
