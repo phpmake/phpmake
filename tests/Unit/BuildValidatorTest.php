@@ -131,4 +131,49 @@ final class BuildValidatorTest extends TestCase
         // Assert
         $this->assertContains("Unknown task type 'unknown' in target 'invalid'.", $errors);
     }
+
+    public function testGeneratedCopySourceIsAllowedAtValidationTime(): void
+    {
+        $config = [
+            'name' => 'Test',
+            'description' => 'Generated input',
+            'version' => '1.0',
+            'targets' => ['build' => ['tasks' => [[
+                'type' => 'copy',
+                'params' => ['source' => 'generated/output.bin', 'dest' => 'dist/output.bin'],
+            ]]]],
+            'default_target' => 'build',
+        ];
+        $this->assertSame([], (new BuildValidator())->validate($config));
+    }
+
+    public function testMalformedTargetsAndDependenciesAreReported(): void
+    {
+        $config = [
+            'name' => 'Test',
+            'description' => 'Malformed',
+            'version' => '1.0',
+            'targets' => [
+                'build' => ['depends' => ['missing'], 'tasks' => 'not-an-array'],
+                'bad' => 'not-an-object',
+            ],
+            'default_target' => 'build',
+        ];
+        $errors = (new BuildValidator())->validate($config);
+        $this->assertStringContainsString("depends on missing", implode("\\n", $errors));
+        $this->assertStringContainsString("valid 'tasks' array", implode("\\n", $errors));
+        $this->assertStringContainsString("must be an object", implode("\\n", $errors));
+    }
+
+    public function testNonArrayTargetsReturnValidationError(): void
+    {
+        $config = [
+            'name' => 'Test',
+            'description' => 'Bad targets',
+            'version' => '1.0',
+            'targets' => 'bad',
+            'default_target' => 'default',
+        ];
+        $this->assertNotEmpty((new BuildValidator())->validate($config));
+    }
 }
