@@ -71,7 +71,9 @@ final class ExecTask extends BaseTask
         $exitCode = ($observedExitCode !== null && $observedExitCode >= 0) ? $observedExitCode : $closeCode;
 
         foreach (preg_split('/\R/', rtrim($stdout)) as $line) {
-            if ($line !== '') $this->logger->info($line);
+            if ($line !== '') {
+                $this->logger->info($line);
+            }
         }
         if (trim($stderr) !== '') $this->logger->error(trim($stderr));
         if ($timedOut) {
@@ -82,7 +84,10 @@ final class ExecTask extends BaseTask
     }
 
     #[\Override]
-    public function getType(): string { return 'exec'; }
+    public function getType(): string
+    {
+        return 'exec';
+    }
 
     protected function validateParams(): void
     {
