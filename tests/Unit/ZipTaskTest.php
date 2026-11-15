@@ -121,7 +121,7 @@ final class ZipTaskTest extends TestCase
 
     public function testArchiveDoesNotIncludeItselfWhenOutputIsInsideSource(): void
     {
-        if (!class_exists(\\ZipArchive::class)) {
+        if (!class_exists(\ZipArchive::class)) {
             $this->markTestSkipped('ext-zip is not available.');
         }
         $root = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-self-' . uniqid('', true);
@@ -129,9 +129,9 @@ final class ZipTaskTest extends TestCase
         file_put_contents($root . DIRECTORY_SEPARATOR . 'input.txt', 'content');
         $output = $root . DIRECTORY_SEPARATOR . 'archive.zip';
         try {
-            $task = new ZipTask(['source' => $root, 'output' => $output], new \\PhpMake\\Utilities\\Logger(false, true, true));
+            $task = new ZipTask(['source' => $root, 'output' => $output], new \PhpMake\\Utilities\\Logger(false, true, true));
             $this->assertTrue($task->execute(false, true));
-            $zip = new \\ZipArchive();
+            $zip = new \ZipArchive();
             $this->assertTrue($zip->open($output));
             $this->assertSame(1, $zip->numFiles);
             $this->assertSame('input.txt', $zip->getNameIndex(0));
