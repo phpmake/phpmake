@@ -74,7 +74,10 @@ final class CopyTask extends BaseTask
     }
 
     #[\Override]
-    public function getType(): string { return 'copy'; }
+    public function getType(): string
+    {
+        return 'copy';
+    }
 
     protected function validateParams(): void
     {
