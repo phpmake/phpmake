@@ -4,116 +4,68 @@ namespace PhpMake\Task\Types;
 
 use PhpMake\Task\BaseTask;
 
-/**
- * DeleteTask Class
- *
- * Implements a task for deleting files and directories within PHPMake tool.
- * Ensures proper handling of file and directory deletion while managing errors.
- *
- * @package    PHPMake
- * @subpackage Task
- */
 final class DeleteTask extends BaseTask
 {
-    /**
-     * Execute delete task.
-     *
-     * Determines if target is a file or directory and performs the appropriate delete operation.
-     *
-     * @param bool $debug  Enable debug mode for detailed logging.
-     * @param bool $silent Suppress output if enabled.
-     *
-     * @return bool Status of delete operation (true if successful, false otherwise).
-     *
-     * @throws \Exception If required parameters are missing.
-     */
     protected function runTask(bool $debug, bool $silent): bool
     {
-        $path = $this->params['path'] ?? '';
-
-        if (empty($path)) {
-            throw new \Exception("Missing 'path' parameter.");
+        $path = (string) ($this->params['path'] ?? '');
+        if ($path === '') {
+            throw new \InvalidArgumentException("Missing 'path' parameter.");
         }
-
-        if (!file_exists($path)) {
+        if (!file_exists($path) && !is_link($path)) {
             $this->logger->debug(sprintf("Path '%s' does not exist.", $path));
             return true;
         }
-
-        return is_dir($path) ? $this->deleteDirectory($path) : $this->deleteFile($path);
+        // Unlink the link itself; never recurse through its target.
+        return is_link($path) || !is_dir($path) ? $this->deleteFile($path) : $this->deleteDirectory($path);
     }
 
-    /**
-     * Delete a single file.
-     *
-     * Removes specified file from the system and logs operation.
-     *
-     * @param string $path File path to be deleted.
-     *
-     * @return bool Status of file deletion.
-     */
     private function deleteFile(string $path): bool
     {
-        if (unlink($path)) {
-            $this->logger->debug(sprintf("Deleted file '%s'.", $path));
-            return true;
+        if (!@unlink($path)) {
+            $this->logger->error(sprintf("Failed to delete '%s'.", $path));
+            return false;
         }
-
-        return false;
+        $this->logger->debug(sprintf("Deleted file '%s'.", $path));
+        return true;
     }
 
-    /**
-     * Delete an entire directory recursively.
-     *
-     * Removes directory and all of its contents.
-     *
-     * @param string $dir Directory path to be deleted.
-     *
-     * @return bool Status of directory deletion operation.
-     */
     private function deleteDirectory(string $dir): bool
     {
-        foreach (scandir($dir) as $item) {
+        if (is_link($dir)) {
+            return $this->deleteFile($dir);
+        }
+        $items = @scandir($dir);
+        if ($items === false) {
+            $this->logger->error(sprintf("Unable to read directory '%s'.", $dir));
+            return false;
+        }
+        foreach ($items as $item) {
             if ($item === '.' || $item === '..') {
                 continue;
             }
-
             $path = $dir . DIRECTORY_SEPARATOR . $item;
-            is_dir($path) ? $this->deleteDirectory($path) : $this->deleteFile($path);
+            $ok = is_link($path) || !is_dir($path) ? $this->deleteFile($path) : $this->deleteDirectory($path);
+            if (!$ok) {
+                return false;
+            }
         }
-
-        if (rmdir($dir)) {
-            $this->logger->debug(sprintf("Deleted directory '%s'.", $dir));
-            return true;
+        if (!@rmdir($dir)) {
+            $this->logger->error(sprintf("Failed to remove directory '%s'.", $dir));
+            return false;
         }
-
-        return false;
+        $this->logger->debug(sprintf("Deleted directory '%s'.", $dir));
+        return true;
     }
 
-    /**
-     * Validate required task parameters.
-     *
-     * @throws \Exception On any issue.
-     */
     protected function validateParams(): void
     {
-        if (!isset($this->params['path'])) {
-            throw new \Exception("Missing 'path' parameter for delete task.");
+        if (!isset($this->params['path']) || !is_string($this->params['path'])) {
+            throw new \InvalidArgumentException("Delete task requires a string 'path' parameter.");
         }
-
-        $this->assertSafePath((string) $this->params['path'], 'delete path');
+        $this->assertSafePath($this->params['path'], 'delete path');
     }
 
-    /**
-     * Get task type identifier.
-     *
-     * Returns string representation of task type.
-     *
-     * @return string The task type ('delete').
-     */
     #[\Override]
-    public function getType(): string
-    {
-        return 'delete';
-    }
+    public function getType(): string { return 'delete'; }
 }
