@@ -49,6 +49,7 @@ final class CreateDirectoryTask extends BaseTask
         return false;
     }
 
+    /** Validates the directory path and ensures it stays within the project. */
     protected function validateParams(): void
     {
         if (!isset($this->params['name'])) {
