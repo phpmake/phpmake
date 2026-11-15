@@ -27,7 +27,7 @@ final class CopyTask extends BaseTask
             return false;
         }
         $destDir = dirname($dest);
-        if (!is_dir($destDir) && !@mkdir($destDir, 0777, true) && !is_dir($destDir)) {
+        if (!is_dir($destDir) && !@mkdir($destDir, 0o777, true) && !is_dir($destDir)) {
             $this->logger->error(sprintf("Unable to create destination directory '%s'.", $destDir));
             return false;
         }
@@ -45,7 +45,7 @@ final class CopyTask extends BaseTask
             $this->logger->error(sprintf("Refusing to traverse symlink directory '%s'.", $source));
             return false;
         }
-        if (!is_dir($dest) && !@mkdir($dest, 0777, true) && !is_dir($dest)) {
+        if (!is_dir($dest) && !@mkdir($dest, 0o777, true) && !is_dir($dest)) {
             $this->logger->error(sprintf("Unable to create destination directory '%s'.", $dest));
             return false;
         }
