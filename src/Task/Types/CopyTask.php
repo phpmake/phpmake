@@ -4,8 +4,10 @@ namespace PhpMake\Task\Types;
 
 use PhpMake\Task\BaseTask;
 
+    /** Copies a file or directory tree while rejecting symbolic links and propagating failures. */
 final class CopyTask extends BaseTask
 {
+    /** Copies the configured source to its destination. */
     protected function runTask(bool $debug, bool $silent): bool
     {
         $source = (string) ($this->params['source'] ?? '');
@@ -20,6 +22,7 @@ final class CopyTask extends BaseTask
         return is_dir($source) ? $this->copyDirectory($source, $dest) : $this->copyFile($source, $dest);
     }
 
+    /** Copies one file after ensuring its destination directory exists. */
     private function copyFile(string $source, string $dest): bool
     {
         if (is_link($source)) {
@@ -39,6 +42,7 @@ final class CopyTask extends BaseTask
         return true;
     }
 
+    /** Recursively copies a directory and stops on the first failure. */
     private function copyDirectory(string $source, string $dest): bool
     {
         if (is_link($source)) {
@@ -74,11 +78,13 @@ final class CopyTask extends BaseTask
     }
 
     #[\Override]
+    /** Returns the copy task identifier. */
     public function getType(): string
     {
         return 'copy';
     }
 
+    /** Validates the source and destination paths. */
     protected function validateParams(): void
     {
         if (!isset($this->params['source'], $this->params['dest']) || !is_string($this->params['source']) || !is_string($this->params['dest'])) {
