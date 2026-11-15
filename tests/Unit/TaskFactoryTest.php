@@ -14,6 +14,7 @@ use PhpMake\Task\Types\ExecTask;
 use PhpMake\Task\Types\EchoTask;
 use PhpMake\Task\Types\ZipTask;
 
+    /** Tests creation of supported task types and rejection of unknown types. */
 final class TaskFactoryTest extends TestCase
 {
     private TaskFactory $factory;
