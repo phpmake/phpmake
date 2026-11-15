@@ -69,4 +69,20 @@ final class ExecTaskTest extends TestCase
         $result = $task->execute(false, true);
         $this->assertTrue($result);
     }
+
+    public function testCommandRunsWithoutShellAndSupportsTimeout(): void
+    {
+        $logger = new Logger(false, true, true);
+        $task = new ExecTask([
+            'command' => PHP_BINARY . ' -r "echo 1;"',
+            'timeout' => 2,
+        ], $logger);
+        $this->assertTrue($task->execute(false, true));
+
+        $timeoutTask = new ExecTask([
+            'command' => PHP_BINARY . ' -r "usleep(500000);"',
+            'timeout' => 0.05,
+        ], $logger);
+        $this->assertFalse($timeoutTask->execute(false, true));
+    }
 }

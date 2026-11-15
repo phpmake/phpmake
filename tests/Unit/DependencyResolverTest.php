@@ -109,4 +109,17 @@ final class DependencyResolverTest extends TestCase
         // Action
         $resolver->resolve($config, 'a');
     }
+
+    public function testMissingDependencyIsRejected(): void
+    {
+        $config = new BuildConfiguration(
+            'Test',
+            'Test',
+            '1.0',
+            ['build' => ['depends' => ['missing'], 'tasks' => []]],
+            'build'
+        );
+        $this->expectException(\InvalidArgumentException::class);
+        (new DependencyResolver())->resolve($config, 'build');
+    }
 }

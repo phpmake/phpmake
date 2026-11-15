@@ -96,4 +96,52 @@ final class PathSafetyTest extends TestCase
 
         rmdir($dir);
     }
+
+    public function testRejectsSymlinkedAncestorEscapingProject(): void
+    {
+        $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-outside-' . uniqid('', true);
+        $link = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-link-' . uniqid('', true);
+        mkdir($outside);
+        if (!@symlink($outside, $link)) {
+            rmdir($outside);
+            $this->markTestSkipped('Symlink creation is not permitted on this platform.');
+        }
+        try {
+            $this->expectException(\InvalidArgumentException::class);
+            $this->expectExceptionMessage('Safety Violation');
+            new DeleteTask(['path' => $link . DIRECTORY_SEPARATOR . 'victim.txt'], $this->logger);
+        } finally {
+            unlink($link);
+            rmdir($outside);
+        }
+    }
+
+    public function testCopyPropagatesNestedSymlinkFailure(): void
+    {
+        $source = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-copy-src-' . uniqid('', true);
+        $dest = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-copy-dest-' . uniqid('', true);
+        $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-copy-outside-' . uniqid('', true);
+        mkdir($source);
+        mkdir($outside);
+        file_put_contents($outside . DIRECTORY_SEPARATOR . 'secret.txt', 'secret');
+        if (!@symlink($outside, $source . DIRECTORY_SEPARATOR . 'linked')) {
+            unlink($outside . DIRECTORY_SEPARATOR . 'secret.txt');
+            rmdir($outside);
+            rmdir($source);
+            $this->markTestSkipped('Symlink creation is not permitted on this platform.');
+        }
+        try {
+            $task = new CopyTask(['source' => $source, 'dest' => $dest], $this->logger);
+            $this->assertFalse($task->execute(false, true));
+            $this->assertFileDoesNotExist($dest . DIRECTORY_SEPARATOR . 'linked' . DIRECTORY_SEPARATOR . 'secret.txt');
+        } finally {
+            unlink($source . DIRECTORY_SEPARATOR . 'linked');
+            rmdir($source);
+            if (is_dir($dest)) {
+                rmdir($dest);
+            }
+            unlink($outside . DIRECTORY_SEPARATOR . 'secret.txt');
+            rmdir($outside);
+        }
+    }
 }

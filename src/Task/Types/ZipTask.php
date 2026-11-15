@@ -5,133 +5,98 @@ namespace PhpMake\Task\Types;
 use PhpMake\Task\BaseTask;
 use ZipArchive;
 
-/**
- * ZipTask Class
- *
- * Implements a task for archiving files and directories into a ZIP archive
- *  within PHPMake tool.
- *
- * @package    PHPMake
- * @subpackage Task
- */
 final class ZipTask extends BaseTask
 {
-    /**
-     * Execute archive task.
-     *
-     * Creates a ZIP archive from specified source.
-     *
-     * @param bool $debug  Enable debug mode for detailed logging.
-     * @param bool $silent Suppress output if enabled.
-     *
-     * @return bool Status of ZIP archive creation. (true if successful, false otherwise)
-     *
-     * @throws \Exception If required parameters are missing or if ZIP creation fails.
-     */
     protected function runTask(bool $debug, bool $silent): bool
     {
-        $source = $this->params['source'] ?? '';
-        $output = $this->params['output'] ?? '';
-
-        if (empty($source) || empty($output)) {
-            throw new \Exception("Missing 'source' or 'output' parameter for zip task.");
+        $source = (string) ($this->params['source'] ?? '');
+        $output = (string) ($this->params['output'] ?? '');
+        if ($source === '' || $output === '' || (!file_exists($source) && !is_link($source))) {
+            throw new \RuntimeException(sprintf("Archive source '%s' does not exist.", $source));
         }
-
-        if (!file_exists($source)) {
-            throw new \Exception(sprintf("Source '%s' does not exist.", $source));
+        if (is_link($source)) {
+            throw new \RuntimeException('Archive source cannot be a symlink.');
         }
 
         $outputDir = dirname($output);
-        if ($outputDir !== '.' && !is_dir($outputDir)) {
-            mkdir($outputDir, 0o777, true);
+        if (!is_dir($outputDir) && !@mkdir($outputDir, 0o777, true) && !is_dir($outputDir)) {
+            throw new \RuntimeException(sprintf("Unable to create archive directory '%s'.", $outputDir));
         }
 
+        $sourceReal = realpath($source);
+        $outputParent = realpath($outputDir);
+        if ($sourceReal === false || $outputParent === false) {
+            throw new \RuntimeException('Unable to resolve archive source or output directory.');
+        }
+        $outputReal = $outputParent . DIRECTORY_SEPARATOR . basename($output);
         $zip = new ZipArchive();
-
-        if (!$zip->open($output, ZipArchive::CREATE | ZipArchive::OVERWRITE)) {
-            throw new \Exception(sprintf("Failed to create ZIP file '%s'.", $output));
+        $opened = $zip->open($outputReal, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        if ($opened !== true) {
+            throw new \RuntimeException(sprintf("Failed to create ZIP file '%s' (code %s).", $outputReal, (string) $opened));
         }
 
-        $this->addFilesToZip($zip, $source);
-        $zip->close();
+        try {
+            $this->addFilesToZip($zip, $sourceReal, $outputReal);
+            if (!$zip->close()) {
+                throw new \RuntimeException(sprintf("Failed to finalize ZIP file '%s'.", $outputReal));
+            }
+        } catch (\Throwable $e) {
+            $zip->close();
+            @unlink($outputReal);
+            throw $e;
+        }
 
         if ($debug) {
             $this->logger->debug(sprintf("Archived '%s' to '%s'.", $source, $output));
         }
-
         return true;
     }
 
-    /**
-     * Recursively add files to ZIP archive.
-     *
-     * Traverses directories and includes files in archive.
-     *
-     * @param ZipArchive $zip     The ZIP archive instance.
-     * @param string     $source  Source path to archive.
-     * @param string     $baseDir Base directory inside archive.
-     */
-    private function addFilesToZip(ZipArchive $zip, string $source, string $baseDir = ''): void
+    private function addFilesToZip(ZipArchive $zip, string $source, string $output): void
     {
-        $source = realpath($source);
-
-        if ($source === false) {
-            throw new \Exception("Invalid source path: cannot resolve realpath.");
-        }
-
         if (is_file($source)) {
-            $zip->addFile($source, basename($source));
+            if ($source === $output || !$zip->addFile($source, basename($source))) {
+                throw new \RuntimeException(sprintf("Unable to add '%s' to archive.", $source));
+            }
             return;
         }
 
-        $source = rtrim($source, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        $root = rtrim($source, DIRECTORY_SEPARATOR);
         $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($source, \FilesystemIterator::SKIP_DOTS)
+            new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::SELF_FIRST
         );
-
         foreach ($iterator as $file) {
+            $path = $file->getPathname();
+            if ($file->isLink()) {
+                throw new \RuntimeException(sprintf("Refusing to archive symlink '%s'.", $path));
+            }
             if (!$file->isFile()) {
                 continue;
             }
-
-            $absolutePath = $file->getRealPath();
-            if ($absolutePath === false) {
-                continue;
+            $real = $file->getRealPath();
+            if ($real === false || $real === $output) {
+                continue; // Exclude the output archive, including when it is inside the source tree.
             }
-
-            $relativePath = substr((string) $absolutePath, strlen($source));
-            $archivePath = ltrim($baseDir . str_replace(DIRECTORY_SEPARATOR, '/', $relativePath), '/');
-            $zip->addFile($absolutePath, $archivePath);
+            $relative = ltrim(substr($real, strlen($root)), DIRECTORY_SEPARATOR);
+            if (!$zip->addFile($real, str_replace(DIRECTORY_SEPARATOR, '/', $relative))) {
+                throw new \RuntimeException(sprintf("Unable to add '%s' to archive.", $real));
+            }
         }
     }
 
-    /**
-     * Get task type identifier.
-     *
-     * Returns string representation of task type.
-     *
-     * @return string The task type ('archive').
-     */
     #[\Override]
     public function getType(): string
     {
         return 'archive';
     }
 
-    /**
-     * Validate required task parameters.
-     *
-     * Ensures presence of 'source' and 'output' parameters before execution.
-     *
-     * @throws \Exception If required parameters are missing.
-     */
-    protected function validateParams()
+    protected function validateParams(): void
     {
-        if (!isset($this->params['source']) || !isset($this->params['output'])) {
-            throw new \Exception('Missing required parameters for zip task.');
+        if (!isset($this->params['source'], $this->params['output']) || !is_string($this->params['source']) || !is_string($this->params['output'])) {
+            throw new \InvalidArgumentException("Archive task requires string 'source' and 'output' parameters.");
         }
-
-        $this->assertSafePath((string) $this->params['source'], 'archive source');
-        $this->assertSafePath((string) $this->params['output'], 'archive output');
+        $this->assertSafePath($this->params['source'], 'archive source');
+        $this->assertSafePath($this->params['output'], 'archive output');
     }
 }
