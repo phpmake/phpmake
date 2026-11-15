@@ -75,7 +75,9 @@ final class ExecTask extends BaseTask
                 $this->logger->info($line);
             }
         }
-        if (trim($stderr) !== '') $this->logger->error(trim($stderr));
+        if (trim($stderr) !== '') {
+            $this->logger->error(trim($stderr));
+        }
         if ($timedOut) {
             $this->logger->error(sprintf("Command timed out after %.1f seconds.", $timeout));
             return false;
