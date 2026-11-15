@@ -8,10 +8,12 @@ use PhpMake\Build\BuildLoader;
 use PhpMake\Utilities\Logger;
 use PHPUnit\Framework\TestCase;
 
+    /** Tests loading valid build configuration files. */
 final class BuildLoaderTest extends TestCase
 {
     private string $buildFile = __DIR__ . '/build.json';
 
+    /** Creates a valid temporary build file for each test. */
     protected function setUp(): void
     {
         // Create a valid build.json
@@ -35,11 +37,13 @@ final class BuildLoaderTest extends TestCase
         );
     }
 
+    /** Removes the temporary build file. */
     protected function tearDown(): void
     {
         unlink($this->buildFile);
     }
 
+    /** Verifies that a valid build file loads into a configuration. */
     public function testLoadValidBuildFile(): void
     {
         $buildLoader = new BuildLoader();
