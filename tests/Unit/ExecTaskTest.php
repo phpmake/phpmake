@@ -74,7 +74,7 @@ final class ExecTaskTest extends TestCase
     {
         $logger = new Logger(false, true, true);
         $task = new ExecTask([
-            'command' => PHP_BINARY . ' -r "echo \\\"safe\\\";"',
+            'command' => PHP_BINARY . ' -r "echo 1;"',
             'timeout' => 2,
         ], $logger);
         $this->assertTrue($task->execute(false, true));
