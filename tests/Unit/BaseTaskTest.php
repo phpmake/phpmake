@@ -5,6 +5,7 @@ namespace PhpMake\Tests\Unit;
 use PhpMake\Task\BaseTask;
 use PHPUnit\Framework\TestCase;
 
+    /** Tests the shared task contract and base-class behavior. */
 final class BaseTaskTest extends TestCase
 {
     /**
