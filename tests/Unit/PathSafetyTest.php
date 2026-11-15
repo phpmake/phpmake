@@ -9,10 +9,12 @@ use PhpMake\Task\Types\ZipTask;
 use PhpMake\Utilities\Logger;
 use PHPUnit\Framework\TestCase;
 
+    /** Tests filesystem boundary enforcement and symbolic-link safety. */
 final class PathSafetyTest extends TestCase
 {
     private Logger $logger;
 
+    /** Initializes a silent logger for filesystem safety tests. */
     protected function setUp(): void
     {
         parent::setUp();
@@ -97,6 +99,7 @@ final class PathSafetyTest extends TestCase
         rmdir($dir);
     }
 
+    /** Rejects paths that traverse a symlinked ancestor outside the project. */
     public function testRejectsSymlinkedAncestorEscapingProject(): void
     {
         $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-outside-' . uniqid('', true);
@@ -116,6 +119,7 @@ final class PathSafetyTest extends TestCase
         }
     }
 
+    /** Reports failure when a recursive copy encounters a symlink. */
     public function testCopyPropagatesNestedSymlinkFailure(): void
     {
         $source = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-copy-src-' . uniqid('', true);
@@ -145,6 +149,7 @@ final class PathSafetyTest extends TestCase
         }
     }
 
+    /** Removes an in-project symlink while preserving its external target. */
     public function testDeleteRemovesSymlinkWithoutDeletingItsTarget(): void
     {
         $target = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-delete-target-' . uniqid('', true);

@@ -8,6 +8,7 @@ use PhpMake\Task\Types\CreateDirectoryTask;
 use PhpMake\Utilities\Logger;
 use PHPUnit\Framework\TestCase;
 
+    /** Tests execution results for built-in task types. */
 final class TaskExecutionTest extends TestCase
 {
     private Logger $logger;

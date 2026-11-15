@@ -2,6 +2,7 @@
 
 namespace PhpMake\Utilities;
 
+    /** Writes console messages and optionally persists them to a rotating log. */
 final class Logger
 {
     private string $logFile = 'build.log';
@@ -10,12 +11,14 @@ final class Logger
 
     private const int MAX_FILES = 5;
 
+    /** Configures debug output, console silence, and file logging. */
     public function __construct(
         private readonly bool $debug,
         private readonly bool $silent,
         private readonly bool $noLog
     ) {}
 
+    /** Writes an informational message. */
     public function info(string $message): void
     {
         if (!$this->silent) {
@@ -27,6 +30,7 @@ final class Logger
         }
     }
 
+    /** Writes a debug message when debug output is enabled. */
     public function debug(string $message): void
     {
         if ($this->debug && !$this->silent) {
@@ -38,6 +42,7 @@ final class Logger
         }
     }
 
+    /** Writes an error message to standard error. */
     public function error(string $message): void
     {
         fwrite(STDERR, 'Error: ' . $message . PHP_EOL);
@@ -110,11 +115,13 @@ final class Logger
         }
     }
 
+    /** Indicates whether debug messages are visible. */
     public function isDebugEnabled(): bool
     {
         return $this->debug && !$this->silent;
     }
 
+    /** Indicates whether regular console output is suppressed. */
     public function isSilent(): bool
     {
         return $this->silent;

@@ -5,8 +5,10 @@ namespace PhpMake\Task\Types;
 use PhpMake\Task\BaseTask;
 use ZipArchive;
 
+    /** Creates ZIP archives while excluding the output and rejecting symbolic links. */
 final class ZipTask extends BaseTask
 {
+    /** Creates the configured archive and removes partial output on failure. */
     protected function runTask(bool $debug, bool $silent): bool
     {
         $source = (string) ($this->params['source'] ?? '');
@@ -52,6 +54,7 @@ final class ZipTask extends BaseTask
         return true;
     }
 
+    /** Adds source files to the archive using paths relative to its root. */
     private function addFilesToZip(ZipArchive $zip, string $source, string $output): void
     {
         if (is_file($source)) {
@@ -86,11 +89,13 @@ final class ZipTask extends BaseTask
     }
 
     #[\Override]
+    /** Returns the archive task identifier. */
     public function getType(): string
     {
         return 'archive';
     }
 
+    /** Validates the source and archive output paths. */
     protected function validateParams(): void
     {
         if (!isset($this->params['source'], $this->params['output']) || !is_string($this->params['source']) || !is_string($this->params['output'])) {

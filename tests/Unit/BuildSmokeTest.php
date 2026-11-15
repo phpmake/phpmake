@@ -13,6 +13,7 @@ use PhpMake\Task\TaskExecutor;
 use PhpMake\Task\TaskFactory;
 use PhpMake\Utilities\Logger;
 
+    /** Runs smoke tests across build configuration, validation, dependency, and execution components. */
 final class BuildSmokeTest extends TestCase
 {
     private Logger $logger;

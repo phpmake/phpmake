@@ -2,8 +2,10 @@
 
 namespace PhpMake\Build;
 
+    /** Loads and validates the structure of a JSON build configuration. */
 final class BuildLoader
 {
+    /** Reads a build file and creates its typed configuration object. */
     public function load(string $buildFile = 'build.json'): BuildConfiguration
     {
         if (!is_file($buildFile) || !is_readable($buildFile)) {

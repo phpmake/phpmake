@@ -7,6 +7,7 @@ use PhpMake\Task\Types\ZipTask;
 use PhpMake\Task\BaseTask;
 use PhpMake\Utilities\Logger;
 
+    /** Tests ZIP task structure, archive contents, and symlink handling. */
 final class ZipTaskTest extends TestCase
 {
     /**
@@ -120,6 +121,7 @@ final class ZipTaskTest extends TestCase
         $this->assertEquals('void', $method->getReturnType()->getName());
     }
 
+    /** Ensures an archive created inside its source directory does not include itself. */
     public function testArchiveDoesNotIncludeItselfWhenOutputIsInsideSource(): void
     {
         if (!class_exists(\ZipArchive::class)) {

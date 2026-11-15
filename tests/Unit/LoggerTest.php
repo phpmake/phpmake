@@ -9,6 +9,7 @@ use PhpMake\Task\Types\ZipTask;
 use PhpMake\Utilities\Logger;
 use PHPUnit\Framework\TestCase;
 
+    /** Tests console output, file logging, and task logging behavior. */
 final class LoggerTest extends TestCase
 {
     private Logger $logger;

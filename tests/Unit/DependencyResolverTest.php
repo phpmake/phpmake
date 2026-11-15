@@ -6,6 +6,7 @@ use PhpMake\Build\BuildConfiguration;
 use PhpMake\Target\DependencyResolver;
 use PHPUnit\Framework\TestCase;
 
+    /** Tests dependency ordering and invalid dependency handling. */
 final class DependencyResolverTest extends TestCase
 {
     /**
@@ -110,6 +111,7 @@ final class DependencyResolverTest extends TestCase
         $resolver->resolve($config, 'a');
     }
 
+    /** Rejects a target that depends on an undefined target. */
     public function testMissingDependencyIsRejected(): void
     {
         $config = new BuildConfiguration(
