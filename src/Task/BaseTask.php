@@ -4,13 +4,16 @@ namespace PhpMake\Task;
 
 use PhpMake\Utilities\Logger;
 
+    /** Provides shared execution, logging, and filesystem-safety behavior for tasks. */
 abstract class BaseTask implements TaskInterface
 {
+    /** Initializes the task and validates its parameters. */
     public function __construct(protected array $params, protected Logger $logger)
     {
         $this->validateParams();
     }
 
+    /** Runs the task and converts execution exceptions into a failed result. */
     public function execute(bool $debug, bool $silent): bool
     {
         try {
@@ -21,12 +24,15 @@ abstract class BaseTask implements TaskInterface
         }
     }
 
+    /** Returns the task type identifier. */
     public function getType(): string
     {
         return static::class;
     }
 
+    /** Executes the task-specific operation. */
     abstract protected function runTask(bool $debug, bool $silent): bool;
+    /** Validates task-specific parameters before execution. */
     abstract protected function validateParams();
 
     /**
@@ -72,6 +78,7 @@ abstract class BaseTask implements TaskInterface
         $this->assertWithinDirectory($this->normalizePath($resolved), $this->normalizePath($cwd), $label);
     }
 
+    /** Rejects paths that are not contained within the allowed directory. */
     private function assertWithinDirectory(string $path, string $cwd, string $label): void
     {
         $path = rtrim($path, DIRECTORY_SEPARATOR);
@@ -81,12 +88,14 @@ abstract class BaseTask implements TaskInterface
         }
     }
 
+    /** Determines whether a path uses an absolute-path format. */
     private function isAbsolutePath(string $path): bool
     {
         return str_starts_with($path, '/') || str_starts_with($path, '\\')
             || (strlen($path) > 2 && ctype_alpha($path[0]) && $path[1] === ':' && ($path[2] === '\\' || $path[2] === '/'));
     }
 
+    /** Normalizes path separators and resolves lexical dot segments. */
     private function normalizePath(string $path): string
     {
         $path = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $path);
