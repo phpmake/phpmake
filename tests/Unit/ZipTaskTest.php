@@ -152,7 +152,7 @@ final class ZipTaskTest extends TestCase
 
     public function testArchiveRejectsNestedSymlinksAndRemovesPartialOutput(): void
     {
-        if (!class_exists(\\ZipArchive::class)) {
+        if (!class_exists(\ZipArchive::class)) {
             $this->markTestSkipped('ext-zip is not available.');
         }
 
