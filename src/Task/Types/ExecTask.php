@@ -4,8 +4,10 @@ namespace PhpMake\Task\Types;
 
 use PhpMake\Task\BaseTask;
 
+    /** Runs an external process without invoking a command shell. */
 final class ExecTask extends BaseTask
 {
+    /** Starts the configured process, captures output, and enforces its timeout. */
     protected function runTask(bool $debug, bool $silent): bool
     {
         $command = trim($this->params['command']);
@@ -86,11 +88,13 @@ final class ExecTask extends BaseTask
     }
 
     #[\Override]
+    /** Returns the exec task identifier. */
     public function getType(): string
     {
         return 'exec';
     }
 
+    /** Validates the command, argument list, and optional timeout. */
     protected function validateParams(): void
     {
         if (!isset($this->params['command']) || !is_string($this->params['command']) || trim($this->params['command']) === '') {
