@@ -160,9 +160,9 @@ final class BuildValidatorTest extends TestCase
             'default_target' => 'build',
         ];
         $errors = (new BuildValidator())->validate($config);
-        $this->assertStringContainsString("depends on missing", implode("\\n", $errors));
-        $this->assertStringContainsString("valid 'tasks' array", implode("\\n", $errors));
-        $this->assertStringContainsString("must be an object", implode("\\n", $errors));
+        $this->assertStringContainsString("depends on missing", implode("\n", $errors));
+        $this->assertStringContainsString("valid 'tasks' array", implode("\n", $errors));
+        $this->assertStringContainsString("must be an object", implode("\n", $errors));
     }
 
     public function testNonArrayTargetsReturnValidationError(): void
