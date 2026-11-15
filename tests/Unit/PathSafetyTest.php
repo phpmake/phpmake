@@ -144,4 +144,30 @@ final class PathSafetyTest extends TestCase
             rmdir($outside);
         }
     }
+
+    public function testDeleteRemovesSymlinkWithoutDeletingItsTarget(): void
+    {
+        $target = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-delete-target-' . uniqid('', true);
+        $link = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-delete-link-' . uniqid('', true);
+        file_put_contents($target, 'keep me');
+        if (!@symlink($target, $link)) {
+            unlink($target);
+            $this->markTestSkipped('Symlink creation is not permitted on this platform.');
+        }
+
+        try {
+            $task = new DeleteTask(['path' => $link], $this->logger);
+            $this->assertTrue($task->execute(false, true));
+            $this->assertFileDoesNotExist($link);
+            $this->assertFileExists($target);
+            $this->assertSame('keep me', file_get_contents($target));
+        } finally {
+            if (is_link($link)) {
+                unlink($link);
+            }
+            if (file_exists($target)) {
+                unlink($target);
+            }
+        }
+    }
 }
