@@ -149,4 +149,48 @@ final class ZipTaskTest extends TestCase
             }
         }
     }
+
+    public function testArchiveRejectsNestedSymlinksAndRemovesPartialOutput(): void
+    {
+        if (!class_exists(\\ZipArchive::class)) {
+            $this->markTestSkipped('ext-zip is not available.');
+        }
+
+        $root = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-link-' . uniqid('', true);
+        $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-zip-target-' . uniqid('', true);
+        mkdir($root);
+        file_put_contents($root . DIRECTORY_SEPARATOR . 'input.txt', 'content');
+        file_put_contents($outside, 'external');
+        $link = $root . DIRECTORY_SEPARATOR . 'linked.txt';
+        if (!@symlink($outside, $link)) {
+            unlink($outside);
+            unlink($root . DIRECTORY_SEPARATOR . 'input.txt');
+            rmdir($root);
+            $this->markTestSkipped('Symlink creation is not permitted on this platform.');
+        }
+        $output = $root . DIRECTORY_SEPARATOR . 'archive.zip';
+
+        try {
+            $task = new ZipTask(['source' => $root, 'output' => $output], new Logger(false, true, true));
+            $this->assertFalse($task->execute(false, true));
+            $this->assertFileDoesNotExist($output);
+            $this->assertFileExists($outside);
+        } finally {
+            if (is_link($link)) {
+                unlink($link);
+            }
+            if (file_exists($output)) {
+                unlink($output);
+            }
+            if (file_exists($root . DIRECTORY_SEPARATOR . 'input.txt')) {
+                unlink($root . DIRECTORY_SEPARATOR . 'input.txt');
+            }
+            if (is_dir($root)) {
+                rmdir($root);
+            }
+            if (file_exists($outside)) {
+                unlink($outside);
+            }
+        }
+    }
 }
