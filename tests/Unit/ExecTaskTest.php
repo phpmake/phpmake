@@ -65,7 +65,7 @@ final class ExecTaskTest extends TestCase
     public function testExecTaskWithSafeCommand(): void
     {
         $logger = new Logger(false, true, true);
-        $task = new ExecTask(['command' => 'echo "Hello World"'], $logger);
+        $task = new ExecTask(['command' => PHP_BINARY, 'args' => ['-r', 'echo "Hello World";']], $logger);
         $result = $task->execute(false, true);
         $this->assertTrue($result);
     }
@@ -74,13 +74,15 @@ final class ExecTaskTest extends TestCase
     {
         $logger = new Logger(false, true, true);
         $task = new ExecTask([
-            'command' => PHP_BINARY . ' -r "echo 1;"',
+            'command' => PHP_BINARY,
+            'args' => ['-r', 'echo 1;'],
             'timeout' => 2,
         ], $logger);
         $this->assertTrue($task->execute(false, true));
 
         $timeoutTask = new ExecTask([
-            'command' => PHP_BINARY . ' -r "usleep(500000);"',
+            'command' => PHP_BINARY,
+            'args' => ['-r', 'usleep(500000);'],
             'timeout' => 0.05,
         ], $logger);
         $this->assertFalse($timeoutTask->execute(false, true));
