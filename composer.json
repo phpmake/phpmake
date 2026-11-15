@@ -83,7 +83,7 @@
     "scripts": {
         "lint": "phplint",
         "reformat": "php-cs-fixer fix",
-        "format-check": "php-cs-fixer check",
+        "format-check": "php-cs-fixer check --diff",
         "refactor": "rector process",
         "refactor-check": "rector --dry-run",
         "test": "phpunit --configuration phpunit.xml"
