@@ -2,8 +2,10 @@
 
 namespace PhpMake\Build;
 
+    /** Validates build configuration fields, targets, dependencies, and task parameters. */
 final class BuildValidator
 {
+    /** Returns validation errors found in a build configuration. */
     public function validate(array $config): array
     {
         $errors = [];
