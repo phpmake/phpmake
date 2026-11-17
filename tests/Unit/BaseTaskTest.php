@@ -70,4 +70,36 @@ final class BaseTaskTest extends TestCase
         $this->assertTrue($reflection->hasMethod('getType'));
         $this->assertTrue($reflection->hasMethod('validateParams'));
     }
+
+    /** The base implementation returns the concrete task class as its type. */
+    public function testBaseTaskReturnsConcreteClassNameByDefault(): void
+    {
+        $task = new class([], new \PhpMake\Utilities\Logger(false, true, true)) extends BaseTask {
+            protected function runTask(bool $debug, bool $silent): bool
+            {
+                return true;
+            }
+
+            protected function validateParams(): void {}
+        };
+
+        self::assertSame($task::class, $task->getType());
+        self::assertTrue($task->execute(false, true));
+    }
+
+    /** Exceptions thrown by task implementations are converted to a failed result. */
+    public function testBaseTaskConvertsExecutionExceptionToFailure(): void
+    {
+        $task = new class([], new \PhpMake\Utilities\Logger(false, true, true)) extends BaseTask {
+            protected function runTask(bool $debug, bool $silent): bool
+            {
+                throw new \RuntimeException('Expected task failure');
+            }
+
+            protected function validateParams(): void {}
+        };
+
+        self::assertFalse($task->execute(false, true));
+    }
+
 }
