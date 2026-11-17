@@ -497,6 +497,136 @@ final class CoverageCompletionTest extends TestCase
         }
     }
 
+    /** Exercises TaskExecutor's diagnostic branches for every non-silent failure category. */
+    public function testTaskExecutorReportsNonSilentFailures(): void
+    {
+        $executor = new TaskExecutor();
+        $factory = new TaskFactory($this->logger());
+
+        $missing = new BuildConfiguration('Missing target', '', '', [
+            'default' => ['tasks' => []],
+        ], 'default');
+        self::assertSame(1, $executor->executeTasks($missing, ['absent'], $factory, false, false));
+
+        $withoutTasks = new BuildConfiguration('Missing tasks', '', '', [
+            'default' => [],
+        ], 'default');
+        self::assertSame(1, $executor->executeTasks($withoutTasks, ['default'], $factory, false, false));
+
+        $factoryFailure = new BuildConfiguration('Factory failure', '', '', [
+            'default' => ['tasks' => [['type' => 'not-supported', 'params' => []]]],
+        ], 'default');
+        self::assertSame(1, $executor->executeTasks($factoryFailure, ['default'], $factory, false, false));
+
+        $taskFailure = new BuildConfiguration('Task failure', '', '', [
+            'default' => ['tasks' => [[
+                'type' => 'exec',
+                'params' => ['command' => PHP_BINARY, 'args' => ['-r', 'exit(12);']],
+            ]]],
+        ], 'default');
+
+        ob_start();
+        try {
+            self::assertSame(1, $executor->executeTasks($taskFailure, ['default'], $factory, false, false));
+            $output = ob_get_contents();
+        } finally {
+            ob_end_clean();
+        }
+
+        self::assertIsString($output);
+        self::assertStringContainsString('Task failed', $output);
+    }
+
+    /** Covers CreateDirectoryTask validation, defensive state checks, and debug output. */
+    public function testCreateDirectoryTaskCoversValidationAndDebugBranches(): void
+    {
+        $this->assertThrows(InvalidArgumentException::class, fn() => new CreateDirectoryTask([], $this->logger()));
+        $this->assertThrows(
+            InvalidArgumentException::class,
+            fn() => new CreateDirectoryTask(['name' => ''], $this->logger())
+        );
+
+        $defensive = new CreateDirectoryTask(['name' => 'valid-name'], $this->logger());
+        $parameters = new \ReflectionProperty(\PhpMake\Task\BaseTask::class, 'params');
+        $parameters->setValue($defensive, []);
+        self::assertFalse($defensive->execute(false, true));
+
+        $debugLogger = new Logger(true, false, true);
+        mkdir('already-created');
+        $existing = new CreateDirectoryTask(['name' => 'already-created'], $debugLogger);
+        $created = new CreateDirectoryTask(['name' => 'created-with-debug'], $debugLogger);
+
+        ob_start();
+        try {
+            self::assertTrue($existing->execute(false, false));
+            self::assertTrue($created->execute(false, false));
+            $output = ob_get_contents();
+        } finally {
+            ob_end_clean();
+        }
+
+        self::assertIsString($output);
+        self::assertStringContainsString('already exists', $output);
+        self::assertStringContainsString('Created directory', $output);
+    }
+
+    /** Exercises ExecTask defensive validation, debug logging, process-start failure, and forced termination. */
+    public function testExecTaskCoversDefensiveAndDiagnosticBranches(): void
+    {
+        $logger = $this->logger();
+
+        $invalidTimeout = new ExecTask(['command' => PHP_BINARY], $logger);
+        (new \ReflectionProperty(\PhpMake\Task\BaseTask::class, 'params'))->setValue(
+            $invalidTimeout,
+            ['command' => PHP_BINARY, 'timeout' => 0]
+        );
+        self::assertFalse($invalidTimeout->execute(false, true));
+
+        $emptyCommand = new ExecTask(['command' => PHP_BINARY], $logger);
+        (new \ReflectionProperty(\PhpMake\Task\BaseTask::class, 'params'))->setValue(
+            $emptyCommand,
+            ['command' => ' ']
+        );
+        self::assertFalse($emptyCommand->execute(false, true));
+
+        $debugTask = new ExecTask([
+            'command' => PHP_BINARY,
+            'args' => ['-r', 'exit(0);'],
+        ], new Logger(true, false, true));
+
+        ob_start();
+        try {
+            self::assertTrue($debugTask->execute(false, true));
+            $output = ob_get_contents();
+        } finally {
+            ob_end_clean();
+        }
+        self::assertIsString($output);
+        self::assertStringContainsString('Executing process:', $output);
+
+        if (PHP_OS_FAMILY !== 'Windows') {
+            $previousHandler = set_error_handler(static fn(): bool => true);
+            try {
+                $cannotStart = new ExecTask(['command' => '/'], $logger);
+                self::assertFalse($cannotStart->execute(false, true));
+            } finally {
+                restore_error_handler();
+            }
+        }
+
+        if (PHP_OS_FAMILY !== 'Windows' && extension_loaded('pcntl')) {
+            $ignoresTermination = new ExecTask([
+                'command' => PHP_BINARY,
+                'args' => [
+                    '-r',
+                    'pcntl_signal(SIGTERM, SIG_IGN); pcntl_async_signals(true); while (true) { usleep(10000); }',
+                ],
+                'timeout' => 0.05,
+            ], $logger);
+            self::assertFalse($ignoresTermination->execute(false, true));
+        }
+    }
+
     /** Returns a logger configured not to write files or emit regular output. */
     private function logger(): Logger
     {
