@@ -1,6 +1,6 @@
 <?php
 
-namespace PhpMake\\Utilities;
+namespace PhpMake\Utilities;
 
 /** Writes console messages and optionally persists them to a rotating log. */
 final class Logger
@@ -50,7 +50,7 @@ final class Logger
 
         try {
             $this->logToFile($message);
-        } catch (\\Throwable) {
+        } catch (\Throwable) {
             // Console/build behavior takes precedence over optional log persistence.
         }
     }
@@ -75,19 +75,19 @@ final class Logger
             if (is_file($this->logFile) && filesize($this->logFile) >= self::MAX_SIZE) {
                 $oldest = $this->logFile . '.' . self::MAX_FILES;
                 if (file_exists($oldest) && !@unlink($oldest)) {
-                    throw new \\RuntimeException(sprintf("Unable to remove old log '%s'.", $oldest));
+                    throw new \RuntimeException(sprintf("Unable to remove old log '%s'.", $oldest));
                 }
 
                 for ($i = self::MAX_FILES - 1; $i >= 1; --$i) {
                     $from = $this->logFile . '.' . $i;
                     $to = $this->logFile . '.' . ($i + 1);
                     if (file_exists($from) && !@rename($from, $to)) {
-                        throw new \\RuntimeException(sprintf("Unable to rotate log '%s'.", $from));
+                        throw new \RuntimeException(sprintf("Unable to rotate log '%s'.", $from));
                     }
                 }
 
                 if (!@rename($this->logFile, $this->logFile . '.1')) {
-                    throw new \\RuntimeException(sprintf("Unable to rotate log '%s'.", $this->logFile));
+                    throw new \RuntimeException(sprintf("Unable to rotate log '%s'.", $this->logFile));
                 }
             }
 
@@ -99,7 +99,7 @@ final class Logger
             try {
                 $line = date('Y-m-d H:i:s') . ' ' . $message . PHP_EOL;
                 if (fwrite($fp, $line) === false) {
-                    throw new \\RuntimeException('Unable to write build log.');
+                    throw new \RuntimeException('Unable to write build log.');
                 }
                 fflush($fp);
             } finally {
