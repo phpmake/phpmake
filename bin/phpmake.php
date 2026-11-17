@@ -16,26 +16,21 @@
  * @throws \Throwable If an error occurs during execution.
  */
 
-// Support both development (package root) and Composer-installed layouts.
-$autoloadCandidates = [
-    __DIR__ . '/../vendor/autoload.php',
-    __DIR__ . '/../../autoload.php',
-];
+// Composer's generated vendor/bin proxy loads the consuming project's
+// autoloader before including this file. In that case, do not load a
+// package-local autoloader: dependencies installed as a library do not
+// contain their own vendor/autoload.php.
+if (!class_exists(\Composer\Autoload\ClassLoader::class, false)) {
+    // Direct execution from a source checkout.
+    $autoload = __DIR__ . '/../vendor/autoload.php';
 
-$autoload = null;
-foreach ($autoloadCandidates as $candidate) {
-    if (file_exists($candidate)) {
-        $autoload = $candidate;
-        break;
+    if (!is_file($autoload)) {
+        fwrite(STDERR, "Error: Unable to locate Composer autoloader.\n");
+        exit(1);
     }
-}
 
-if ($autoload === null) {
-    fwrite(STDERR, "Error: Unable to locate Composer autoloader.\n");
-    exit(1);
+    require $autoload;
 }
-
-require $autoload;
 
 use PhpMake\Utilities\Logger;
 use PhpMake\Cli\CliParser;

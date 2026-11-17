@@ -3,33 +3,11 @@
     "description": "A PHP build automation tool using JSON configuration file.",
     "license": "GPL-3.0-only",
     "type": "library",
-    "keywords": [
-        "php",
-        "make",
-        "maker",
-        "build",
-        "builder",
-        "build-automation"
-    ],
-    "authors": [
-        {
-            "name": "PHPMake",
-            "email": "phpmake.github@gmail.com",
-            "homepage": "https://github.com/phpmake",
-            "role": "Maintainer, Developer"
-        }
-    ],
+    "keywords": ["php", "make", "maker", "build", "builder", "build-automation"],
+    "authors": [{"name": "PHPMake", "email": "phpmake.github@gmail.com", "homepage": "https://github.com/phpmake", "role": "Maintainer, Developer"}],
     "homepage": "https://github.com/phpmake/phpmake",
-    "support": {
-        "email": "phpmake.github@gmail.com",
-        "issues": "https://github.com/phpmake/phpmake/issues",
-        "source": "https://github.com/phpmake/phpmake"
-    },
-    "require": {
-        "php": "^8.3",
-        "ext-json": "*",
-        "ext-zip": "*"
-    },
+    "support": {"email": "phpmake.github@gmail.com", "issues": "https://github.com/phpmake/phpmake/issues", "source": "https://github.com/phpmake/phpmake"},
+    "require": {"php": "^8.3", "ext-json": "*", "ext-zip": "*"},
     "require-dev": {
         "friendsofphp/php-cs-fixer": "3.*",
         "ergebnis/composer-normalize": "2.*",
@@ -41,31 +19,12 @@
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "autoload": {
-        "psr-4": {
-            "PhpMake\\": "src/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "PhpMake\\Tests\\": "tests/"
-        }
-    },
-    "bin": [
-        "bin/phpmake.php"
-    ],
-    "archive": {
-        "exclude": [
-            "*.log",
-            "*.cache",
-            "composer.lock"
-        ]
-    },
+    "autoload": {"psr-4": {"PhpMake\\": "src/"}},
+    "autoload-dev": {"psr-4": {"PhpMake\\Tests\\": "tests/"}},
+    "bin": ["bin/phpmake.php"],
+    "archive": {"exclude": ["*.log", "*.cache", "composer.lock"]},
     "config": {
-        "allow-plugins": {
-            "composer-unused/composer-unused-plugin": true,
-            "ergebnis/composer-normalize": true
-        },
+        "allow-plugins": {"composer-unused/composer-unused-plugin": true, "ergebnis/composer-normalize": true},
         "archive-format": "zip",
         "bin-compat": "full",
         "optimize-autoloader": true,
@@ -80,7 +39,8 @@
         "format-check": "php-cs-fixer check",
         "refactor": "rector process",
         "refactor-check": "rector --dry-run",
-        "test": "phpunit --configuration phpunit.xml"
+        "test": "phpunit --configuration phpunit.xml",
+        "coverage": "phpunit --configuration phpunit.xml --coverage-clover coverage.xml --coverage-text"
     },
     "scripts-descriptions": {
         "lint": "Check PHP files for syntax errors.",
@@ -88,6 +48,7 @@
         "format-check": "Check coding style issues.",
         "refactor": "Apply code refactoring.",
         "refactor-check": "Check code refactoring rules.",
-        "test": "Run all tests."
+        "test": "Run all tests.",
+        "coverage": "Run tests and generate a Clover code coverage report."
     }
 }
