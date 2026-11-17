@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PhpMake\\Tests\\Unit;
+namespace PhpMake\Tests\Unit;
 
-use PhpMake\\Build\\BuildLoader;
-use PHPUnit\\Framework\\TestCase;
+use PhpMake\Build\BuildLoader;
+use PHPUnit\Framework\TestCase;
 
 /** Tests loading and validating build configuration files. */
 final class BuildLoaderTest extends TestCase
@@ -49,7 +49,7 @@ final class BuildLoaderTest extends TestCase
     {
         file_put_contents($this->buildFile, '[]');
 
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('must be a JSON object');
         (new BuildLoader())->load($this->buildFile);
     }
@@ -59,7 +59,7 @@ final class BuildLoaderTest extends TestCase
     {
         file_put_contents($this->buildFile, '{"name":"Incomplete"}');
 
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Missing required field: description');
         (new BuildLoader())->load($this->buildFile);
     }
@@ -75,7 +75,7 @@ final class BuildLoaderTest extends TestCase
             'default_target' => 'build',
         ], JSON_THROW_ON_ERROR));
 
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Unknown task type 'not-real'");
         (new BuildLoader())->load($this->buildFile);
     }
