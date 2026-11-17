@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace PhpMake\Tests\Unit;
 
 use FilesystemIterator;
+use InvalidArgumentException;
+use RuntimeException;
 use PhpMake\Build\BuildConfiguration;
-use PhpMake\Build\BuildExecutor;
 use PhpMake\Build\BuildLoader;
 use PhpMake\Build\BuildValidator;
 use PhpMake\Cli\CliParser;
@@ -216,6 +217,8 @@ final class CoverageCompletionTest extends TestCase
 
         self::assertSame(0, $executor->executeTasks($valid, ['default'], $factory, false, true));
         self::assertSame(1, $executor->executeTasks($valid, [null], $factory, false, true));
+        self::assertSame(1, $executor->executeTasks($valid, ['missing-target'], $factory, false, true));
+        $this->assertExecutorFails($executor, $factory, ['default' => 'not-an-array'], ['default']);
 
         $this->assertExecutorFails($executor, $factory, [
             'default' => [],
