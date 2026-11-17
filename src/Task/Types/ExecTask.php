@@ -1,8 +1,8 @@
 <?php
 
-namespace PhpMake\\Task\\Types;
+namespace PhpMake\Task\Types;
 
-use PhpMake\\Task\\BaseTask;
+use PhpMake\Task\BaseTask;
 
 /** Runs an external process without invoking a command shell. */
 final class ExecTask extends BaseTask
@@ -14,17 +14,17 @@ final class ExecTask extends BaseTask
         $args = $this->params['args'] ?? [];
         $timeout = (float) ($this->params['timeout'] ?? 300);
         if (!is_finite($timeout) || $timeout <= 0 || $timeout > 86400) {
-            throw new \\InvalidArgumentException('Exec timeout must be greater than 0 and at most 86400 seconds.');
+            throw new \InvalidArgumentException('Exec timeout must be greater than 0 and at most 86400 seconds.');
         }
 
-        preg_match_all('/"((?:\\\\\\\\.|[^"])*)"|\\'((?:\\\\\\\\.|[^\\'])*)\\'|(\\S+)/', $command, $matches, PREG_SET_ORDER);
+        preg_match_all('/"((?:\\\\.|[^"])*)"|\'((?:\\\\.|[^\'])*)\'|(\S+)/', $command, $matches, PREG_SET_ORDER);
         $argv = [];
         foreach ($matches as $match) {
             $token = $match[1] !== '' ? stripcslashes($match[1]) : ($match[2] !== '' ? stripcslashes($match[2]) : $match[3]);
             $argv[] = $token;
         }
         if ($argv === []) {
-            throw new \\InvalidArgumentException('Exec command is empty.');
+            throw new \InvalidArgumentException('Exec command is empty.');
         }
 
         $argv = array_merge($argv, array_map(static fn($arg): string => (string) $arg, $args));
@@ -74,7 +74,7 @@ final class ExecTask extends BaseTask
         $closeCode = proc_close($process);
         $exitCode = ($observedExitCode !== null && $observedExitCode >= 0) ? $observedExitCode : $closeCode;
 
-        foreach (preg_split('/\\R/', rtrim($stdout)) as $line) {
+        foreach (preg_split('/\R/', rtrim($stdout)) as $line) {
             if ($line !== '') {
                 $this->logger->info($line);
             }
@@ -90,7 +90,7 @@ final class ExecTask extends BaseTask
         return $exitCode === 0;
     }
 
-    #[\\Override]
+    #[\Override]
     /** Returns the exec task identifier. */
     public function getType(): string
     {
@@ -101,17 +101,17 @@ final class ExecTask extends BaseTask
     protected function validateParams(): void
     {
         if (!isset($this->params['command']) || !is_string($this->params['command']) || trim($this->params['command']) === '') {
-            throw new \\InvalidArgumentException("Exec task requires a non-empty string 'command'.");
+            throw new \InvalidArgumentException("Exec task requires a non-empty string 'command'.");
         }
         if (isset($this->params['args']) && (!is_array($this->params['args']) || array_filter($this->params['args'], static fn($value) => !is_scalar($value)))) {
-            throw new \\InvalidArgumentException("Exec task 'args' must be an array of scalar values.");
+            throw new \InvalidArgumentException("Exec task 'args' must be an array of scalar values.");
         }
         if (isset($this->params['timeout']) && (
             !is_numeric($this->params['timeout'])
             || (float) $this->params['timeout'] <= 0
             || (float) $this->params['timeout'] > 86400
         )) {
-            throw new \\InvalidArgumentException("Exec task 'timeout' must be greater than 0 and at most 86400 seconds.");
+            throw new \InvalidArgumentException("Exec task 'timeout' must be greater than 0 and at most 86400 seconds.");
         }
     }
 }
