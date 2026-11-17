@@ -13,7 +13,7 @@
  * @license    GPL-3.0
  * @link       https://github.com/phpmake/phpmake
  *
- * @throws \\Throwable If an error occurs during execution.
+ * @throws \Throwable If an error occurs during execution.
  */
 
 // Support both development (package root) and Composer-installed layouts.
@@ -31,19 +31,19 @@ foreach ($autoloadCandidates as $candidate) {
 }
 
 if ($autoload === null) {
-    fwrite(STDERR, "Error: Unable to locate Composer autoloader.\\n");
+    fwrite(STDERR, "Error: Unable to locate Composer autoloader.\n");
     exit(1);
 }
 
 require $autoload;
 
-use PhpMake\\Utilities\\Logger;
-use PhpMake\\Cli\\CliParser;
-use PhpMake\\Build\\BuildLoader;
-use PhpMake\\Task\\TaskExecutor;
-use PhpMake\\Build\\BuildExecutor;
-use PhpMake\\Task\\TaskFactory;
-use PhpMake\\Target\\DependencyResolver;
+use PhpMake\Utilities\Logger;
+use PhpMake\Cli\CliParser;
+use PhpMake\Build\BuildLoader;
+use PhpMake\Task\TaskExecutor;
+use PhpMake\Build\BuildExecutor;
+use PhpMake\Task\TaskFactory;
+use PhpMake\Target\DependencyResolver;
 
 try {
     $parser = new CliParser();
@@ -80,21 +80,21 @@ try {
 
         $destFile = getcwd() . DIRECTORY_SEPARATOR . 'build.json';
         if (file_exists($destFile)) {
-            fwrite(STDERR, "Error: '{$destFile}' already exists.\\n");
+            fwrite(STDERR, "Error: '{$destFile}' already exists.\n");
             exit(1);
         }
 
         if ($sampleFile === null) {
-            fwrite(STDERR, "Error: Sample config 'build.json.example' not found.\\n");
+            fwrite(STDERR, "Error: Sample config 'build.json.example' not found.\n");
             exit(1);
         }
 
         if (copy($sampleFile, $destFile)) {
-            echo "Sample build.json created successfully.\\n";
+            echo "Sample build.json created successfully.\n";
             exit(0);
         }
 
-        fwrite(STDERR, "Error: Failed to create build.json.\\n");
+        fwrite(STDERR, "Error: Failed to create build.json.\n");
         exit(1);
     }
 
@@ -103,7 +103,7 @@ try {
     $config = $loader->load();
 
     if ($args['validateBuild']) {
-        echo "Build configuration is valid.\\n";
+        echo "Build configuration is valid.\n";
         exit(0);
     }
 
@@ -128,7 +128,7 @@ try {
     }
 
     exit($exitCode);
-} catch (\\Throwable $exception) {
+} catch (\Throwable $exception) {
     fwrite(STDERR, $exception->getMessage() . PHP_EOL);
     exit(1);
 }
