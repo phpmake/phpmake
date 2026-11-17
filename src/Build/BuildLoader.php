@@ -12,7 +12,7 @@ final class BuildLoader
             throw new \RuntimeException(sprintf("Build file '%s' not found or unreadable.", $buildFile));
         }
 
-        $rawContents = file_get_contents($buildFile);
+        $rawContents = @file_get_contents($buildFile);
         if ($rawContents === false) {
             throw new \RuntimeException(sprintf("Cannot read build file '%s'.", $buildFile));
         }
