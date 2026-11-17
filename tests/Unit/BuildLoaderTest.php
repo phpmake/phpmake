@@ -85,7 +85,7 @@ final class BuildLoaderTest extends TestCase
     {
         file_put_contents($this->buildFile, '{"name":');
 
-        $this->expectException(\\JsonException::class);
+        $this->expectException(\JsonException::class);
         (new BuildLoader())->load($this->buildFile);
     }
 
