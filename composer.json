@@ -43,12 +43,12 @@
     "prefer-stable": true,
     "autoload": {
         "psr-4": {
-            "PhpMake\\": "src/"
+            "PhpMake\\\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "PhpMake\\Tests\\": "tests/"
+            "PhpMake\\\\Tests\\\\": "tests/"
         }
     },
     "bin": [
@@ -80,7 +80,8 @@
         "format-check": "php-cs-fixer check",
         "refactor": "rector process",
         "refactor-check": "rector --dry-run",
-        "test": "phpunit --configuration phpunit.xml"
+        "test": "phpunit --configuration phpunit.xml",
+        "coverage": "phpunit --configuration phpunit.xml --coverage-clover build/coverage.xml"
     },
     "scripts-descriptions": {
         "lint": "Check PHP files for syntax errors.",
@@ -88,6 +89,7 @@
         "format-check": "Check coding style issues.",
         "refactor": "Apply code refactoring.",
         "refactor-check": "Check code refactoring rules.",
-        "test": "Run all tests."
+        "test": "Run all tests.",
+        "coverage": "Run tests and generate a Clover code coverage report."
     }
 }
