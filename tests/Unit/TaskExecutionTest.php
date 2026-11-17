@@ -258,4 +258,27 @@ final class TaskExecutionTest extends TestCase
         self::assertSame(1, $exitCode);
     }
 
+
+    /** Non-array task entries fail safely without invoking the task factory. */
+    public function testTaskExecutorRejectsNonArrayTaskEntry(): void
+    {
+        $config = new \PhpMake\Build\BuildConfiguration(
+            'MalformedTaskEntry',
+            'Task entry is not an object',
+            '1.0.0',
+            ['build' => ['tasks' => ['invalid-task-entry']]],
+            'build'
+        );
+
+        $exitCode = (new \PhpMake\Task\TaskExecutor())->executeTasks(
+            $config,
+            ['build'],
+            new \PhpMake\Task\TaskFactory($this->logger),
+            false,
+            true
+        );
+
+        self::assertSame(1, $exitCode);
+    }
+
 }
