@@ -117,4 +117,27 @@ final class TaskExecutionTest extends TestCase
         // Assert
         $this->assertTrue($result);
     }
+
+    /** Returns failure when a regular file blocks directory creation. */
+    public function testCreateDirectoryTaskReportsFilesystemFailure(): void
+    {
+        $parentFile = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-parent-' . bin2hex(random_bytes(6));
+        file_put_contents($parentFile, 'not a directory');
+        $task = new CreateDirectoryTask(['name' => $parentFile . DIRECTORY_SEPARATOR . 'child'], $this->logger);
+        try {
+            self::assertFalse($task->execute(false, true));
+        } finally {
+            unlink($parentFile);
+        }
+    }
+
+    /** Rejects an exec timeout above the supported maximum. */
+    public function testExecTaskRejectsTimeoutAboveMaximum(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('at most 86400');
+        new ExecTask(['command' => PHP_BINARY, 'timeout' => 86401], $this->logger);
+    }
+
+
 }

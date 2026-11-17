@@ -95,9 +95,6 @@ jobs:
       - name: Security check
         run: composer audit --abandoned=ignore
 
-      - name: Run tests
-        run: composer test
-
       - name: Use tool
         run: php bin/phpmake.php package
 

@@ -180,4 +180,48 @@ final class BuildValidatorTest extends TestCase
         ];
         $this->assertNotEmpty((new BuildValidator())->validate($config));
     }
+
+    /** Accepts the maximum supported exec timeout. */
+    public function testExecTimeoutAtMaximumIsValid(): void
+    {
+        $config = [
+            'name' => 'Test', 'description' => 'Timeout boundary', 'version' => '1.0',
+            'targets' => ['build' => ['tasks' => [[
+                'type' => 'exec', 'params' => ['command' => 'php', 'timeout' => 86400],
+            ]]]],
+            'default_target' => 'build',
+        ];
+        self::assertSame([], (new BuildValidator())->validate($config));
+    }
+
+    /** Rejects exec timeouts above the runtime limit. */
+    public function testExecTimeoutAboveMaximumIsInvalid(): void
+    {
+        $config = [
+            'name' => 'Test', 'description' => 'Timeout boundary', 'version' => '1.0',
+            'targets' => ['build' => ['tasks' => [[
+                'type' => 'exec', 'params' => ['command' => 'php', 'timeout' => 86401],
+            ]]]],
+            'default_target' => 'build',
+        ];
+        $errors = (new BuildValidator())->validate($config);
+        self::assertStringContainsString("invalid 'timeout'", implode("\n", $errors));
+    }
+
+    /** Rejects zero and negative exec timeouts. */
+    public function testNonPositiveExecTimeoutIsInvalid(): void
+    {
+        foreach ([0, -1] as $timeout) {
+            $config = [
+                'name' => 'Test', 'description' => 'Timeout boundary', 'version' => '1.0',
+                'targets' => ['build' => ['tasks' => [[
+                    'type' => 'exec', 'params' => ['command' => 'php', 'timeout' => $timeout],
+                ]]]],
+                'default_target' => 'build',
+            ];
+            self::assertStringContainsString("invalid 'timeout'", implode("\n", (new BuildValidator())->validate($config)));
+        }
+    }
+
+
 }

@@ -234,4 +234,27 @@ final class LoggerTest extends TestCase
         // Assert
         $this->assertEquals('DEBUG: Test debug' . PHP_EOL, $output);
     }
+
+    /** File rotation failures must not interrupt normal logger calls. */
+    public function testFileLoggingFailureDoesNotThrow(): void
+    {
+        $base = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-log-' . bin2hex(random_bytes(8));
+        mkdir($base);
+        $logFile = $base . DIRECTORY_SEPARATOR . 'build.log';
+        file_put_contents($logFile, str_repeat('x', 10 * 1024 * 1024 + 1));
+        mkdir($logFile . '.5');
+
+        $logger = new Logger(false, true, false, $logFile);
+        try {
+            $logger->info('Build continues after log rotation failure');
+            self::assertDirectoryExists($logFile . '.5');
+        } finally {
+            unlink($logFile);
+            rmdir($logFile . '.5');
+            @unlink($logFile . '.lock');
+            rmdir($base);
+        }
+    }
+
+
 }

@@ -4,36 +4,15 @@ namespace PhpMake\Task\Types;
 
 use PhpMake\Task\BaseTask;
 
-/**
- * CreateDirectoryTask Class
- *
- * Implements a task for creating directories within PHPMake tool.
- * Ensures the directory is created with appropriate permissions.
- *
- * @package    PHPMake
- * @subpackage Task
- */
+/** Creates directories while enforcing PHPMake project-path boundaries. */
 final class CreateDirectoryTask extends BaseTask
 {
-    /**
-     * Execute directory creation task.
-     *
-     * Creates specified directory with appropriate permissions.
-     * Treats an already-existing directory as success.
-     *
-     * @param bool $debug  Enable debug mode for detailed logging.
-     * @param bool $silent Suppress output if enabled.
-     *
-     * @return bool Status of directory creation operation (true if successful, false otherwise).
-     *
-     * @throws \Exception If required 'name' parameter is missing.
-     */
+    /** Creates the configured directory, treating an existing directory as success. */
     protected function runTask(bool $debug, bool $silent): bool
     {
         $dirName = $this->params['name'] ?? '';
-
-        if (empty($dirName)) {
-            throw new \Exception("Missing 'name' parameter.");
+        if ($dirName === '') {
+            throw new \InvalidArgumentException("Missing 'name' parameter.");
         }
 
         if (is_dir($dirName)) {
@@ -41,31 +20,28 @@ final class CreateDirectoryTask extends BaseTask
             return true;
         }
 
-        if (mkdir($dirName, 0o777, true) || is_dir($dirName)) {
+        error_clear_last();
+        if (@mkdir($dirName, 0o777, true) || is_dir($dirName)) {
             $this->logger->debug(sprintf("Created directory '%s'.", $dirName));
             return true;
         }
 
+        $error = error_get_last();
+        $reason = $error['message'] ?? 'unknown filesystem error';
+        $this->logger->error(sprintf("Unable to create directory '%s': %s", $dirName, $reason));
         return false;
     }
 
     /** Validates the directory path and ensures it stays within the project. */
     protected function validateParams(): void
     {
-        if (!isset($this->params['name'])) {
-            throw new \Exception("Missing 'name' parameter for create_directory task.");
+        if (!isset($this->params['name']) || !is_string($this->params['name']) || trim($this->params['name']) === '') {
+            throw new \InvalidArgumentException("Missing or invalid 'name' parameter for create_directory task.");
         }
-
-        $this->assertSafePath((string) $this->params['name'], 'create_directory name');
+        $this->assertSafePath($this->params['name'], 'create_directory name');
     }
 
-    /**
-     * Get task type identifier.
-     *
-     * Returns string representation of task type.
-     *
-     * @return string The task type ('create_directory').
-     */
+    /** Returns the create_directory task identifier. */
     #[\Override]
     public function getType(): string
     {

@@ -2,20 +2,9 @@
 
 namespace PhpMake;
 
-/**
- * Config Class
- *
- * Provides global configuration constants for PHPMake tool.
- *
- * @package    PHPMake
- * @subpackage Core
- */
+/** Provides global configuration constants for PHPMake. */
 final class Config
 {
-    /**
-     * Tool version identifier.
-     *
-     * Represents version number of PHPMake.
-     */
-    public const string TOOL_VERSION = '2.0.1';
+    /** Current PHPMake release version. */
+    public const string TOOL_VERSION = '2.0.2';
 }

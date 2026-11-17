@@ -1,95 +1,48 @@
 {
     "$schema": "http://json-schema.org/draft-06/schema#",
-    "$id": "https://github.com/phpmake/schemas/build-schema.json ",
+    "$id": "https://github.com/phpmake/schemas/build-schema.json",
     "title": "PHPMake Build Configuration Schema",
-    "description": "Schema for validating build.json files used by PHPMake, a PHP-based build automation tool.",
+    "description": "Schema for validating build.json files used by PHPMake.",
     "type": "object",
-    "required": [
-        "name",
-        "version",
-        "targets"
-    ],
+    "required": ["name", "description", "version", "targets", "default_target"],
     "properties": {
-        "name": {
-            "type": "string",
-            "description": "The name of project being built."
-        },
-        "description": {
-            "type": "string",
-            "description": "A short description of build configuration or project."
-        },
-        "version": {
-            "type": "string",
-            "description": "The version of project. Follows semantic versioning."
-        },
-        "default_target": {
-            "type": "string",
-            "description": "The target to run if none is specified on command line."
-        },
+        "name": {"type": "string", "minLength": 1},
+        "description": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1},
+        "default_target": {"type": "string", "minLength": 1},
         "targets": {
             "type": "object",
-            "description": "A map of target names to their configurations.",
+            "minProperties": 1,
             "patternProperties": {
-                "^\\w+$": {
+                "^.+$": {
                     "type": "object",
-                    "required": [
-                        "tasks"
-                    ],
+                    "required": ["tasks"],
                     "properties": {
-                        "description": {
-                            "type": "string"
-                        },
-                        "depends": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
+                        "description": {"type": "string"},
+                        "depends": {"type": "array", "items": {"type": "string"}},
                         "tasks": {
                             "type": "array",
                             "items": {
                                 "type": "object",
+                                "required": ["type", "params"],
                                 "properties": {
                                     "type": {
                                         "type": "string",
-                                        "description": "Type of task to execute.",
-                                        "enum": [
-                                            "create_directory",
-                                            "delete",
-                                            "copy",
-                                            "exec",
-                                            "echo",
-                                            "archive"
-                                        ]
+                                        "enum": ["create_directory", "delete", "copy", "exec", "echo", "archive"]
                                     },
                                     "params": {
                                         "type": "object",
                                         "oneOf": [
-                                            {
-                                                "$ref": "#/definitions/create_directory"
-                                            },
-                                            {
-                                                "$ref": "#/definitions/delete"
-                                            },
-                                            {
-                                                "$ref": "#/definitions/copy"
-                                            },
-                                            {
-                                                "$ref": "#/definitions/exec"
-                                            },
-                                            {
-                                                "$ref": "#/definitions/echo"
-                                            },
-                                            {
-                                                "$ref": "#/definitions/archive"
-                                            }
+                                            {"$ref": "#/definitions/create_directory"},
+                                            {"$ref": "#/definitions/delete"},
+                                            {"$ref": "#/definitions/copy"},
+                                            {"$ref": "#/definitions/exec"},
+                                            {"$ref": "#/definitions/echo"},
+                                            {"$ref": "#/definitions/archive"}
                                         ]
                                     }
                                 },
-                                "required": [
-                                    "type",
-                                    "params"
-                                ]
+                                "additionalProperties": false
                             }
                         }
                     },
@@ -101,86 +54,44 @@
     },
     "definitions": {
         "create_directory": {
-            "type": "object",
-            "required": [
-                "name"
-            ],
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "description": "Path to the directory to create."
-                }
-            }
+            "type": "object", "required": ["name"],
+            "properties": {"name": {"type": "string", "minLength": 1}},
+            "additionalProperties": false
         },
         "delete": {
-            "type": "object",
-            "required": [
-                "path"
-            ],
-            "properties": {
-                "path": {
-                    "type": "string",
-                    "description": "Path to the file or directory to delete."
-                }
-            }
+            "type": "object", "required": ["path"],
+            "properties": {"path": {"type": "string", "minLength": 1}},
+            "additionalProperties": false
         },
         "copy": {
-            "type": "object",
-            "required": [
-                "source",
-                "dest"
-            ],
+            "type": "object", "required": ["source", "dest"],
             "properties": {
-                "source": {
-                    "type": "string",
-                    "description": "Source path to copy from."
-                },
-                "dest": {
-                    "type": "string",
-                    "description": "Destination path to copy to."
-                }
-            }
+                "source": {"type": "string", "minLength": 1},
+                "dest": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": false
         },
         "exec": {
-            "type": "object",
-            "required": [
-                "command"
-            ],
+            "type": "object", "required": ["command"],
             "properties": {
-                "command": {
-                    "type": "string",
-                    "description": "Shell command to execute."
-                }
-            }
+                "command": {"type": "string", "minLength": 1},
+                "args": {"type": "array", "items": {"type": ["string", "number", "integer", "boolean"]}},
+                "timeout": {"type": "number", "exclusiveMinimum": 0, "maximum": 86400}
+            },
+            "additionalProperties": false
         },
         "echo": {
-            "type": "object",
-            "required": [
-                "message"
-            ],
-            "properties": {
-                "message": {
-                    "type": "string",
-                    "description": "Message to output to the console."
-                }
-            }
+            "type": "object", "required": ["message"],
+            "properties": {"message": {"type": "string"}},
+            "additionalProperties": false
         },
         "archive": {
-            "type": "object",
-            "required": [
-                "source",
-                "output"
-            ],
+            "type": "object", "required": ["source", "output"],
             "properties": {
-                "source": {
-                    "type": "string",
-                    "description": "Directory or file to archive."
-                },
-                "output": {
-                    "type": "string",
-                    "description": "Path to the output archive file."
-                }
-            }
+                "source": {"type": "string", "minLength": 1},
+                "output": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": false
         }
     }
 }

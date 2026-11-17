@@ -2,20 +2,18 @@
 
 namespace PhpMake\Utilities;
 
-    /** Writes console messages and optionally persists them to a rotating log. */
+/** Writes console messages and optionally persists them to a rotating log. */
 final class Logger
 {
-    private string $logFile = 'build.log';
-
     private const int MAX_SIZE = 10 * 1024 * 1024;
-
     private const int MAX_FILES = 5;
 
-    /** Configures debug output, console silence, and file logging. */
+    /** Configures debug output, console silence, file logging, and an optional log path. */
     public function __construct(
         private readonly bool $debug,
         private readonly bool $silent,
-        private readonly bool $noLog
+        private readonly bool $noLog,
+        private readonly string $logFile = 'build.log'
     ) {}
 
     /** Writes an informational message. */
@@ -24,10 +22,7 @@ final class Logger
         if (!$this->silent) {
             echo $message . PHP_EOL;
         }
-
-        if (!$this->noLog) {
-            $this->logToFile('INFO: ' . $message);
-        }
+        $this->writeLog('INFO: ' . $message);
     }
 
     /** Writes a debug message when debug output is enabled. */
@@ -36,19 +31,27 @@ final class Logger
         if ($this->debug && !$this->silent) {
             echo 'DEBUG: ' . $message . PHP_EOL;
         }
-
-        if (!$this->noLog) {
-            $this->logToFile('DEBUG: ' . $message);
-        }
+        $this->writeLog('DEBUG: ' . $message);
     }
 
     /** Writes an error message to standard error. */
     public function error(string $message): void
     {
         fwrite(STDERR, 'Error: ' . $message . PHP_EOL);
+        $this->writeLog('ERROR: ' . $message);
+    }
 
-        if (!$this->noLog) {
-            $this->logToFile('ERROR: ' . $message);
+    /** File logging is best-effort and must never interrupt the build. */
+    private function writeLog(string $message): void
+    {
+        if ($this->noLog) {
+            return;
+        }
+
+        try {
+            $this->logToFile($message);
+        } catch (\Throwable) {
+            // Console/build behavior takes precedence over optional log persistence.
         }
     }
 
@@ -59,7 +62,6 @@ final class Logger
     private function logToFile(string $message): void
     {
         $lock = @fopen($this->logFile . '.lock', 'c');
-
         if ($lock === false) {
             return;
         }
@@ -70,10 +72,8 @@ final class Logger
             }
 
             clearstatcache(true, $this->logFile);
-
             if (is_file($this->logFile) && filesize($this->logFile) >= self::MAX_SIZE) {
                 $oldest = $this->logFile . '.' . self::MAX_FILES;
-
                 if (file_exists($oldest) && !@unlink($oldest)) {
                     throw new \RuntimeException(sprintf("Unable to remove old log '%s'.", $oldest));
                 }
@@ -81,7 +81,6 @@ final class Logger
                 for ($i = self::MAX_FILES - 1; $i >= 1; --$i) {
                     $from = $this->logFile . '.' . $i;
                     $to = $this->logFile . '.' . ($i + 1);
-
                     if (file_exists($from) && !@rename($from, $to)) {
                         throw new \RuntimeException(sprintf("Unable to rotate log '%s'.", $from));
                     }
@@ -93,18 +92,15 @@ final class Logger
             }
 
             $fp = @fopen($this->logFile, 'ab');
-
             if ($fp === false) {
                 return;
             }
 
             try {
                 $line = date('Y-m-d H:i:s') . ' ' . $message . PHP_EOL;
-
                 if (fwrite($fp, $line) === false) {
                     throw new \RuntimeException('Unable to write build log.');
                 }
-
                 fflush($fp);
             } finally {
                 fclose($fp);

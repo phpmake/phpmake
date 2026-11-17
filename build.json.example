@@ -1,79 +1,36 @@
 {
     "name": "MyProject",
     "description": "Sample build file demonstrating PHPMake build tool capabilities.",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "targets": {
         "clean": {
             "description": "Remove build artifacts.",
             "tasks": [
-                {
-                    "type": "delete",
-                    "params": {
-                        "path": "build"
-                    }
-                }
+                {"type": "delete", "params": {"path": "build"}}
             ]
         },
         "build": {
             "description": "Build project files.",
-            "depends": [
-                "clean"
-            ],
+            "depends": ["clean"],
             "tasks": [
-                {
-                    "type": "create_directory",
-                    "params": {
-                        "name": "build"
-                    }
-                },
-                {
-                    "type": "copy",
-                    "params": {
-                        "source": "src/",
-                        "dest": "build/"
-                    }
-                },
-                {
-                    "type": "exec",
-                    "params": {
-                        "command": "php compiler.php"
-                    }
-                },
-                {
-                    "type": "echo",
-                    "params": {
-                        "message": "Build completed successfully."
-                    }
-                }
+                {"type": "create_directory", "params": {"name": "build"}},
+                {"type": "copy", "params": {"source": "src/", "dest": "build/"}},
+                {"type": "exec", "params": {"command": "php compiler.php"}},
+                {"type": "echo", "params": {"message": "Build completed successfully."}}
             ]
         },
         "test": {
             "description": "Run unit tests",
-            "depends": [
-                "build"
-            ],
+            "depends": ["build"],
             "tasks": [
-                {
-                    "type": "exec",
-                    "params": {
-                        "command": "vendor/bin/phpunit tests/"
-                    }
-                }
+                {"type": "exec", "params": {"command": "vendor/bin/phpunit tests/"}}
             ]
         },
         "package": {
             "description": "Create distributable package.",
-            "depends": [
-                "test"
-            ],
+            "depends": ["test"],
             "tasks": [
-                {
-                    "type": "archive",
-                    "params": {
-                        "source": "build/",
-                        "output": "dist/myproject.zip"
-                    }
-                }
+                {"type": "archive", "params": {"source": "build/", "output": "dist/myproject.zip"}}
             ]
         }
     },
