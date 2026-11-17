@@ -43,12 +43,12 @@
     "prefer-stable": true,
     "autoload": {
         "psr-4": {
-            "PhpMake\\\\": "src/"
+            "PhpMake\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "PhpMake\\\\Tests\\\\": "tests/"
+            "PhpMake\\Tests\\": "tests/"
         }
     },
     "bin": [
