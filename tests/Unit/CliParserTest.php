@@ -144,4 +144,42 @@ final class CliParserTest extends TestCase
         // Assert
         $this->assertEquals('custom_target', $result['target']);
     }
+
+    /** Prints the complete command-line help text. */
+    public function testShowHelpPrintsUsageAndOptions(): void
+    {
+        ob_start();
+        CliParser::showHelp();
+        $output = ob_get_clean();
+
+        self::assertIsString($output);
+        self::assertStringContainsString('Usage: phpmake', $output);
+        self::assertStringContainsString('--validate-build', $output);
+        self::assertStringContainsString('--silent', $output);
+    }
+
+    /** Prints the configured PHPMake version. */
+    public function testShowVersionPrintsConfiguredVersion(): void
+    {
+        ob_start();
+        CliParser::showVersion();
+        $output = ob_get_clean();
+
+        self::assertSame(\PhpMake\Config::TOOL_VERSION . PHP_EOL, $output);
+    }
+
+    /** Prints runtime and extension diagnostics. */
+    public function testShowDiagnosticsPrintsRuntimeInformation(): void
+    {
+        ob_start();
+        CliParser::showDiagnostics();
+        $output = ob_get_clean();
+
+        self::assertIsString($output);
+        self::assertStringContainsString('Diagnostics information:', $output);
+        self::assertStringContainsString('PHP:', $output);
+        self::assertStringContainsString('OS:', $output);
+        self::assertStringContainsString('Loaded extensions:', $output);
+    }
+
 }
