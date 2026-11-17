@@ -166,4 +166,96 @@ final class TaskExecutionTest extends TestCase
     }
 
 
+
+    /** Invalid execution-order targets stop execution with a failure code. */
+    public function testTaskExecutorRejectsMissingExecutionTarget(): void
+    {
+        $config = new \PhpMake\Build\BuildConfiguration(
+            'InvalidOrder',
+            'Missing target',
+            '1.0.0',
+            ['build' => ['tasks' => []]],
+            'build'
+        );
+
+        $exitCode = (new \PhpMake\Task\TaskExecutor())->executeTasks(
+            $config,
+            ['missing'],
+            new \PhpMake\Task\TaskFactory($this->logger),
+            false,
+            true
+        );
+
+        self::assertSame(1, $exitCode);
+    }
+
+    /** Targets without a task list fail instead of being silently skipped. */
+    public function testTaskExecutorRejectsMalformedTaskList(): void
+    {
+        $config = new \PhpMake\Build\BuildConfiguration(
+            'MalformedTasks',
+            'Malformed task list',
+            '1.0.0',
+            ['build' => ['tasks' => 'not-an-array']],
+            'build'
+        );
+
+        $exitCode = (new \PhpMake\Task\TaskExecutor())->executeTasks(
+            $config,
+            ['build'],
+            new \PhpMake\Task\TaskFactory($this->logger),
+            false,
+            true
+        );
+
+        self::assertSame(1, $exitCode);
+    }
+
+    /** Invalid task configuration is caught and reported as a failed build. */
+    public function testTaskExecutorHandlesTaskFactoryFailure(): void
+    {
+        $config = new \PhpMake\Build\BuildConfiguration(
+            'InvalidTask',
+            'Invalid task configuration',
+            '1.0.0',
+            ['build' => ['tasks' => [['type' => '', 'params' => []]]]],
+            'build'
+        );
+
+        $exitCode = (new \PhpMake\Task\TaskExecutor())->executeTasks(
+            $config,
+            ['build'],
+            new \PhpMake\Task\TaskFactory($this->logger),
+            false,
+            true
+        );
+
+        self::assertSame(1, $exitCode);
+    }
+
+    /** A task returning false stops the target and returns a failure code. */
+    public function testTaskExecutorStopsAfterTaskFailure(): void
+    {
+        $config = new \PhpMake\Build\BuildConfiguration(
+            'FailingTask',
+            'Non-zero process exit',
+            '1.0.0',
+            ['build' => ['tasks' => [[
+                'type' => 'exec',
+                'params' => ['command' => PHP_BINARY, 'args' => ['-r', 'exit(7);']],
+            ]]]],
+            'build'
+        );
+
+        $exitCode = (new \PhpMake\Task\TaskExecutor())->executeTasks(
+            $config,
+            ['build'],
+            new \PhpMake\Task\TaskFactory($this->logger),
+            false,
+            true
+        );
+
+        self::assertSame(1, $exitCode);
+    }
+
 }
