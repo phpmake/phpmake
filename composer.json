@@ -40,7 +40,7 @@
         "refactor": "rector process",
         "refactor-check": "rector --dry-run",
         "test": "phpunit --configuration phpunit.xml",
-        "coverage": "phpunit --configuration phpunit.xml --coverage-clover coverage.xml"
+        "coverage": "phpunit --configuration phpunit.xml --coverage-clover coverage.xml --coverage-text"
     },
     "scripts-descriptions": {
         "lint": "Check PHP files for syntax errors.",
