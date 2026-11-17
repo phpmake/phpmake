@@ -1,6 +1,6 @@
 <?php
 
-namespace PhpMake\\Build;
+namespace PhpMake\Build;
 
 /** Validates build configuration fields, targets, dependencies, and task parameters. */
 final class BuildValidator
