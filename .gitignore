@@ -79,4 +79,5 @@ composer.lock
 *.cache
 *.log
 /artifacts/
+/coverage.xml
 *-cache
