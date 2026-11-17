@@ -1,8 +1,8 @@
 <?php
 
-namespace PhpMake\\Task\\Types;
+namespace PhpMake\Task\Types;
 
-use PhpMake\\Task\\BaseTask;
+use PhpMake\Task\BaseTask;
 
 /** Creates directories while enforcing PHPMake project-path boundaries. */
 final class CreateDirectoryTask extends BaseTask
@@ -12,7 +12,7 @@ final class CreateDirectoryTask extends BaseTask
     {
         $dirName = $this->params['name'] ?? '';
         if ($dirName === '') {
-            throw new \\InvalidArgumentException("Missing 'name' parameter.");
+            throw new \InvalidArgumentException("Missing 'name' parameter.");
         }
 
         if (is_dir($dirName)) {
@@ -36,13 +36,13 @@ final class CreateDirectoryTask extends BaseTask
     protected function validateParams(): void
     {
         if (!isset($this->params['name']) || !is_string($this->params['name']) || trim($this->params['name']) === '') {
-            throw new \\InvalidArgumentException("Missing or invalid 'name' parameter for create_directory task.");
+            throw new \InvalidArgumentException("Missing or invalid 'name' parameter for create_directory task.");
         }
         $this->assertSafePath($this->params['name'], 'create_directory name');
     }
 
     /** Returns the create_directory task identifier. */
-    #[\\Override]
+    #[\Override]
     public function getType(): string
     {
         return 'create_directory';
