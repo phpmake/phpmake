@@ -257,4 +257,44 @@ final class LoggerTest extends TestCase
     }
 
 
+
+    /** Logger state accessors reflect debug and silent configuration. */
+    public function testLoggerStateAccessors(): void
+    {
+        $normal = new Logger(true, false, true);
+        $silent = new Logger(true, true, true);
+        $nonDebug = new Logger(false, false, true);
+
+        self::assertTrue($normal->isDebugEnabled());
+        self::assertFalse($normal->isSilent());
+        self::assertFalse($silent->isDebugEnabled());
+        self::assertTrue($silent->isSilent());
+        self::assertFalse($nonDebug->isDebugEnabled());
+        self::assertFalse($nonDebug->isSilent());
+    }
+
+    /** Error messages are persisted with the ERROR level when file logging is enabled. */
+    public function testLoggerErrorWritesErrorEntryToFile(): void
+    {
+        $directory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-error-log-' . bin2hex(random_bytes(8));
+        self::assertTrue(mkdir($directory));
+        $logFile = $directory . DIRECTORY_SEPARATOR . 'build.log';
+        $logger = new Logger(false, true, false, $logFile);
+
+        try {
+            $logger->error('Expected logger error');
+
+            self::assertFileExists($logFile);
+            self::assertStringContainsString('ERROR: Expected logger error', (string) file_get_contents($logFile));
+        } finally {
+            if (is_file($logFile)) {
+                unlink($logFile);
+            }
+            if (is_file($logFile . '.lock')) {
+                unlink($logFile . '.lock');
+            }
+            rmdir($directory);
+        }
+    }
+
 }
