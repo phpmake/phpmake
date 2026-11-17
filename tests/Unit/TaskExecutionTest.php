@@ -140,4 +140,30 @@ final class TaskExecutionTest extends TestCase
     }
 
 
+
+    /** Successful task execution produces no console output in silent mode. */
+    public function testTaskExecutorSuppressesAllSuccessfulTaskOutputInSilentMode(): void
+    {
+        $config = new \PhpMake\Build\BuildConfiguration(
+            'SilentTest',
+            'Silent output contract',
+            '1.0.0',
+            ['build' => ['tasks' => [[
+                'type' => 'echo',
+                'params' => ['message' => 'This must remain hidden'],
+            ]]]],
+            'build'
+        );
+        $taskFactory = new \PhpMake\Task\TaskFactory($this->logger);
+        $executor = new \PhpMake\Task\TaskExecutor();
+
+        ob_start();
+        $exitCode = $executor->executeTasks($config, ['build'], $taskFactory, false, true);
+        $output = ob_get_clean();
+
+        self::assertSame(0, $exitCode);
+        self::assertSame('', $output);
+    }
+
+
 }

@@ -79,4 +79,15 @@ final class BuildLoaderTest extends TestCase
         $this->expectExceptionMessage("Unknown task type 'not-real'");
         (new BuildLoader())->load($this->buildFile);
     }
+
+    /** Malformed JSON is rejected with a JSON decoding exception. */
+    public function testRejectsMalformedJson(): void
+    {
+        file_put_contents($this->buildFile, '{"name":');
+
+        $this->expectException(\JsonException::class);
+        (new BuildLoader())->load($this->buildFile);
+    }
+
+
 }
