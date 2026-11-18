@@ -14,7 +14,7 @@
             "type": "object",
             "minProperties": 1,
             "patternProperties": {
-                "^.+$": {
+                "^(?=.*\\\\S).+$": {
                     "type": "object",
                     "required": ["tasks"],
                     "properties": {
@@ -56,26 +56,26 @@
     "definitions": {
         "create_directory": {
             "type": "object", "required": ["name"],
-            "properties": {"name": {"type": "string", "minLength": 1}},
+            "properties": {"name": {"type": "string", "minLength": 1, "pattern": ".*\\\\S.*"}},
             "additionalProperties": false
         },
         "delete": {
             "type": "object", "required": ["path"],
-            "properties": {"path": {"type": "string", "minLength": 1}},
+            "properties": {"path": {"type": "string", "minLength": 1, "pattern": ".*\\\\S.*"}},
             "additionalProperties": false
         },
         "copy": {
             "type": "object", "required": ["source", "dest"],
             "properties": {
-                "source": {"type": "string", "minLength": 1},
-                "dest": {"type": "string", "minLength": 1}
+                "source": {"type": "string", "minLength": 1, "pattern": ".*\\\\S.*"},
+                "dest": {"type": "string", "minLength": 1, "pattern": ".*\\\\S.*"}
             },
             "additionalProperties": false
         },
         "exec": {
             "type": "object", "required": ["command"],
             "properties": {
-                "command": {"type": "string", "minLength": 1},
+                "command": {"type": "string", "minLength": 1, "pattern": ".*\\\\S.*"},
                 "args": {"type": "array", "items": {"type": ["string", "number", "integer", "boolean"]}},
                 "timeout": {"type": "number", "exclusiveMinimum": 0, "maximum": 86400}
             },
@@ -89,8 +89,8 @@
         "archive": {
             "type": "object", "required": ["source", "output"],
             "properties": {
-                "source": {"type": "string", "minLength": 1},
-                "output": {"type": "string", "minLength": 1}
+                "source": {"type": "string", "minLength": 1, "pattern": ".*\\\\S.*"},
+                "output": {"type": "string", "minLength": 1, "pattern": ".*\\\\S.*"}
             },
             "additionalProperties": false
         }
