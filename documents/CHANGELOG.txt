@@ -1,5 +1,10 @@
 PHPMake - Unreleased
 --------------------
+* Prevent deleting the project root and reject dangling symlinks during --init.
+* Make directory copies transactional and bound external process output capture.
+* Align JSON schema and runtime validation, including raw JSON array/object shapes.
+* Improve CLI validation, dependency resolution, path comparison, and error reporting.
+* Add macOS CI coverage and regression tests for filesystem and process safety.
 * Fix Composer-installed CLI execution by reusing the consuming project's
   Composer autoloader instead of requiring a package-local vendor/autoload.php.
 * Add an integration regression test for the Composer-installed binary.
