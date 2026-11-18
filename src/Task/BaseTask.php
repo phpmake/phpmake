@@ -86,7 +86,7 @@ abstract class BaseTask implements TaskInterface
         $candidate = $this->normalizePath($candidate);
         $this->assertWithinDirectory($candidate, $cwd, $label);
         if (!$allowProjectRoot && $this->pathsEqual($candidate, $cwd)) {
-            throw new \\InvalidArgumentException(sprintf("Safety Violation: Refusing to operate on the project root for %s.", $label));
+            throw new \InvalidArgumentException(sprintf("Safety Violation: Refusing to operate on the project root for %s.", $label));
         }
 
         // Resolve the deepest existing prefix. realpath() follows symlinks,
@@ -117,7 +117,8 @@ abstract class BaseTask implements TaskInterface
     {
         $path = rtrim($path, DIRECTORY_SEPARATOR);
         $cwd = rtrim($cwd, DIRECTORY_SEPARATOR);
-        if ($path !== $cwd && !str_starts_with($path, $cwd . DIRECTORY_SEPARATOR)) {
+        $matches = PHP_OS_FAMILY === 'Windows' ? strncasecmp($path, $cwd . DIRECTORY_SEPARATOR, strlen($cwd . DIRECTORY_SEPARATOR)) === 0 : str_starts_with($path, $cwd . DIRECTORY_SEPARATOR);
+        if (!$this->pathsEqual($path, $cwd) && !$matches) {
             throw new \InvalidArgumentException(sprintf("Safety Violation: Path for %s escapes project directory: '%s'.", $label, $path));
         }
     }
