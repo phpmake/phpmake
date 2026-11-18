@@ -58,7 +58,7 @@ final class BuildValidator
                 $errors[] = sprintf("Target '%s' description must be a string.", (string) $targetName);
             }
 
-            $depends = $target['depends'] ?? [];
+            $depends = array_key_exists('depends', $target) ? $target['depends'] : [];
             if (!is_array($depends)) {
                 $errors[] = sprintf("Target '%s' dependencies must be an array.", (string) $targetName);
             } else {
