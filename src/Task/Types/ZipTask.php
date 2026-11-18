@@ -37,7 +37,7 @@ final class ZipTask extends BaseTask
         $outputReal = $outputParent . DIRECTORY_SEPARATOR . basename($output);
         $sourcePath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $sourceReal);
         $outputPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $outputReal);
-        if (in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true)) {
+        if (PHP_OS_FAMILY === 'Windows') {
             $sourcePath = strtolower($sourcePath);
             $outputPath = strtolower($outputPath);
         }
