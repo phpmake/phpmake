@@ -59,7 +59,7 @@ final class DeleteTask extends BaseTask
                 continue;
             }
             $path = $dir . DIRECTORY_SEPARATOR . $item;
-            $ok = $this->isSymbolicLinkOrJunction($path) || !is_dir($path) ? $this->deleteFile($path) : $this->deleteDirectory($path);
+            $ok = $this->isSymbolicLinkOrJunction($path) ? $this->removeLink($path) : (!is_dir($path) ? $this->deleteFile($path) : $this->deleteDirectory($path));
             if (!$ok) {
                 return false;
             }
