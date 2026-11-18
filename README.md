@@ -191,7 +191,7 @@ vendor/bin/phpunit tests/
 | `create_directory` | `name` (string)                              | Create directory       |
 | `delete`           | `path` (string)                              | Delete file/directory  |
 | `copy`             | `source` (string), `dest` (string)           | Copy files/directories |
-| `exec`             | `command` (string), optional `args` (scalar array), `timeout` (seconds, 0<timeout<=86400) | Execute a process without a shell |
+| `exec`             | `command` (string), optional `args` (scalar array), `timeout` (seconds, greater than 0 and at most 86400) | Execute a process without a shell |
 | `echo`             | `message` (string)                           | Output message         |
 | `archive`          | `source` (string), `output` (string)         | Archive a file/directory to ZIP |
 
