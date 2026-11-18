@@ -19,7 +19,7 @@ final class ExecTask extends BaseTask
         }
 
         if (!self::hasBalancedQuotes($command)) {
-            throw new \\InvalidArgumentException('Exec command contains an unbalanced quote.');
+            throw new \InvalidArgumentException('Exec command contains an unbalanced quote.');
         }
 
         $argv = self::tokenizeCommand($command);
@@ -137,6 +137,9 @@ final class ExecTask extends BaseTask
         if (!isset($this->params['command']) || !is_string($this->params['command']) || trim($this->params['command']) === '') {
             throw new \InvalidArgumentException("Exec task requires a non-empty string 'command'.");
         }
+        if (!self::hasBalancedQuotes($this->params['command'])) {
+            throw new \\InvalidArgumentException('Exec command contains an unbalanced quote.');
+        }
         if (isset($this->params['args']) && (!is_array($this->params['args']) || array_filter($this->params['args'], static fn($value) => !is_scalar($value)))) {
             throw new \InvalidArgumentException("Exec task 'args' must be an array of scalar values.");
         }
@@ -158,8 +161,8 @@ final class ExecTask extends BaseTask
         for ($i = 0; $i < $length; ++$i) {
             $character = $command[$i];
             if ($quote !== null) {
-                if ($character === '\\\\' && $i + 1 < $length
-                    && ($command[$i + 1] === $quote || $command[$i + 1] === '\\\\')) {
+                if ($character === '\\' && $i + 1 < $length
+                    && ($command[$i + 1] === $quote || $command[$i + 1] === '\\')) {
                     ++$i;
                     continue;
                 }
