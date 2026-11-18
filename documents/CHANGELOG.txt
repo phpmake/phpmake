@@ -5,6 +5,10 @@ PHPMake - Unreleased
 * Align JSON schema and runtime validation, including raw JSON array/object shapes.
 * Improve CLI validation, dependency resolution, path comparison, and error reporting.
 * Add macOS CI coverage and regression tests for filesystem and process safety.
+* Terminate process descendants on timeout/output overflow using Windows process-tree termination or a POSIX session.
+* Respect case-sensitive macOS filesystems and reject Windows UNC and drive-relative paths.
+* Test concurrent and partial logger writes, schema/runtime parity, and process-tree cleanup.
+* Verify a clean Composer consumer install, generated binary proxy, and sample build execution.
 * Fix Composer-installed CLI execution by reusing the consuming project's
   Composer autoloader instead of requiring a package-local vendor/autoload.php.
 * Add an integration regression test for the Composer-installed binary.
