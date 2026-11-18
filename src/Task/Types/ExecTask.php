@@ -36,13 +36,23 @@ final class ExecTask extends BaseTask
         $processOptions = ['bypass_shell' => true];
         $launchArgv = $argv;
         $processGroupCreated = false;
+        $hasPosixProcessGroups = PHP_OS_FAMILY !== 'Windows'
+            && function_exists('posix_setsid')
+            && function_exists('posix_kill');
+
         if (PHP_OS_FAMILY === 'Windows') {
             $processOptions['create_process_group'] = true;
-        } elseif (function_exists('posix_setsid') && function_exists('posix_kill')) {
-            // Establish a new session inside the child before it can spawn descendants.
+        }
+
+        if (PHP_OS_FAMILY === 'Windows' || $hasPosixProcessGroups) {
+            // Keep a stable launcher process alive while the configured command runs.
+            // On POSIX, establish its session before spawning the target process.
             $launcher = <<<'PHP'
 $command = json_decode(base64_decode($argv[1], true), true, 512, JSON_THROW_ON_ERROR);
-if (!is_array($command) || !posix_setsid()) {
+if (!is_array($command)) {
+    exit(126);
+}
+if (function_exists('posix_setsid') && !posix_setsid()) {
     exit(126);
 }
 $child = proc_open(
@@ -65,7 +75,7 @@ PHP;
                 $launcher,
                 base64_encode(json_encode($argv, JSON_THROW_ON_ERROR)),
             ];
-            $processGroupCreated = true;
+            $processGroupCreated = $hasPosixProcessGroups;
         }
         $process = proc_open(
             $launchArgv,
