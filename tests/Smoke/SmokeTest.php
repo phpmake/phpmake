@@ -16,9 +16,7 @@ namespace PhpMake\Tests\Smoke {
     use Throwable;
     use PHPUnit\Framework\TestCase;
 
-    /**
-     * @group Smoke
-     */
+    /** Smoke tests for the main library components and CLI entry point. */
     final class SmokeTest extends TestCase
     {
         private DependencyResolver $dependencyResolver;
@@ -35,36 +33,7 @@ namespace PhpMake\Tests\Smoke {
 
         private BuildValidator $buildValidator;
 
-        /**
-/** Tests is behavior. */
-         * This method is called before the first test method in the test class is executed.
-         *
-         * @doesNotPerformAssertions
-         *
-         * @return void
-         */
-        public static function setUpBeforeClass(): void {}
-
-        /**
-/** Tests has behavior. */
-         * This method is called after the last test method in the test class has been executed.
-         *
-         * @doesNotPerformAssertions
-         *
-         * @return void
-         */
-        public static function tearDownAfterClass(): void
-        {
-            gc_collect_cycles();
-        }
-
-        /**
-         * This method is called BEFORE each test method.
-         *
-         * @doesNotPerformAssertions
-         *
-         * @return void
-         */
+        /** Initializes the dependencies used by smoke tests. */
         protected function setUp(): void
         {
             parent::setUp();
@@ -77,205 +46,154 @@ namespace PhpMake\Tests\Smoke {
             $this->buildValidator = new BuildValidator();
         }
 
-        /**
-         * This method is called AFTER each test method.
-         *
-         * @doesNotPerformAssertions
-         *
-         * @return void
-         */
+        /** Confirms the test process can release temporary object cycles. */
         protected function tearDown(): void
         {
-            // Methods finalization codes.
             parent::tearDown();
         }
 
-        /**
-         * @test
-         *
-         * @small
-         *
-         * @return void
-         */
+        /** Confirms Composer can autoload the primary library classes. */
         public function testComposerCanLoadLibraryClass(): void
         {
             // Arrange
-            // AAA
-            // Assert
+            $classes = [DependencyResolver::class, TaskExecutor::class, Logger::class, BuildConfiguration::class, BuildLoader::class, BuildValidator::class];
+
             // Act
-            $this->assertTrue(class_exists(DependencyResolver::class));
-            $this->assertTrue(class_exists(TaskExecutor::class));
-            $this->assertTrue(class_exists(Logger::class));
-            $this->assertTrue(class_exists(BuildConfiguration::class));
-            $this->assertTrue(class_exists(BuildLoader::class));
-            $this->assertTrue(class_exists(BuildValidator::class));
+            $loaded = array_map(static fn (string $class): bool => class_exists($class), $classes);
+
+            // Assert
+            $this->assertNotContains(false, $loaded);
         }
 
-        /**
-         * @test
-         *
-         * @small
-         *
-         * @return void
-         */
+        /** Confirms the dependency resolver is initialized. */
         public function testDependencyResolverInstanceIsObject(): void
         {
             // Arrange
-            // AAA
+            $resolver = $this->dependencyResolver;
+
+            // Act
+            $isObject = is_object($resolver);
+
             // Assert
-            $this->assertNotNull($this->dependencyResolver);
-            // AAA
-            $this->assertIsObject($this->dependencyResolver);
+            $this->assertTrue($isObject);
         }
 
-        /**
-         * @test
-         *
-         * @small
-         *
-         * @return void
-         */
+        /** Confirms the task executor is initialized. */
         public function testTaskExecutorInstanceIsObject(): void
         {
             // Arrange
-            // AAA
+            $executor = $this->taskExecutor;
+
+            // Act
+            $isObject = is_object($executor);
+
             // Assert
-            $this->assertNotNull($this->taskExecutor);
-            // AAA
-            $this->assertIsObject($this->taskExecutor);
+            $this->assertTrue($isObject);
         }
 
-        /**
-         * @test
-         *
-         * @small
-         *
-         * @return void
-         */
+        /** Confirms the logger is initialized. */
         public function testLoggerInstanceIsObject(): void
         {
             // Arrange
-            // AAA
+            $logger = $this->logger;
+
+            // Act
+            $isObject = is_object($logger);
+
             // Assert
-            $this->assertNotNull($this->logger);
-            // AAA
-            $this->assertIsObject($this->logger);
+            $this->assertTrue($isObject);
         }
 
-        /**
-         * @test
-         *
-         * @small
-         *
-         * @return void
-         */
+        /** Confirms the build configuration is initialized. */
         public function testBuildConfigurationInstanceIsObject(): void
         {
             // Arrange
-            // AAA
+            $configuration = $this->buildConfiguration;
+
+            // Act
+            $isObject = is_object($configuration);
+
             // Assert
-            $this->assertNotNull($this->buildConfiguration);
-            // AAA
-            $this->assertIsObject($this->buildConfiguration);
+            $this->assertTrue($isObject);
         }
 
-        /**
-         * @test
-         *
-         * @small
-         *
-         * @return void
-         */
+        /** Confirms the build executor is initialized. */
         public function testBuildExecutorInstanceIsObject(): void
         {
             // Arrange
-            // AAA
+            $executor = $this->buildExecutor;
+
+            // Act
+            $isObject = is_object($executor);
+
             // Assert
-            $this->assertNotNull($this->buildExecutor);
-            // AAA
-            $this->assertIsObject($this->buildExecutor);
+            $this->assertTrue($isObject);
         }
 
-        /**
-         * @test
-         *
-         * @small
-         *
-         * @return void
-         */
+        /** Confirms the build loader is initialized. */
         public function testBuildLoaderInstanceIsObject(): void
         {
             // Arrange
-            // AAA
+            $loader = $this->buildLoader;
+
+            // Act
+            $isObject = is_object($loader);
+
             // Assert
-            $this->assertNotNull($this->buildLoader);
-            // AAA
-            $this->assertIsObject($this->buildLoader);
+            $this->assertTrue($isObject);
         }
 
-        /**
-         * @test
-         *
-         * @small
-         *
-         * @return void
-         */
+        /** Confirms the build validator is initialized. */
         public function testBuildValidatorInstanceIsObject(): void
         {
             // Arrange
-            // AAA
+            $validator = $this->buildValidator;
+
+            // Act
+            $isObject = is_object($validator);
+
             // Assert
-            $this->assertNotNull($this->buildValidator);
-            // AAA
-            $this->assertIsObject($this->buildValidator);
+            $this->assertTrue($isObject);
         }
 
-        /**
-         * @test
-         *
-         * @small
-         *
-         * @return void
-         */
+        /** Verifies CLI flags and target arguments are parsed. */
         public function testCliParserParse(): void
         {
             // Arrange
             $argv = ['bin/phpmake.php', '--debug', '--help', 'build'];
             $parser = new CliParser();
-            // Action
+
+            // Act
             $result = $parser->parse($argv);
+
             // Assert
             $this->assertTrue($result['debug']);
             $this->assertTrue($result['help']);
-            $this->assertEquals('build', $result['target']);
+            $this->assertSame('build', $result['target']);
         }
 
-        /**
-         * @test
-         *
-         * @small
-         *
-         * @return void
-         */
+        /** Verifies a real copy task copies file contents successfully. */
         public function testCopyTask(): void
         {
-            // Arrange — use paths under CWD so path-safety checks allow them.
+            // Arrange
             $baseDir = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-test';
             if (!is_dir($baseDir)) {
-                mkdir($baseDir, 0o777, true);
+                mkdir($baseDir, 0777, true);
             }
 
             $sourceFile = $baseDir . DIRECTORY_SEPARATOR . 'src_' . uniqid('', true) . '.txt';
             $destFile = $baseDir . DIRECTORY_SEPARATOR . 'dest_' . uniqid('', true) . '.txt';
             file_put_contents($sourceFile, 'Test copy');
 
+            // Act
             $copyTask = new CopyTask(['source' => $sourceFile, 'dest' => $destFile], $this->logger);
-            // Action
             $result = $copyTask->execute(false, true);
+
             // Assert
             $this->assertTrue($result);
             $this->assertFileExists($destFile);
-            $this->assertEquals('Test copy', file_get_contents($destFile));
+            $this->assertSame('Test copy', file_get_contents($destFile));
+
             // Cleanup
             @unlink($sourceFile);
             @unlink($destFile);
