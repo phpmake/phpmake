@@ -33,7 +33,7 @@ final class FilesystemTaskCoverageTest extends TestCase
         self::assertTrue(chdir($this->root));
         // Use the exact canonical path returned by PHP on Windows. The
         // temporary-directory path may use an 8.3 alias instead.
-        $workingDirectory = getcwd();
+        $workingDirectory = realpath(getcwd());
         self::assertNotFalse($workingDirectory);
         $this->root = $workingDirectory;
     }
