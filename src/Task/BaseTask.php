@@ -117,7 +117,7 @@ abstract class BaseTask implements TaskInterface
     {
         $path = rtrim($path, DIRECTORY_SEPARATOR);
         $cwd = rtrim($cwd, DIRECTORY_SEPARATOR);
-        $matches = in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true) ? strncasecmp($path, $cwd . DIRECTORY_SEPARATOR, strlen($cwd . DIRECTORY_SEPARATOR)) === 0 : str_starts_with($path, $cwd . DIRECTORY_SEPARATOR);
+        $matches = PHP_OS_FAMILY === 'Windows' ? strncasecmp($path, $cwd . DIRECTORY_SEPARATOR, strlen($cwd . DIRECTORY_SEPARATOR)) === 0 : str_starts_with($path, $cwd . DIRECTORY_SEPARATOR);
         if (!$this->pathsEqual($path, $cwd) && !$matches) {
             throw new \InvalidArgumentException(sprintf("Safety Violation: Path for %s escapes project directory: '%s'.", $label, $path));
         }
