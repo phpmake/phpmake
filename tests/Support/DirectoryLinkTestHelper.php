@@ -37,6 +37,9 @@ trait DirectoryLinkTestHelper
             exec($command, $output, $exitCode);
             clearstatcache(true, $link);
             if ($exitCode === 0 && is_dir($link)) {
+                if (!$this->isDirectoryJunction($link)) {
+                    self::fail('Windows junction was created but not recognized; lstat=' . var_export(lstat($link), true));
+                }
                 return;
             }
         }
