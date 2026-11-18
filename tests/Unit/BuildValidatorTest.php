@@ -9,7 +9,6 @@ use PHPUnit\Framework\TestCase;
 final class BuildValidatorTest extends TestCase
 {
     /**
-/** Tests is behavior. */
      * This method is called before the first test method in the test class is executed.
      *
      * @doesNotPerformAssertions
@@ -19,7 +18,6 @@ final class BuildValidatorTest extends TestCase
     public static function setUpBeforeClass(): void {}
 
     /**
-/** Tests has behavior. */
      * This method is called after the last test method in the test class has been executed.
      *
      * @doesNotPerformAssertions
