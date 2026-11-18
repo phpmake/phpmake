@@ -83,7 +83,7 @@ final class BuildLoaderTest extends TestCase
             'name' => 'Test',
             'description' => 'Invalid task',
             'version' => '1.0',
-            'targets' => ['build' => ['tasks' => [['type' => 'not-real', 'params' => []]]]],
+            'targets' => ['build' => ['tasks' => [['type' => 'not-real', 'params' => (object) []]]]],
             'default_target' => 'build',
         ], JSON_THROW_ON_ERROR));
 
