@@ -51,11 +51,11 @@ final readonly class BuildConfiguration
      */
     public function __construct(string $name, string $description, string $version, array $targets, string $defaultTarget)
     {
-        $this->name = $name ?: '';
-        $this->description = $description ?: '';
-        $this->version = $version ?: '';
-        $this->targets = $targets ?: [];
-        $this->defaultTarget = $defaultTarget ?: 'default';
+        $this->name = $name;
+        $this->description = $description;
+        $this->version = $version;
+        $this->targets = $targets;
+        $this->defaultTarget = $defaultTarget;
     }
 
     /**
