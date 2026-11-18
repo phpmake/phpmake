@@ -6,7 +6,7 @@
     colors="true"
     testdox="true"
     stopOnError="true" stopOnFailure="false" stopOnSkipped="false" stopOnRisky="false"
-    failOnWarning="true" failOnRisky="false"
+    failOnWarning="true" failOnRisky="false" failOnSkipped="true"
     timeoutForSmallTests="5" timeoutForMediumTests="30" timeoutForLargeTests="60"
     beStrictAboutTestsThatDoNotTestAnything="true" beStrictAboutOutputDuringTests="false">
     <!-- Test suite configuration -->
