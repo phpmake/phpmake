@@ -103,7 +103,7 @@ final class Logger
                 while ($offset < $length) {
                     $written = fwrite($fp, substr($line, $offset));
                     if ($written === false || $written === 0) {
-                        throw new \\RuntimeException('Unable to write complete build log entry.');
+                        throw new \RuntimeException('Unable to write complete build log entry.');
                     }
                     $offset += $written;
                 }
