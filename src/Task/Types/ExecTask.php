@@ -34,11 +34,41 @@ final class ExecTask extends BaseTask
 
         $pipes = [];
         $processOptions = ['bypass_shell' => true];
+        $launchArgv = $argv;
+        $processGroupCreated = false;
         if (PHP_OS_FAMILY === 'Windows') {
             $processOptions['create_process_group'] = true;
+        } elseif (function_exists('posix_setsid') && function_exists('posix_kill')) {
+            // Establish a new session inside the child before it can spawn descendants.
+            $launcher = <<<'PHP'
+$command = json_decode(base64_decode($argv[1], true), true, 512, JSON_THROW_ON_ERROR);
+if (!is_array($command) || !posix_setsid()) {
+    exit(126);
+}
+$child = proc_open(
+    $command,
+    [0 => STDIN, 1 => STDOUT, 2 => STDERR],
+    $pipes,
+    getcwd(),
+    null,
+    ['bypass_shell' => true]
+);
+if (!is_resource($child)) {
+    exit(127);
+}
+$exitCode = proc_close($child);
+exit($exitCode >= 0 ? $exitCode : 1);
+PHP;
+            $launchArgv = [
+                PHP_BINARY,
+                '-r',
+                $launcher,
+                base64_encode(json_encode($argv, JSON_THROW_ON_ERROR)),
+            ];
+            $processGroupCreated = true;
         }
         $process = proc_open(
-            $argv,
+            $launchArgv,
             [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
             $pipes,
             getcwd(),
@@ -52,10 +82,6 @@ final class ExecTask extends BaseTask
 
         fclose($pipes[0]);
         $processPid = proc_get_status($process)['pid'] ?? null;
-        $processGroupCreated = PHP_OS_FAMILY !== 'Windows'
-            && is_int($processPid)
-            && function_exists('posix_setpgid')
-            && @posix_setpgid($processPid, $processPid);
         stream_set_blocking($pipes[1], false);
         stream_set_blocking($pipes[2], false);
         $stdout = $stderr = '';
