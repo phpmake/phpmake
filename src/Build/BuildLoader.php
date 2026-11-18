@@ -30,6 +30,9 @@ final class BuildLoader
                 if (!($target instanceof \stdClass)) {
                     throw new \InvalidArgumentException(sprintf("Target '%s' must be a JSON object.", $targetName));
                 }
+                if (property_exists($target, 'depends') && !is_array($target->depends)) {
+                    throw new \InvalidArgumentException(sprintf("Dependencies for target '%s' must be a JSON array.", $targetName));
+                }
                 if (isset($target->tasks) && !is_array($target->tasks)) {
                     throw new \InvalidArgumentException(sprintf("Tasks for target '%s' must be a JSON array.", $targetName));
                 }
