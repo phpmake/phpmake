@@ -168,8 +168,10 @@ PHP;
                 foreach ($pipes as $pipe) {
                     fclose($pipe);
                 }
-                proc_close($terminator);
-                return;
+                $terminationCode = proc_close($terminator);
+                if ($terminationCode === 0) {
+                    return;
+                }
             }
         }
 
@@ -178,12 +180,13 @@ PHP;
             && $processPid !== null
             && function_exists('posix_kill')
         ) {
-            @posix_kill(-$processPid, SIGTERM);
-            usleep(200000);
-            if (@posix_kill(-$processPid, 0)) {
-                @posix_kill(-$processPid, SIGKILL);
+            if (@posix_kill(-$processPid, SIGTERM)) {
+                usleep(200000);
+                if (@posix_kill(-$processPid, 0)) {
+                    @posix_kill(-$processPid, SIGKILL);
+                }
+                return;
             }
-            return;
         }
 
         // Best-effort fallback when process groups are unavailable.
