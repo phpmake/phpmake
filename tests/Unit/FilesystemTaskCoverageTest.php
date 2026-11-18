@@ -18,19 +18,25 @@ final class FilesystemTaskCoverageTest extends TestCase
 
     private Logger $logger;
     private string $root;
+    private string $originalCwd;
 
     /** Initializes test fixtures. */
     protected function setUp(): void
     {
         parent::setUp();
         $this->logger = new Logger(false, true, true);
-        $this->root = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-fs-' . bin2hex(random_bytes(8));
+        $this->originalCwd = getcwd();
+        // Keep the test workspace on the system volume. Windows directory
+        // junctions require source and target to share a local NTFS volume.
+        $this->root = sys_get_temp_dir() . DIRECTORY_SEPARATOR . '.phpmake-fs-' . bin2hex(random_bytes(8));
         self::assertTrue(mkdir($this->root));
+        self::assertTrue(chdir($this->root));
     }
 
     /** Cleans up test fixtures. */
     protected function tearDown(): void
     {
+        chdir($this->originalCwd);
         $this->removePath($this->root);
         parent::tearDown();
     }
