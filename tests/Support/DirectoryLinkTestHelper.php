@@ -7,6 +7,27 @@ namespace PhpMake\Tests\Support;
 /** Creates directory links on Unix and unprivileged Windows environments. */
 trait DirectoryLinkTestHelper
 {
+    /** Detects a Windows NTFS junction without following its target. */
+    private function isDirectoryJunction(string $path): bool
+    {
+        clearstatcache(true, $path);
+        if (PHP_OS_FAMILY !== 'Windows' || !is_dir($path) || is_link($path)) {
+            return false;
+        }
+        $stat = @lstat($path);
+        return is_array($stat) && (($stat['mode'] & 0xF000) !== 0x4000);
+    }
+
+    /** Removes a directory link without traversing its target. */
+    private function removeDirectoryLink(string $path): void
+    {
+        if (PHP_OS_FAMILY === 'Windows' && is_dir($path)) {
+            rmdir($path);
+            return;
+        }
+        unlink($path);
+    }
+
     /** Creates a symbolic link or, on Windows, an NTFS junction. */
     private function createDirectoryLink(string $target, string $link): void
     {
