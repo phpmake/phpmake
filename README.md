@@ -36,12 +36,12 @@ PHPMake is a well-architected, modern PHP build tool that follows best practices
 * No runtime PHP package dependencies; PHP extensions and Composer are still required.
 * Define build processes in human-readable JSON
 * Specify execution order with dependencies
-* Works on Microsoft Windows & GNU+Linux
+* Works on Microsoft Windows, GNU+Linux, and Apple macOS
 * Built-in tasks:
   * `create_directory` (create directories)
   * `delete` (remove files/directories)
   * `copy` (file/directory copying)
-  * `exec` (execute shell commands)
+  * `exec` (execute processes without a shell)
   * `echo` (output messages)
   * `archive` (archive/compress a file or directory)
 * Filesystem tasks are restricted to paths inside the project directory (CWD)
@@ -54,7 +54,7 @@ PHPMake is a well-architected, modern PHP build tool that follows best practices
 * `--init` to create a sample `build.json`
 * CI/CD pipeline integration
 * PHP 8.3+ (active)
-* Microsoft Windows, GNU+Linux, Apple MacOS
+* Microsoft Windows, GNU+Linux, Apple macOS
 
 ## Requirements
 
@@ -67,7 +67,6 @@ PHPMake is a well-architected, modern PHP build tool that follows best practices
 |-----------------|---------------|-------------|----------------|
 | dev-main        | `main`        | 8.3         | Active         |
 | 2.*             | `main`        | 8.3         | Active         |
-| 1.*             | `main-php7.4` | 7.4         | Maintenance    |
 
 * **Active**: Full support
 * **Maintenance**: Bug/Security fixes only
