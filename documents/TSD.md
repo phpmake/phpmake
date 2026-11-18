@@ -82,7 +82,7 @@ Unknown properties are rejected. The runtime validator and `schema/build-schema.
 - `args` is an optional array of scalar values appended to the argument vector.
 - The command is launched without shell expansion, pipelines, or shell operators.
 - `timeout` is an optional numeric duration in seconds. The default is 300 seconds; values must be greater than 0 and no greater than 86400.
-- Captured stdout and stderr are each limited to 1 MiB. Exceeding either limit fails the task.
+- Captured stdout and stderr are each written to temporary files and monitored independently against a 1 MiB limit. Exceeding either limit fails the task; only bounded output is read into memory, and temporary files are removed after execution.
 - On timeout or output overflow, Windows uses `taskkill /T` to terminate the process tree. POSIX systems use a dedicated process group when the POSIX extension is available. Without process-group support, termination falls back to the direct process.
 
 ## 5. Platform Compatibility
