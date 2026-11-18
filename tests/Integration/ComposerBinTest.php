@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PhpMake\Tests;
+namespace PhpMake\Tests\Integration;
 
 use PHPUnit\Framework\TestCase;
 
@@ -12,7 +12,7 @@ final class ComposerBinTest extends TestCase
     /** Runs the package binary with the consuming project's Composer autoloader. */
     public function testComposerInstalledBinaryUsesConsumerAutoloader(): void
     {
-        $projectRoot = dirname(__DIR__);
+        $projectRoot = dirname(__DIR__, 2);
         $temporaryRoot = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-composer-bin-' . bin2hex(random_bytes(8));
         $autoloadDirectory = $temporaryRoot . DIRECTORY_SEPARATOR . 'vendor';
         $packageBinDirectory = $autoloadDirectory . DIRECTORY_SEPARATOR . 'phpmake' . DIRECTORY_SEPARATOR . 'phpmake' . DIRECTORY_SEPARATOR . 'bin';

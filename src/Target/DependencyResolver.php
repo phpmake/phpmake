@@ -72,6 +72,6 @@ final class DependencyResolver
 
         $order[] = $target;
         array_pop($this->visited); // Backtrack after resolving dependencies.
-        return array_unique($order);
+        return array_values(array_unique($order));
     }
 }

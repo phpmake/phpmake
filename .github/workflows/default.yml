@@ -92,6 +92,9 @@ jobs:
       - name: Run tests with code coverage
         run: composer coverage
 
+      - name: Enforce class and method coverage thresholds
+        run: php tools/check-coverage.php coverage.xml
+
       - name: Upload code coverage report
         uses: actions/upload-artifact@v4
         with:

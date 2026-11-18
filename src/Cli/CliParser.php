@@ -143,7 +143,7 @@ final class CliParser
      */
     public static function showVersion(): void
     {
-        echo Config::TOOL_VERSION . "\n";
+        echo Config::TOOL_VERSION . PHP_EOL;
     }
 
     /**

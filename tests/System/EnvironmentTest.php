@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PhpMake\Tests {
+namespace PhpMake\Tests\System {
     use Exception;
     use RuntimeException;
     use stdClass;

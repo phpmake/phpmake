@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PhpMake\Tests {
+namespace PhpMake\Tests\Smoke {
     use PhpMake\Build\BuildConfiguration;
     use PhpMake\Build\BuildExecutor;
     use PhpMake\Build\BuildLoader;
