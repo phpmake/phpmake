@@ -14,12 +14,12 @@ final class DeleteTask extends BaseTask
         if ($path === '') {
             throw new \InvalidArgumentException("Missing 'path' parameter.");
         }
-        if (!file_exists($path) && !is_link($path)) {
+        if (!file_exists($path) && !$this->isSymbolicLinkOrJunction($path)) {
             $this->logger->debug(sprintf("Path '%s' does not exist.", $path));
             return true;
         }
         // Unlink the link itself; never recurse through its target.
-        return is_link($path) || !is_dir($path) ? $this->deleteFile($path) : $this->deleteDirectory($path);
+        return $this->isSymbolicLinkOrJunction($path) ? $this->removeLink($path) : (!is_dir($path) ? $this->deleteFile($path) : $this->deleteDirectory($path));
     }
 
     /** Unlinks a file or symbolic link and reports failures. */
@@ -33,11 +33,21 @@ final class DeleteTask extends BaseTask
         return true;
     }
 
+    /** Removes a symbolic link or junction without touching its target. */
+    private function removeLink(string $path): bool
+    {
+        if (!$this->removeSymbolicLinkOrJunction($path)) {
+            $this->logger->error(sprintf("Failed to delete link '%s'.", $path));
+            return false;
+        }
+        return true;
+    }
+
     /** Recursively deletes a directory and propagates child failures. */
     private function deleteDirectory(string $dir): bool
     {
-        if (is_link($dir)) {
-            return $this->deleteFile($dir);
+        if ($this->isSymbolicLinkOrJunction($dir)) {
+            return $this->removeLink($dir);
         }
         $items = @scandir($dir);
         if ($items === false) {
@@ -49,7 +59,7 @@ final class DeleteTask extends BaseTask
                 continue;
             }
             $path = $dir . DIRECTORY_SEPARATOR . $item;
-            $ok = is_link($path) || !is_dir($path) ? $this->deleteFile($path) : $this->deleteDirectory($path);
+            $ok = $this->isSymbolicLinkOrJunction($path) ? $this->removeLink($path) : (!is_dir($path) ? $this->deleteFile($path) : $this->deleteDirectory($path));
             if (!$ok) {
                 return false;
             }
@@ -72,7 +82,7 @@ final class DeleteTask extends BaseTask
 
         // Deleting a symlink removes the link, not its target. Validate its
         // parent directory instead of resolving the final symlink target.
-        if (is_link($path)) {
+        if ($this->isSymbolicLinkOrJunction($path)) {
             $parent = dirname($path);
             if ($parent === '.') {
                 $parent = getcwd();

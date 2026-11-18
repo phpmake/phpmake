@@ -105,3 +105,28 @@ jobs:
           php -r ' $config = json_decode(file_get_contents("build.json"), true);
           if (!isset($config["targets"]["package"])) { echo "build.json missing
           'package' target\\n"; exit(1); }'
+
+  windows-tests:
+    name: Windows Filesystem Tests
+    runs-on: windows-latest
+    continue-on-error: false
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          extensions: zip
+          tools: composer:v2
+          ini-values: >-
+            memory_limit=256M, zend.assertions=1,
+            error_reporting=-1, display_errors=On
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run PHPUnit tests
+        run: composer test

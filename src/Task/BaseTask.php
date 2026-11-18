@@ -35,6 +35,37 @@ abstract class BaseTask implements TaskInterface
     /** Validates task-specific parameters before execution. */
     abstract protected function validateParams();
 
+    /** Detects POSIX symbolic links and Windows NTFS junctions. */
+    protected function isSymbolicLinkOrJunction(string $path): bool
+    {
+        clearstatcache(true, $path);
+        if (PHP_OS_FAMILY !== 'Windows') {
+            return is_link($path);
+        }
+
+        // Check is_dir() before is_link() to preserve Windows reparse-point
+        // metadata for lstat(), matching PHP's junction detection semantics.
+        if (!is_dir($path)) {
+            return is_link($path);
+        }
+        if (is_link($path)) {
+            return true;
+        }
+
+        $stat = @lstat($path);
+        return is_array($stat) && (($stat['mode'] & 0xF000) !== 0x4000);
+    }
+
+    /** Removes a link itself without traversing its target. */
+    protected function removeSymbolicLinkOrJunction(string $path): bool
+    {
+        if (PHP_OS_FAMILY === 'Windows' && @rmdir($path)) {
+            return true;
+        }
+
+        return @unlink($path);
+    }
+
     /**
      * Validate lexical containment and resolve every existing path prefix.
      * This rejects symlinked ancestors that redirect operations outside CWD.

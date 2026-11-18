@@ -13,10 +13,10 @@ final class ZipTask extends BaseTask
     {
         $source = (string) ($this->params['source'] ?? '');
         $output = (string) ($this->params['output'] ?? '');
-        if ($source === '' || $output === '' || (!file_exists($source) && !is_link($source))) {
+        if ($source === '' || $output === '' || (!file_exists($source) && !$this->isSymbolicLinkOrJunction($source))) {
             throw new \RuntimeException(sprintf("Archive source '%s' does not exist.", $source));
         }
-        if (is_link($source)) {
+        if ($this->isSymbolicLinkOrJunction($source)) {
             throw new \RuntimeException('Archive source cannot be a symlink.');
         }
 
@@ -71,7 +71,7 @@ final class ZipTask extends BaseTask
         );
         foreach ($iterator as $file) {
             $path = $file->getPathname();
-            if ($file->isLink()) {
+            if ($file->isLink() || $this->isSymbolicLinkOrJunction($path)) {
                 throw new \RuntimeException(sprintf("Refusing to archive symlink '%s'.", $path));
             }
             if (!$file->isFile()) {
