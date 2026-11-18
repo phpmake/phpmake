@@ -87,6 +87,21 @@ jobs:
       - name: Lint codes
         run: composer lint
 
+      - name: Check code formatting
+        run: composer format-check
+
+      - name: Check Rector rules
+        run: composer refactor-check
+
+      - name: Check unused Composer dependencies
+        run: composer-unused
+
+      - name: Check declared Composer requirements
+        run: composer-require-checker check
+
+      - name: Check Composer normalization
+        run: composer normalize --dry-run
+
       - name: Run PHPUnit tests
         run: composer test
 
