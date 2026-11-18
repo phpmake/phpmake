@@ -7,11 +7,14 @@ use PhpMake\Task\Types\CreateDirectoryTask;
 use PhpMake\Task\Types\DeleteTask;
 use PhpMake\Task\Types\ZipTask;
 use PhpMake\Utilities\Logger;
+use PhpMake\Tests\Support\DirectoryLinkTestHelper;
 use PHPUnit\Framework\TestCase;
 
     /** Tests filesystem boundary enforcement and symbolic-link safety. */
 final class PathSafetyTest extends TestCase
 {
+    use DirectoryLinkTestHelper;
+
     private Logger $logger;
 
     /** Initializes a silent logger for filesystem safety tests. */
@@ -121,18 +124,14 @@ final class PathSafetyTest extends TestCase
         $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-outside-' . uniqid('', true);
         $link = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-link-' . uniqid('', true);
         mkdir($outside);
-        if (!@symlink($outside, $link)) {
-            rmdir($outside);
-        // Assert
-            $this->markTestSkipped('Symlink creation is not permitted on this platform.');
-        }
+        $this->createDirectoryLink($outside, $link);
         try {
             $this->expectException(\InvalidArgumentException::class);
             $this->expectExceptionMessage('Safety Violation');
         // Act
             new DeleteTask(['path' => $link . DIRECTORY_SEPARATOR . 'victim.txt'], $this->logger);
         } finally {
-            unlink($link);
+            $this->removeDirectoryLink($link);
             rmdir($outside);
         }
     }
@@ -147,20 +146,14 @@ final class PathSafetyTest extends TestCase
         mkdir($source);
         mkdir($outside);
         file_put_contents($outside . DIRECTORY_SEPARATOR . 'secret.txt', 'secret');
-        if (!@symlink($outside, $source . DIRECTORY_SEPARATOR . 'linked')) {
-            unlink($outside . DIRECTORY_SEPARATOR . 'secret.txt');
-            rmdir($outside);
-            rmdir($source);
-        // Assert
-            $this->markTestSkipped('Symlink creation is not permitted on this platform.');
-        }
+        $this->createDirectoryLink($outside, $source . DIRECTORY_SEPARATOR . 'linked');
         try {
             $task = new CopyTask(['source' => $source, 'dest' => $dest], $this->logger);
         // Act
             $this->assertFalse($task->execute(false, true));
             $this->assertFileDoesNotExist($dest . DIRECTORY_SEPARATOR . 'linked' . DIRECTORY_SEPARATOR . 'secret.txt');
         } finally {
-            unlink($source . DIRECTORY_SEPARATOR . 'linked');
+            $this->removeDirectoryLink($source . DIRECTORY_SEPARATOR . 'linked');
             rmdir($source);
             if (is_dir($dest)) {
                 rmdir($dest);
@@ -176,27 +169,37 @@ final class PathSafetyTest extends TestCase
         // Arrange
         $target = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-delete-target-' . uniqid('', true);
         $link = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-delete-link-' . uniqid('', true);
-        file_put_contents($target, 'keep me');
-        if (!@symlink($target, $link)) {
-            unlink($target);
-        // Assert
-            $this->markTestSkipped('Symlink creation is not permitted on this platform.');
-        }
+        mkdir($target);
+        file_put_contents($target . DIRECTORY_SEPARATOR . 'keep.txt', 'keep me');
+        $this->createDirectoryLink($target, $link);
 
         try {
             $task = new DeleteTask(['path' => $link], $this->logger);
         // Act
             $this->assertTrue($task->execute(false, true));
-            $this->assertFileDoesNotExist($link);
-            $this->assertFileExists($target);
-            $this->assertSame('keep me', file_get_contents($target));
+            $this->assertDirectoryDoesNotExist($link);
+            $this->assertFileExists($target . DIRECTORY_SEPARATOR . 'keep.txt');
+            $this->assertSame('keep me', file_get_contents($target . DIRECTORY_SEPARATOR . 'keep.txt'));
         } finally {
-            if (is_link($link)) {
-                unlink($link);
+            if (is_dir($link) || is_link($link)) {
+                $this->removeDirectoryLink($link);
             }
-            if (file_exists($target)) {
-                unlink($target);
+            if (is_file($target . DIRECTORY_SEPARATOR . 'keep.txt')) {
+                unlink($target . DIRECTORY_SEPARATOR . 'keep.txt');
+            }
+            if (is_dir($target)) {
+                rmdir($target);
             }
         }
     }
+    /** Removes a directory symlink or Windows junction without traversing its target. */
+    private function removeDirectoryLink(string $path): void
+    {
+        if (PHP_OS_FAMILY === 'Windows' && is_dir($path)) {
+            rmdir($path);
+            return;
+        }
+        unlink($path);
+    }
+
 }
