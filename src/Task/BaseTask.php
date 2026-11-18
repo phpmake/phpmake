@@ -142,7 +142,7 @@ abstract class BaseTask implements TaskInterface
     {
         $left = rtrim($this->normalizePath($left), DIRECTORY_SEPARATOR);
         $right = rtrim($this->normalizePath($right), DIRECTORY_SEPARATOR);
-        return in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true) ? strcasecmp($left, $right) === 0 : $left === $right;
+        return PHP_OS_FAMILY === 'Windows' ? strcasecmp($left, $right) === 0 : $left === $right;
     }
 
     /** Determines whether a path uses an absolute-path format. */
