@@ -117,7 +117,7 @@ abstract class BaseTask implements TaskInterface
     {
         $path = rtrim($path, DIRECTORY_SEPARATOR);
         $cwd = rtrim($cwd, DIRECTORY_SEPARATOR);
-        $matches = PHP_OS_FAMILY === 'Windows' ? strncasecmp($path, $cwd . DIRECTORY_SEPARATOR, strlen($cwd . DIRECTORY_SEPARATOR)) === 0 : str_starts_with($path, $cwd . DIRECTORY_SEPARATOR);
+        $matches = in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true) ? strncasecmp($path, $cwd . DIRECTORY_SEPARATOR, strlen($cwd . DIRECTORY_SEPARATOR)) === 0 : str_starts_with($path, $cwd . DIRECTORY_SEPARATOR);
         if (!$this->pathsEqual($path, $cwd) && !$matches) {
             throw new \InvalidArgumentException(sprintf("Safety Violation: Path for %s escapes project directory: '%s'.", $label, $path));
         }
@@ -128,7 +128,7 @@ abstract class BaseTask implements TaskInterface
     {
         $left = rtrim($this->normalizePath($left), DIRECTORY_SEPARATOR);
         $right = rtrim($this->normalizePath($right), DIRECTORY_SEPARATOR);
-        return PHP_OS_FAMILY === 'Windows' ? strcasecmp($left, $right) === 0 : $left === $right;
+        return in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true) ? strcasecmp($left, $right) === 0 : $left === $right;
     }
 
     /** Determines whether a path uses an absolute-path format. */
