@@ -15,7 +15,7 @@ final class CopyTask extends BaseTask
         if ($source === '' || $dest === '') {
             throw new \InvalidArgumentException("Missing 'source' or 'dest' parameter.");
         }
-        if (is_link($source) || (!file_exists($source))) {
+        if ($this->isSymbolicLinkOrJunction($source) || (!file_exists($source))) {
             $this->logger->error(sprintf("Copy source '%s' does not exist or is a symlink.", $source));
             return false;
         }
@@ -25,7 +25,7 @@ final class CopyTask extends BaseTask
     /** Copies one file after ensuring its destination directory exists. */
     private function copyFile(string $source, string $dest): bool
     {
-        if (is_link($source)) {
+        if ($this->isSymbolicLinkOrJunction($source)) {
             $this->logger->error(sprintf("Refusing to copy symlink '%s'.", $source));
             return false;
         }
@@ -45,7 +45,7 @@ final class CopyTask extends BaseTask
     /** Recursively copies a directory and stops on the first failure. */
     private function copyDirectory(string $source, string $dest): bool
     {
-        if (is_link($source)) {
+        if ($this->isSymbolicLinkOrJunction($source)) {
             $this->logger->error(sprintf("Refusing to traverse symlink directory '%s'.", $source));
             return false;
         }
@@ -64,7 +64,7 @@ final class CopyTask extends BaseTask
             }
             $src = $source . DIRECTORY_SEPARATOR . $item;
             $target = $dest . DIRECTORY_SEPARATOR . $item;
-            if (is_link($src)) {
+            if ($this->isSymbolicLinkOrJunction($src)) {
                 $this->logger->error(sprintf("Refusing to copy symlink '%s'.", $src));
                 return false;
             }
