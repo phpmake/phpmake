@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpMake\Tests\System;
 
+use PhpMake\Config;
 use PHPUnit\Framework\TestCase;
 
 /** Verifies the installed command-line entry point as a real operating-system process. */
@@ -46,7 +47,7 @@ final class RuntimeSystemTest extends TestCase
 
         // Assert
         self::assertSame(0, $result['exitCode'], $result['stderr']);
-        self::assertSame("2.0.2" . PHP_EOL, $result['stdout']);
+        self::assertSame(Config::TOOL_VERSION . PHP_EOL, $result['stdout']);
         self::assertSame('', $result['stderr']);
     }
 
