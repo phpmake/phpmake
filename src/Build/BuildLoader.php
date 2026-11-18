@@ -41,7 +41,7 @@ final class BuildLoader
                         throw new \InvalidArgumentException(sprintf("Task %s in target '%s' must be a JSON object.", $index, $targetName));
                     }
                     if (property_exists($task, 'args') && !is_array($task->args)) {
-                        throw new \\InvalidArgumentException(sprintf("Arguments for task %s in target '%s' must be a JSON array.", $index, $targetName));
+                        throw new \InvalidArgumentException(sprintf("Arguments for task %s in target '%s' must be a JSON array.", $index, $targetName));
                     }
                     if (isset($task->params) && !($task->params instanceof \stdClass)) {
                         throw new \InvalidArgumentException(sprintf("Parameters for task %s in target '%s' must be a JSON object.", $index, $targetName));
