@@ -188,4 +188,35 @@ final class CliParserTest extends TestCase
         self::assertStringContainsString('Loaded extensions:', $output);
     }
 
+
+    /** Rejects empty arguments rather than indexing an empty string. */
+    public function testRejectsEmptyArgument(): void
+    {
+        // Assert
+        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Empty command-line argument');
+        // Act
+        (new CliParser())->parse(['script.php', '']);
+    }
+
+    /** Rejects more than one positional target. */
+    public function testRejectsDuplicatePositionalTargets(): void
+    {
+        // Assert
+        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Extra argument detected');
+        // Act
+        (new CliParser())->parse(['script.php', 'build', 'test']);
+    }
+
+    /** Rejects conflicting command actions. */
+    public function testRejectsConflictingActionFlags(): void
+    {
+        // Assert
+        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Conflicting command actions');
+        // Act
+        (new CliParser())->parse(['script.php', '--help', '--version']);
+    }
+
 }
