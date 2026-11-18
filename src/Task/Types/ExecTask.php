@@ -140,10 +140,10 @@ final class ExecTask extends BaseTask
         if (!self::hasBalancedQuotes($this->params['command'])) {
             throw new \InvalidArgumentException('Exec command contains an unbalanced quote.');
         }
-        if (isset($this->params['args']) && (!is_array($this->params['args']) || array_filter($this->params['args'], static fn($value) => !is_scalar($value)))) {
+        if (array_key_exists('args', $this->params) && (!is_array($this->params['args']) || array_filter($this->params['args'], static fn($value) => !is_scalar($value)))) {
             throw new \InvalidArgumentException("Exec task 'args' must be an array of scalar values.");
         }
-        if (isset($this->params['timeout']) && (
+        if (array_key_exists('timeout', $this->params) && (
             (!is_int($this->params['timeout']) && !is_float($this->params['timeout']))
             || !is_finite((float) $this->params['timeout'])
             || (float) $this->params['timeout'] <= 0
