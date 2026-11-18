@@ -1,3 +1,4 @@
 * Add a dedicated case-sensitive APFS test volume to macOS CI; the current path test exercises case-only siblings when the runner filesystem supports them.
 * Define and test a process-tree termination strategy for POSIX environments without the POSIX extension; current fallback terminates only the direct process.
-* Document the limits of process-group termination for descendants that deliberately detach or create a new session.
+* Document and test the limits of Windows process-tree cleanup when an intermediate descendant exits before the timeout or a child detaches from the process tree.
+* Document the limits of POSIX process-group termination for descendants that deliberately create a new session.
