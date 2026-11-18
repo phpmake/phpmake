@@ -24,12 +24,7 @@ final class CopyTask extends BaseTask
             return $this->copyFile($source, $dest);
         }
 
-        $destinationExisted = file_exists($dest) || is_link($dest);
-        $copied = $this->copyDirectory($source, $dest);
-        if (!$copied && !$destinationExisted && is_dir($dest)) {
-            $this->removeCreatedTree($dest);
-        }
-        return $copied;
+        return $this->copyDirectoryTransactionally($source, $dest);
     }
 
     /** Copies one file after ensuring its destination directory exists. */
@@ -108,6 +103,54 @@ final class CopyTask extends BaseTask
         }
 
         $this->logger->debug(sprintf("Copied directory '%s' → '%s'.", $source, $dest));
+        return true;
+    }
+
+    /** Copies into a staging tree and swaps it into place only after success. */
+    private function copyDirectoryTransactionally(string $source, string $destination): bool
+    {
+        if ($this->isSymbolicLinkOrJunction($destination)) {
+            $this->logger->error(sprintf("Refusing to replace destination link '%s'.", $destination));
+            return false;
+        }
+        if (file_exists($destination) && !is_dir($destination)) {
+            $this->logger->error(sprintf("Directory copy destination '%s' is not a directory.", $destination));
+            return false;
+        }
+
+        $base = rtrim($destination, DIRECTORY_SEPARATOR);
+        $suffix = '.phpmake-' . bin2hex(random_bytes(8));
+        $staging = $base . $suffix . '.staging';
+        $backup = $base . $suffix . '.backup';
+
+        if (is_dir($destination) && !$this->copyDirectory($destination, $staging)) {
+            $this->removeCreatedTree($staging);
+            return false;
+        }
+        if (!$this->copyDirectory($source, $staging)) {
+            $this->removeCreatedTree($staging);
+            return false;
+        }
+
+        $hadDestination = file_exists($destination);
+        if ($hadDestination && !@rename($destination, $backup)) {
+            $this->logger->error(sprintf("Unable to stage existing destination '%s'.", $destination));
+            $this->removeCreatedTree($staging);
+            return false;
+        }
+
+        if (!@rename($staging, $destination)) {
+            $this->logger->error(sprintf("Unable to publish copied directory '%s'.", $destination));
+            if ($hadDestination) {
+                @rename($backup, $destination);
+            }
+            $this->removeCreatedTree($staging);
+            return false;
+        }
+
+        if ($hadDestination) {
+            $this->removeCreatedTree($backup);
+        }
         return true;
     }
 
