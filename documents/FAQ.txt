@@ -45,7 +45,7 @@ A:
 - `archive`: Archive/compress a file or directory (`source`, `output`)
 
 Q: Are paths outside the project allowed?
-A: No. Filesystem task paths are normalized and must resolve inside the current working directory. Absolute paths are accepted only when they remain inside that directory. `..` components are resolved and are allowed only if the final normalized path remains inside the project. Symlinked directories and Windows junction ancestors that escape the project are rejected. UNC paths outside the project are rejected, and destructive tasks cannot target the project root.
+A: No. Filesystem task paths are normalized and must resolve inside the current working directory. Absolute paths are accepted only when they remain inside that directory. `..` components are resolved and are allowed only if the final normalized path remains inside the project. Symlinked directories and Windows junction ancestors that escape the project are rejected. UNC paths outside the project, extended-length UNC paths, and Windows drive-relative paths are rejected. Destructive tasks cannot target the project root.
 
 Q: How do I pass arguments and set a process timeout?
 A: Use an `args` JSON array of scalar values and an optional numeric `timeout` in seconds (greater than 0 and at most 86400). The default timeout is 300 seconds. Arguments are passed directly; shell operators, variable expansion, and pipelines are not interpreted. Standard output and standard error are each limited to 1 MiB.
