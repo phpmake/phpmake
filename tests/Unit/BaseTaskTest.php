@@ -70,6 +70,7 @@ final class BaseTaskTest extends TestCase
         // Arrange
         $reflection = new \ReflectionClass(BaseTask::class);
         // Action/Assert
+        // Assert
         $this->assertTrue($reflection->hasMethod('getType'));
         $this->assertTrue($reflection->hasMethod('validateParams'));
     }

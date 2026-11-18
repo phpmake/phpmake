@@ -71,6 +71,7 @@ namespace PhpMake\Tests\System {
         {
             // Arrange
             $_result = (PHP_MAJOR_VERSION == 8) && (PHP_MINOR_VERSION >= 3);
+            // Assert
             $this->assertTrue($_result);
         }
 
@@ -90,6 +91,8 @@ namespace PhpMake\Tests\System {
             ];
 
             foreach ($extensions as $extension) {
+            // Assert
+            // Act
                 $this->assertTrue(extension_loaded($extension));
             }
         }
@@ -115,6 +118,7 @@ namespace PhpMake\Tests\System {
             ];
 
             foreach ($directories as $directory) {
+            // Assert
                 $this->assertDirectoryExists($directory);
             }
         }
@@ -158,6 +162,7 @@ namespace PhpMake\Tests\System {
             ];
 
             foreach ($files as $file) {
+            // Assert
                 $this->assertFileExists($file);
             }
         }

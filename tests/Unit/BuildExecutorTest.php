@@ -33,6 +33,7 @@ final class BuildExecutorTest extends TestCase
             new TaskExecutor()
         );
 
+        // Assert
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage("Target 'missing' not found.");
         // Act

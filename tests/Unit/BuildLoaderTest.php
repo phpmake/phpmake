@@ -55,6 +55,7 @@ final class BuildLoaderTest extends TestCase
         // Arrange
         file_put_contents($this->buildFile, '[]');
 
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('must be a JSON object');
         // Act
@@ -67,6 +68,7 @@ final class BuildLoaderTest extends TestCase
         // Arrange
         file_put_contents($this->buildFile, '{"name":"Incomplete"}');
 
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Missing required field: description');
         // Act
@@ -85,6 +87,7 @@ final class BuildLoaderTest extends TestCase
             'default_target' => 'build',
         ], JSON_THROW_ON_ERROR));
 
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Unknown task type 'not-real'");
         // Act
@@ -97,6 +100,7 @@ final class BuildLoaderTest extends TestCase
         // Arrange
         file_put_contents($this->buildFile, '{"name":');
 
+        // Assert
         $this->expectException(\JsonException::class);
         // Act
         (new BuildLoader())->load($this->buildFile);

@@ -71,6 +71,7 @@ final class ZipTaskTest extends TestCase
         // Arrange
         $reflection = new \ReflectionClass(ZipTask::class);
         // Action/Assert
+        // Assert
         $this->assertTrue($reflection->isSubclassOf(BaseTask::class));
     }
 
@@ -86,6 +87,7 @@ final class ZipTaskTest extends TestCase
         // Arrange
         $method = new \ReflectionMethod(ZipTask::class, 'getType');
         // Action/Assert
+        // Assert
         $this->assertTrue($method->isPublic());
         $this->assertEquals('string', $method->getReturnType()->getName());
     }
@@ -102,6 +104,7 @@ final class ZipTaskTest extends TestCase
         // Arrange
         $method = new \ReflectionMethod(ZipTask::class, 'validateParams');
         // Action/Assert
+        // Assert
         $this->assertTrue($method->isProtected());
         $this->assertCount(0, $method->getParameters()); // No parameters.
     }
@@ -118,6 +121,7 @@ final class ZipTaskTest extends TestCase
         // Arrange
         $method = new \ReflectionMethod(ZipTask::class, 'addFilesToZip');
         // Action/Assert
+        // Assert
         $this->assertTrue($method->isPrivate());
         // Action/Assert
         $this->assertEquals('void', $method->getReturnType()->getName());
@@ -128,6 +132,7 @@ final class ZipTaskTest extends TestCase
     {
         // Arrange
         if (!class_exists(\ZipArchive::class)) {
+        // Assert
             $this->markTestSkipped('ext-zip is not available.');
         }
         $root = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-self-' . uniqid('', true);

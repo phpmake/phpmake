@@ -91,6 +91,7 @@ final class BuildSmokeTest extends TestCase
             'default'
         );
         // Action/Assert
+        // Assert
         $this->assertSame('My Project', $config->getName());
         $this->assertSame('A sample project', $config->getDescription());
         $this->assertSame('2.0.1', $config->getVersion());
@@ -278,6 +279,7 @@ final class BuildSmokeTest extends TestCase
         // Execute with target 'test' (which will run an echo task).
         $exitCode = $buildExecutor->execute($config, 'test', $this->logger);
         // Action
+        // Assert
         $this->assertSame(0, $exitCode);
     }
 }

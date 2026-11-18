@@ -150,6 +150,7 @@ final class BuildValidatorTest extends TestCase
             'default_target' => 'build',
         ];
         // Act
+        // Assert
         $this->assertSame([], (new BuildValidator())->validate($config));
     }
 
@@ -169,6 +170,7 @@ final class BuildValidatorTest extends TestCase
         ];
         // Act
         $errors = (new BuildValidator())->validate($config);
+        // Assert
         $this->assertStringContainsString("depends on missing", implode("\n", $errors));
         $this->assertStringContainsString("valid 'tasks' array", implode("\n", $errors));
         $this->assertStringContainsString("must be an object", implode("\n", $errors));
@@ -186,6 +188,7 @@ final class BuildValidatorTest extends TestCase
             'default_target' => 'default',
         ];
         // Act
+        // Assert
         $this->assertNotEmpty((new BuildValidator())->validate($config));
     }
 

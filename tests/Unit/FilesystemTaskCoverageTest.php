@@ -342,6 +342,7 @@ final class FilesystemTaskCoverageTest extends TestCase
     public function testCopyTaskRejectsNonStringPaths(): void
     {
         // Arrange
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
         // Act
         new CopyTask(['source' => 123, 'dest' => 'destination.txt'], $this->logger);
@@ -351,6 +352,7 @@ final class FilesystemTaskCoverageTest extends TestCase
     public function testDeleteTaskRejectsNonStringPath(): void
     {
         // Arrange
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
         // Act
         new DeleteTask(['path' => 123], $this->logger);
@@ -360,6 +362,7 @@ final class FilesystemTaskCoverageTest extends TestCase
     public function testZipTaskRejectsNonStringPaths(): void
     {
         // Arrange
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
         // Act
         new ZipTask(['source' => 'source.txt', 'output' => 123], $this->logger);

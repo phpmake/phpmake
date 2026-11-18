@@ -14,6 +14,7 @@ final class ComposerPlatformConstraintTest extends TestCase
     {
         // Arrange
         $composerPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'composer.json';
+        // Act
         $composer = json_decode(
             (string) file_get_contents($composerPath),
             true,

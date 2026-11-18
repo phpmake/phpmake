@@ -29,6 +29,7 @@ final class PathSafetyTest extends TestCase
     public function testDeleteRejectsPathOutsideProject(): void
     {
         // Arrange
+        // Assert
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Safety Violation');
 
@@ -44,6 +45,7 @@ final class PathSafetyTest extends TestCase
     public function testCopyRejectsSourceOutsideProject(): void
     {
         // Arrange
+        // Assert
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Safety Violation');
 
@@ -62,6 +64,7 @@ final class PathSafetyTest extends TestCase
     public function testCreateDirectoryRejectsParentTraversal(): void
     {
         // Arrange
+        // Assert
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Safety Violation');
 
@@ -77,6 +80,7 @@ final class PathSafetyTest extends TestCase
     public function testArchiveRejectsOutputOutsideProject(): void
     {
         // Arrange
+        // Assert
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Safety Violation');
 
@@ -99,6 +103,7 @@ final class PathSafetyTest extends TestCase
 
         $task = new CreateDirectoryTask(['name' => $dir], $this->logger);
         // Act
+        // Assert
         $this->assertTrue($task->execute(false, true));
         $this->assertTrue(is_dir($dir));
 
@@ -118,6 +123,7 @@ final class PathSafetyTest extends TestCase
         mkdir($outside);
         if (!@symlink($outside, $link)) {
             rmdir($outside);
+        // Assert
             $this->markTestSkipped('Symlink creation is not permitted on this platform.');
         }
         try {
@@ -145,6 +151,7 @@ final class PathSafetyTest extends TestCase
             unlink($outside . DIRECTORY_SEPARATOR . 'secret.txt');
             rmdir($outside);
             rmdir($source);
+        // Assert
             $this->markTestSkipped('Symlink creation is not permitted on this platform.');
         }
         try {
@@ -172,6 +179,7 @@ final class PathSafetyTest extends TestCase
         file_put_contents($target, 'keep me');
         if (!@symlink($target, $link)) {
             unlink($target);
+        // Assert
             $this->markTestSkipped('Symlink creation is not permitted on this platform.');
         }
 

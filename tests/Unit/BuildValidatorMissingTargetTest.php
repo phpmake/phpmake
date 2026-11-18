@@ -25,6 +25,7 @@ final class BuildValidatorMissingTargetTest extends TestCase
         // Act
         $errors = $validator->validate($config);
 
+        // Assert
         $this->assertNotEmpty($errors);
         $this->assertStringContainsString("Default target 'missing' does not exist", implode("\n", $errors));
     }

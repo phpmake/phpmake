@@ -140,6 +140,7 @@ final class TaskExecutionTest extends TestCase
     public function testExecTaskRejectsTimeoutAboveMaximum(): void
     {
         // Arrange
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('at most 86400');
         // Act

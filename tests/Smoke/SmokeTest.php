@@ -101,6 +101,8 @@ namespace PhpMake\Tests\Smoke {
         {
             // Arrange
             // AAA
+            // Assert
+            // Act
             $this->assertTrue(class_exists(DependencyResolver::class));
             $this->assertTrue(class_exists(TaskExecutor::class));
             $this->assertTrue(class_exists(Logger::class));
@@ -120,6 +122,7 @@ namespace PhpMake\Tests\Smoke {
         {
             // Arrange
             // AAA
+            // Assert
             $this->assertNotNull($this->dependencyResolver);
             // AAA
             $this->assertIsObject($this->dependencyResolver);
@@ -136,6 +139,7 @@ namespace PhpMake\Tests\Smoke {
         {
             // Arrange
             // AAA
+            // Assert
             $this->assertNotNull($this->taskExecutor);
             // AAA
             $this->assertIsObject($this->taskExecutor);
@@ -152,6 +156,7 @@ namespace PhpMake\Tests\Smoke {
         {
             // Arrange
             // AAA
+            // Assert
             $this->assertNotNull($this->logger);
             // AAA
             $this->assertIsObject($this->logger);
@@ -168,6 +173,7 @@ namespace PhpMake\Tests\Smoke {
         {
             // Arrange
             // AAA
+            // Assert
             $this->assertNotNull($this->buildConfiguration);
             // AAA
             $this->assertIsObject($this->buildConfiguration);
@@ -184,6 +190,7 @@ namespace PhpMake\Tests\Smoke {
         {
             // Arrange
             // AAA
+            // Assert
             $this->assertNotNull($this->buildExecutor);
             // AAA
             $this->assertIsObject($this->buildExecutor);
@@ -200,6 +207,7 @@ namespace PhpMake\Tests\Smoke {
         {
             // Arrange
             // AAA
+            // Assert
             $this->assertNotNull($this->buildLoader);
             // AAA
             $this->assertIsObject($this->buildLoader);
@@ -216,6 +224,7 @@ namespace PhpMake\Tests\Smoke {
         {
             // Arrange
             // AAA
+            // Assert
             $this->assertNotNull($this->buildValidator);
             // AAA
             $this->assertIsObject($this->buildValidator);

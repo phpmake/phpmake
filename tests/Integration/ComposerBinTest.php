@@ -19,6 +19,7 @@ final class ComposerBinTest extends TestCase
         $packageBinDirectory = $autoloadDirectory . DIRECTORY_SEPARATOR . 'phpmake' . DIRECTORY_SEPARATOR . 'phpmake' . DIRECTORY_SEPARATOR . 'bin';
 
         // Assert
+        // Act
         self::assertTrue(mkdir($packageBinDirectory, 0777, true));
 
         $autoload = <<<'PHP'
