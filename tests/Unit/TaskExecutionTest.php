@@ -350,6 +350,24 @@ final class TaskExecutionTest extends TestCase
         self::assertFalse($result);
     }
 
+
+    /** Stops a process that exceeds its configured execution timeout. */
+    public function testExecTaskEnforcesTimeout(): void
+    {
+        // Arrange
+        $task = new ExecTask([
+            'command' => PHP_BINARY,
+            'args' => ['-r', 'usleep(2000000);'],
+            'timeout' => 0.1,
+        ], $this->logger);
+
+        // Act
+        $result = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($result);
+    }
+
     /** Rejects unbalanced quotes before attempting to launch a process. */
     public function testExecTaskRejectsUnbalancedCommandQuotes(): void
     {
