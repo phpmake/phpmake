@@ -305,4 +305,32 @@ final class TaskExecutionTest extends TestCase
         self::assertSame(1, $exitCode);
     }
 
+
+    /** Rejects an echo task when its required message parameter is absent. */
+    public function testEchoTaskRequiresMessageParameter(): void
+    {
+        // Arrange
+        $params = [];
+
+        // Assert
+        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectExceptionMessage("Missing 'message' parameter for echo task.");
+
+        // Act
+        new EchoTask($params, $this->logger);
+    }
+
+    /** Allows an explicitly empty echo message. */
+    public function testEchoTaskAllowsEmptyMessage(): void
+    {
+        // Arrange
+        $task = new EchoTask(['message' => ''], $this->logger);
+
+        // Act
+        $result = $task->execute(false, true);
+
+        // Assert
+        self::assertTrue($result);
+    }
+
 }
