@@ -28,8 +28,9 @@ final class LoggerCoverageTest extends TestCase
     /** Restores the process working directory and removes log artifacts. */
     protected function tearDown(): void
     {
-        $this->removeDirectory($this->temporaryDirectory);
+        // Windows does not allow removing the current working directory.
         chdir($this->previousDirectory);
+        $this->removeDirectory($this->temporaryDirectory);
         parent::tearDown();
     }
 
