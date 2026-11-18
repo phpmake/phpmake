@@ -128,7 +128,7 @@ jobs:
           cd "$consumer"
           composer install --no-interaction --no-progress --prefer-dist
           mkdir -p src
-          printf '%s\\n' '<?php echo "consumer";' > src/index.php
+          printf '%s\n' '<?php echo "consumer";' > src/index.php
           php vendor/bin/phpmake --version
           php vendor/bin/phpmake --init
           php vendor/bin/phpmake --validate-build
