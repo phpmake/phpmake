@@ -260,8 +260,8 @@ final class BuildValidatorTest extends TestCase
         $errors = (new BuildValidator())->validate($config);
 
         // Assert
-        self::assertStringContainsString("Unknown property 'unexpected'", implode("\\n", $errors));
-        self::assertStringContainsString("Unknown property 'extra'", implode("\\n", $errors));
+        self::assertStringContainsString("Unknown property 'unexpected'", implode("\n", $errors));
+        self::assertStringContainsString("Unknown property 'extra'", implode("\n", $errors));
     }
 
     /** Allows an intentionally empty echo message, as the schema does. */
