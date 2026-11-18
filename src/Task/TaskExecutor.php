@@ -31,6 +31,7 @@ final class TaskExecutor
             }
             foreach ($currentTarget['tasks'] as $taskConfig) {
                 if (!is_array($taskConfig)) {
+                    fwrite(STDERR, 'Error: Task configuration must be an object.' . PHP_EOL);
                     return 1;
                 }
                 try {
@@ -44,6 +45,7 @@ final class TaskExecutor
                     echo sprintf('  Running task: %s%s', $taskType, PHP_EOL);
                 }
                 if (!$task->execute($debug, $silent)) {
+                    fwrite(STDERR, sprintf("Error: Task '%s' failed.%s", $taskType, PHP_EOL));
                     if (!$silent) {
                         echo "  ✗ Task failed.\n";
                     }
