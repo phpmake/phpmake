@@ -138,11 +138,11 @@ final class BuildValidator
                 }
 
                 if ($type === 'exec') {
-                    if (isset($params['args']) && (!is_array($params['args']) || array_filter($params['args'], static fn($value) => !is_scalar($value)) !== [])) {
+                    if (array_key_exists('args', $params) && (!is_array($params['args']) || array_filter($params['args'], static fn($value) => !is_scalar($value)) !== [])) {
                         $errors[] = sprintf("Exec task in target '%s' has invalid 'args' (expected scalar array).", (string) $targetName);
                     }
 
-                    if (isset($params['timeout']) && (
+                    if (array_key_exists('timeout', $params) && (
                         (!is_int($params['timeout']) && !is_float($params['timeout']))
                         || !is_finite((float) $params['timeout'])
                         || (float) $params['timeout'] <= 0
