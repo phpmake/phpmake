@@ -132,7 +132,7 @@ final class PathSafetyTest extends TestCase
             self::assertTrue(chdir($project));
             $this->createDirectoryLink($outside, $link);
 
-            $this->expectException(\\InvalidArgumentException::class);
+            $this->expectException(\InvalidArgumentException::class);
             $this->expectExceptionMessage('Safety Violation');
             // Act
             new DeleteTask(['path' => $link . DIRECTORY_SEPARATOR . 'victim.txt'], $this->logger);
