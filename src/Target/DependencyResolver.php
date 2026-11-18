@@ -34,23 +34,23 @@ final class DependencyResolver
             return;
         }
         if (isset($this->visiting[$target])) {
-            throw new \\RuntimeException(sprintf("Circular dependency detected in target '%s'.", $target));
+            throw new \RuntimeException(sprintf("Circular dependency detected in target '%s'.", $target));
         }
 
         $targets = $config->getTargets();
         if (!array_key_exists($target, $targets)) {
-            throw new \\InvalidArgumentException(sprintf("Target '%s' does not exist.", $target));
+            throw new \InvalidArgumentException(sprintf("Target '%s' does not exist.", $target));
         }
 
         $dependencies = $targets[$target]['depends'] ?? [];
         if (!is_array($dependencies)) {
-            throw new \\InvalidArgumentException(sprintf("Dependencies for target '%s' must be an array.", $target));
+            throw new \InvalidArgumentException(sprintf("Dependencies for target '%s' must be an array.", $target));
         }
 
         $this->visiting[$target] = true;
         foreach ($dependencies as $dependency) {
             if (!is_string($dependency) || $dependency === '') {
-                throw new \\InvalidArgumentException(sprintf("Target '%s' has an invalid dependency.", $target));
+                throw new \InvalidArgumentException(sprintf("Target '%s' has an invalid dependency.", $target));
             }
             $this->visit($config, $dependency);
         }
