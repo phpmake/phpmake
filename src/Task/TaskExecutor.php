@@ -18,15 +18,13 @@ final class TaskExecutor
         $targets = $config->getTargets();
         foreach ($executionOrder as $targetName) {
             if (!is_string($targetName) || !array_key_exists($targetName, $targets) || !is_array($targets[$targetName])) {
-                if (!$silent) {
-                    fwrite(STDERR, sprintf("Error: Execution order references missing target '%s'.%s", (string) $targetName, PHP_EOL));
+                fwrite(STDERR, sprintf("Error: Execution order references missing target '%s'.%s", (string) $targetName, PHP_EOL));
                 }
                 return 1;
             }
             $currentTarget = $targets[$targetName];
             if (!isset($currentTarget['tasks']) || !is_array($currentTarget['tasks'])) {
-                if (!$silent) {
-                    fwrite(STDERR, sprintf("Error: Target '%s' has no valid tasks array.%s", $targetName, PHP_EOL));
+                fwrite(STDERR, sprintf("Error: Target '%s' has no valid tasks array.%s", $targetName, PHP_EOL));
                 }
                 return 1;
             }
@@ -40,9 +38,7 @@ final class TaskExecutor
                 try {
                     $task = $taskFactory->create($taskConfig);
                 } catch (\Throwable $e) {
-                    if (!$silent) {
-                        fwrite(STDERR, 'Error: ' . $e->getMessage() . PHP_EOL);
-                    }
+                    fwrite(STDERR, 'Error: ' . $e->getMessage() . PHP_EOL);
                     return 1;
                 }
                 $taskType = $task->getType();
