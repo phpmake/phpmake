@@ -140,7 +140,7 @@ final class BuildLoaderTest extends TestCase
         file_put_contents($this->buildFile, '{"name":"Test","description":"Test","version":"1","targets":{"build":{"tasks":[{"type":"exec","params":{"command":"php","args":{"0":"--version"}}}]}},"default_target":"build"}');
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('must be a JSON array');
         // Act
         (new BuildLoader())->load($this->buildFile);
