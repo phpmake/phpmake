@@ -199,10 +199,6 @@ final class FilesystemTaskCoverageTest extends TestCase
     public function testZipTaskRejectsSymlinkSource(): void
     {
         // Arrange
-        if (!class_exists(\ZipArchive::class)) {
-        // Assert
-            self::markTestSkipped('ext-zip is unavailable.');
-        }
         $target = $this->root . DIRECTORY_SEPARATOR . 'target';
         $link = $this->root . DIRECTORY_SEPARATOR . 'source-link';
         mkdir($target);
@@ -221,10 +217,6 @@ final class FilesystemTaskCoverageTest extends TestCase
     public function testZipTaskArchivesSingleFile(): void
     {
         // Arrange
-        if (!class_exists(\ZipArchive::class)) {
-        // Assert
-            self::markTestSkipped('ext-zip is unavailable.');
-        }
         $source = $this->root . DIRECTORY_SEPARATOR . 'single.txt';
         $archive = $this->root . DIRECTORY_SEPARATOR . 'single.zip';
         file_put_contents($source, 'archive payload');
@@ -249,10 +241,6 @@ final class FilesystemTaskCoverageTest extends TestCase
     public function testZipTaskArchivesNestedDirectoryTree(): void
     {
         // Arrange
-        if (!class_exists(\ZipArchive::class)) {
-        // Assert
-            self::markTestSkipped('ext-zip is unavailable.');
-        }
         $source = $this->root . DIRECTORY_SEPARATOR . 'source';
         mkdir($source . DIRECTORY_SEPARATOR . 'nested', 0777, true);
         file_put_contents($source . DIRECTORY_SEPARATOR . 'nested' . DIRECTORY_SEPARATOR . 'item.txt', 'nested payload');
@@ -276,10 +264,6 @@ final class FilesystemTaskCoverageTest extends TestCase
     public function testZipTaskRejectsMissingSourceAtExecution(): void
     {
         // Arrange
-        if (!class_exists(\ZipArchive::class)) {
-        // Assert
-            self::markTestSkipped('ext-zip is unavailable.');
-        }
         $archive = $this->root . DIRECTORY_SEPARATOR . 'missing.zip';
         $task = new ZipTask([
             'source' => $this->root . DIRECTORY_SEPARATOR . 'missing',
@@ -295,10 +279,6 @@ final class FilesystemTaskCoverageTest extends TestCase
     public function testZipTaskFailsWhenOutputParentIsAFile(): void
     {
         // Arrange
-        if (!class_exists(\ZipArchive::class)) {
-        // Assert
-            self::markTestSkipped('ext-zip is unavailable.');
-        }
         $source = $this->root . DIRECTORY_SEPARATOR . 'source.txt';
         $blocker = $this->root . DIRECTORY_SEPARATOR . 'blocker';
         file_put_contents($source, 'payload');
@@ -317,10 +297,6 @@ final class FilesystemTaskCoverageTest extends TestCase
     public function testZipTaskRejectsNestedSymlinkAndCleansPartialArchive(): void
     {
         // Arrange
-        if (!class_exists(\ZipArchive::class)) {
-        // Assert
-            self::markTestSkipped('ext-zip is unavailable.');
-        }
         $source = $this->root . DIRECTORY_SEPARATOR . 'source';
         mkdir($source);
         file_put_contents($source . DIRECTORY_SEPARATOR . 'before.txt', 'before');
