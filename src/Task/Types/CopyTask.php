@@ -117,6 +117,13 @@ final class CopyTask extends BaseTask
     /** Copies into a staging tree and swaps it into place only after success. */
     private function copyDirectoryTransactionally(string $source, string $destination): bool
     {
+        if ($this->destinationIsWithinSource($source, $destination)) {
+            $this->logger->error(sprintf(
+                "Refusing to copy directory '%s' into itself or one of its descendants.",
+                $source
+            ));
+            return false;
+        }
         if ($this->isSymbolicLinkOrJunction($destination)) {
             $this->logger->error(sprintf("Refusing to replace destination link '%s'.", $destination));
             return false;
