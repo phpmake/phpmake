@@ -15,6 +15,7 @@ final class LoggerTest extends TestCase
     private Logger $logger;
 
     /**
+/** Tests is behavior. */
      * This method is called before the first test method in the test class is executed.
      *
      * @doesNotPerformAssertions
@@ -24,6 +25,7 @@ final class LoggerTest extends TestCase
     public static function setUpBeforeClass(): void {}
 
     /**
+/** Tests has behavior. */
      * This method is called after the last test method in the test class has been executed.
      *
      * @doesNotPerformAssertions
@@ -238,6 +240,7 @@ final class LoggerTest extends TestCase
     /** File rotation failures must not interrupt normal logger calls. */
     public function testFileLoggingFailureDoesNotThrow(): void
     {
+        // Arrange
         $base = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-log-' . bin2hex(random_bytes(8));
         mkdir($base);
         $logFile = $base . DIRECTORY_SEPARATOR . 'build.log';
@@ -246,7 +249,9 @@ final class LoggerTest extends TestCase
 
         $logger = new Logger(false, true, false, $logFile);
         try {
+        // Act
             $logger->info('Build continues after log rotation failure');
+        // Assert
             self::assertDirectoryExists($logFile . '.5');
         } finally {
             unlink($logFile);
@@ -261,10 +266,13 @@ final class LoggerTest extends TestCase
     /** Logger state accessors reflect debug and silent configuration. */
     public function testLoggerStateAccessors(): void
     {
+        // Arrange
         $normal = new Logger(true, false, true);
         $silent = new Logger(true, true, true);
         $nonDebug = new Logger(false, false, true);
 
+        // Assert
+        // Act
         self::assertTrue($normal->isDebugEnabled());
         self::assertFalse($normal->isSilent());
         self::assertFalse($silent->isDebugEnabled());
@@ -276,12 +284,15 @@ final class LoggerTest extends TestCase
     /** Error messages are persisted with the ERROR level when file logging is enabled. */
     public function testLoggerErrorWritesErrorEntryToFile(): void
     {
+        // Arrange
         $directory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-error-log-' . bin2hex(random_bytes(8));
+        // Assert
         self::assertTrue(mkdir($directory));
         $logFile = $directory . DIRECTORY_SEPARATOR . 'build.log';
         $logger = new Logger(false, true, false, $logFile);
 
         try {
+        // Act
             $logger->error('Expected logger error');
 
             self::assertFileExists($logFile);

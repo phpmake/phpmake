@@ -12,6 +12,7 @@ final class CliValidationTest extends TestCase
     private string $workingDirectory;
     private string $cliScript;
 
+    /** Initializes test fixtures. */
     protected function setUp(): void
     {
         $this->workingDirectory = sys_get_temp_dir()
@@ -23,6 +24,7 @@ final class CliValidationTest extends TestCase
             . DIRECTORY_SEPARATOR . 'phpmake.php';
     }
 
+    /** Cleans up test fixtures. */
     protected function tearDown(): void
     {
         $buildFile = $this->workingDirectory . DIRECTORY_SEPARATOR . 'build.json';
@@ -37,10 +39,13 @@ final class CliValidationTest extends TestCase
     /** Malformed JSON exits cleanly without an uncaught fatal error. */
     public function testValidateBuildReportsMalformedJsonCleanly(): void
     {
+        // Arrange
         file_put_contents($this->workingDirectory . DIRECTORY_SEPARATOR . 'build.json', '{"name":');
 
+        // Act
         $result = $this->runValidationCommand();
 
+        // Assert
         self::assertSame(1, $result['exitCode']);
         self::assertNotSame('', trim($result['stderr']));
         self::assertStringNotContainsString('Fatal error', $result['stderr']);
@@ -50,10 +55,13 @@ final class CliValidationTest extends TestCase
     /** A JSON array at the root is rejected as an invalid build document. */
     public function testValidateBuildRejectsNonObjectRoot(): void
     {
+        // Arrange
         file_put_contents($this->workingDirectory . DIRECTORY_SEPARATOR . 'build.json', '[]');
 
+        // Act
         $result = $this->runValidationCommand();
 
+        // Assert
         self::assertSame(1, $result['exitCode']);
         self::assertStringContainsString('must be a JSON object', $result['stderr']);
         self::assertStringNotContainsString('Fatal error', $result['stderr']);

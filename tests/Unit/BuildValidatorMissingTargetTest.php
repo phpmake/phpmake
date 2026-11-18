@@ -13,6 +13,7 @@ final class BuildValidatorMissingTargetTest extends TestCase
     /** Reports an error when the configured default target is missing. */
     public function testInvalidDefaultTarget(): void
     {
+        // Arrange
         $config = [
             'name' => 'Test',
             'version' => '2.0.1',
@@ -21,6 +22,7 @@ final class BuildValidatorMissingTargetTest extends TestCase
         ];
 
         $validator = new BuildValidator();
+        // Act
         $errors = $validator->validate($config);
 
         $this->assertNotEmpty($errors);

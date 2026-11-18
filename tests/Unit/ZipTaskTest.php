@@ -11,6 +11,7 @@ use PhpMake\Utilities\Logger;
 final class ZipTaskTest extends TestCase
 {
     /**
+/** Tests is behavior. */
      * This method is called before the first test method in the test class is executed.
      *
      * @doesNotPerformAssertions
@@ -20,6 +21,7 @@ final class ZipTaskTest extends TestCase
     public static function setUpBeforeClass(): void {}
 
     /**
+/** Tests has behavior. */
      * This method is called after the last test method in the test class has been executed.
      *
      * @doesNotPerformAssertions
@@ -124,6 +126,7 @@ final class ZipTaskTest extends TestCase
     /** Ensures an archive created inside its source directory does not include itself. */
     public function testArchiveDoesNotIncludeItselfWhenOutputIsInsideSource(): void
     {
+        // Arrange
         if (!class_exists(\ZipArchive::class)) {
             $this->markTestSkipped('ext-zip is not available.');
         }
@@ -133,6 +136,7 @@ final class ZipTaskTest extends TestCase
         $output = $root . DIRECTORY_SEPARATOR . 'archive.zip';
         try {
             $task = new ZipTask(['source' => $root, 'output' => $output], new Logger(false, true, true));
+        // Act
             $this->assertTrue($task->execute(false, true));
             $zip = new \ZipArchive();
             $this->assertTrue($zip->open($output));

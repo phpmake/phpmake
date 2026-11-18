@@ -40,8 +40,11 @@ final class RuntimeSystemTest extends TestCase
     /** Confirms version output and a successful operating-system exit code. */
     public function testVersionCommandExitsSuccessfully(): void
     {
+        // Arrange
+        // Act
         $result = $this->runCli(['--version'], $this->temporaryDirectory);
 
+        // Assert
         self::assertSame(0, $result['exitCode'], $result['stderr']);
         self::assertSame("2.0.2" . PHP_EOL, $result['stdout']);
         self::assertSame('', $result['stderr']);
@@ -50,8 +53,11 @@ final class RuntimeSystemTest extends TestCase
     /** Confirms the help command reports its usage and supported operational options. */
     public function testHelpCommandExitsSuccessfully(): void
     {
+        // Arrange
+        // Act
         $result = $this->runCli(['--help'], $this->temporaryDirectory);
 
+        // Assert
         self::assertSame(0, $result['exitCode'], $result['stderr']);
         self::assertStringContainsString('Usage: phpmake', $result['stdout']);
         self::assertStringContainsString('--validate-build', $result['stdout']);
@@ -61,8 +67,11 @@ final class RuntimeSystemTest extends TestCase
     /** Confirms runtime diagnostics are produced by the real PHP process. */
     public function testDiagnosticsCommandReportsRuntimeInformation(): void
     {
+        // Arrange
+        // Act
         $result = $this->runCli(['--diagnostics'], $this->temporaryDirectory);
 
+        // Assert
         self::assertSame(0, $result['exitCode'], $result['stderr']);
         self::assertStringContainsString('Diagnostics information:', $result['stdout']);
         self::assertStringContainsString('PHP:', $result['stdout']);
@@ -73,8 +82,11 @@ final class RuntimeSystemTest extends TestCase
     /** Confirms --init creates a usable build file and rejects overwriting it. */
     public function testInitCreatesValidBuildFileAndRefusesOverwrite(): void
     {
+        // Arrange
+        // Act
         $first = $this->runCli(['--init'], $this->temporaryDirectory);
 
+        // Assert
         self::assertSame(0, $first['exitCode'], $first['stderr']);
         self::assertFileExists($this->temporaryDirectory . DIRECTORY_SEPARATOR . 'build.json');
         self::assertStringContainsString('created successfully', $first['stdout']);
@@ -91,8 +103,11 @@ final class RuntimeSystemTest extends TestCase
     /** Confirms a missing build file and an unsupported flag produce non-zero exits. */
     public function testInvalidCliRequestsFailWithUsefulDiagnostics(): void
     {
+        // Arrange
+        // Act
         $missingBuild = $this->runCli(['--validate-build'], $this->temporaryDirectory);
 
+        // Assert
         self::assertSame(1, $missingBuild['exitCode']);
         self::assertStringContainsString('not found or unreadable', $missingBuild['stderr']);
 

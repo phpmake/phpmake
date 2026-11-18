@@ -16,6 +16,7 @@ final class FilesystemTaskCoverageTest extends TestCase
     private Logger $logger;
     private string $root;
 
+    /** Initializes test fixtures. */
     protected function setUp(): void
     {
         parent::setUp();
@@ -24,6 +25,7 @@ final class FilesystemTaskCoverageTest extends TestCase
         self::assertTrue(mkdir($this->root));
     }
 
+    /** Cleans up test fixtures. */
     protected function tearDown(): void
     {
         $this->removePath($this->root);
@@ -33,12 +35,15 @@ final class FilesystemTaskCoverageTest extends TestCase
     /** Copies a file and creates missing destination directories. */
     public function testCopyTaskCopiesFileAndCreatesDestinationDirectory(): void
     {
+        // Arrange
         $source = $this->root . DIRECTORY_SEPARATOR . 'source.txt';
         $destination = $this->root . DIRECTORY_SEPARATOR . 'nested' . DIRECTORY_SEPARATOR . 'copy.txt';
         file_put_contents($source, 'copy payload');
 
         $task = new CopyTask(['source' => $source, 'dest' => $destination], $this->logger);
 
+        // Assert
+        // Act
         self::assertSame('copy', $task->getType());
         self::assertTrue($task->execute(false, true));
         self::assertFileExists($destination);
@@ -48,6 +53,7 @@ final class FilesystemTaskCoverageTest extends TestCase
     /** Recursively copies nested directories and preserves relative paths and contents. */
     public function testCopyTaskCopiesNestedDirectoryTree(): void
     {
+        // Arrange
         $source = $this->root . DIRECTORY_SEPARATOR . 'source';
         mkdir($source . DIRECTORY_SEPARATOR . 'nested', 0777, true);
         file_put_contents($source . DIRECTORY_SEPARATOR . 'root.txt', 'root');
@@ -56,6 +62,8 @@ final class FilesystemTaskCoverageTest extends TestCase
 
         $task = new CopyTask(['source' => $source, 'dest' => $destination], $this->logger);
 
+        // Assert
+        // Act
         self::assertTrue($task->execute(false, true));
         self::assertSame('root', file_get_contents($destination . DIRECTORY_SEPARATOR . 'root.txt'));
         self::assertSame('child', file_get_contents($destination . DIRECTORY_SEPARATOR . 'nested' . DIRECTORY_SEPARATOR . 'child.txt'));
@@ -64,12 +72,15 @@ final class FilesystemTaskCoverageTest extends TestCase
     /** Missing copy sources fail without creating a destination. */
     public function testCopyTaskReturnsFalseForMissingSource(): void
     {
+        // Arrange
         $destination = $this->root . DIRECTORY_SEPARATOR . 'missing.txt';
         $task = new CopyTask([
             'source' => $this->root . DIRECTORY_SEPARATOR . 'absent.txt',
             'dest' => $destination,
         ], $this->logger);
 
+        // Assert
+        // Act
         self::assertFalse($task->execute(false, true));
         self::assertFileDoesNotExist($destination);
     }
@@ -77,6 +88,7 @@ final class FilesystemTaskCoverageTest extends TestCase
     /** Copy fails cleanly when a regular file blocks destination-directory creation. */
     public function testCopyTaskReturnsFalseWhenDestinationParentIsAFile(): void
     {
+        // Arrange
         $source = $this->root . DIRECTORY_SEPARATOR . 'source.txt';
         $blocker = $this->root . DIRECTORY_SEPARATOR . 'blocker';
         file_put_contents($source, 'payload');
@@ -86,6 +98,8 @@ final class FilesystemTaskCoverageTest extends TestCase
             'dest' => $blocker . DIRECTORY_SEPARATOR . 'copy.txt',
         ], $this->logger);
 
+        // Assert
+        // Act
         self::assertFalse($task->execute(false, true));
         self::assertSame('not a directory', file_get_contents($blocker));
     }
@@ -93,10 +107,12 @@ final class FilesystemTaskCoverageTest extends TestCase
     /** A source symlink is rejected rather than followed. */
     public function testCopyTaskRejectsSourceSymlink(): void
     {
+        // Arrange
         $target = $this->root . DIRECTORY_SEPARATOR . 'target.txt';
         $link = $this->root . DIRECTORY_SEPARATOR . 'link.txt';
         file_put_contents($target, 'target');
         if (!@symlink($target, $link)) {
+        // Assert
             self::markTestSkipped('Symlink creation is unavailable.');
         }
 
@@ -105,6 +121,7 @@ final class FilesystemTaskCoverageTest extends TestCase
             'dest' => $this->root . DIRECTORY_SEPARATOR . 'copy.txt',
         ], $this->logger);
 
+        // Act
         self::assertFalse($task->execute(false, true));
         self::assertFileDoesNotExist($this->root . DIRECTORY_SEPARATOR . 'copy.txt');
     }
@@ -112,12 +129,15 @@ final class FilesystemTaskCoverageTest extends TestCase
     /** A failed copy operation is reported when the destination itself is a directory. */
     public function testCopyTaskReturnsFalseWhenDestinationIsDirectory(): void
     {
+        // Arrange
         $source = $this->root . DIRECTORY_SEPARATOR . 'source.txt';
         $destination = $this->root . DIRECTORY_SEPARATOR . 'destination';
         file_put_contents($source, 'payload');
         mkdir($destination);
         $task = new CopyTask(['source' => $source, 'dest' => $destination], $this->logger);
 
+        // Assert
+        // Act
         self::assertFalse($task->execute(false, true));
         self::assertDirectoryExists($destination);
     }
@@ -125,6 +145,7 @@ final class FilesystemTaskCoverageTest extends TestCase
     /** A directory copy fails cleanly when its destination path is occupied by a file. */
     public function testCopyTaskReturnsFalseWhenDirectoryDestinationIsAFile(): void
     {
+        // Arrange
         $source = $this->root . DIRECTORY_SEPARATOR . 'source';
         mkdir($source);
         file_put_contents($source . DIRECTORY_SEPARATOR . 'item.txt', 'payload');
@@ -132,6 +153,8 @@ final class FilesystemTaskCoverageTest extends TestCase
         file_put_contents($destination, 'blocker');
         $task = new CopyTask(['source' => $source, 'dest' => $destination], $this->logger);
 
+        // Assert
+        // Act
         self::assertFalse($task->execute(false, true));
         self::assertSame('blocker', file_get_contents($destination));
     }
@@ -139,10 +162,13 @@ final class FilesystemTaskCoverageTest extends TestCase
     /** Deletes a file and treats an already absent path as a successful no-op. */
     public function testDeleteTaskDeletesFileAndIsIdempotent(): void
     {
+        // Arrange
         $file = $this->root . DIRECTORY_SEPARATOR . 'remove.txt';
         file_put_contents($file, 'remove');
 
         $task = new DeleteTask(['path' => $file], $this->logger);
+        // Assert
+        // Act
         self::assertSame('delete', $task->getType());
         self::assertTrue($task->execute(false, true));
         self::assertFileDoesNotExist($file);
@@ -154,6 +180,7 @@ final class FilesystemTaskCoverageTest extends TestCase
     /** Recursively removes nested files and directories. */
     public function testDeleteTaskDeletesNestedDirectoryTree(): void
     {
+        // Arrange
         $directory = $this->root . DIRECTORY_SEPARATOR . 'tree';
         mkdir($directory . DIRECTORY_SEPARATOR . 'nested', 0777, true);
         file_put_contents($directory . DIRECTORY_SEPARATOR . 'root.txt', 'root');
@@ -161,6 +188,8 @@ final class FilesystemTaskCoverageTest extends TestCase
 
         $task = new DeleteTask(['path' => $directory], $this->logger);
 
+        // Assert
+        // Act
         self::assertTrue($task->execute(false, true));
         self::assertDirectoryDoesNotExist($directory);
     }
@@ -168,7 +197,9 @@ final class FilesystemTaskCoverageTest extends TestCase
     /** A symlink used as the archive source is rejected rather than followed. */
     public function testZipTaskRejectsSymlinkSource(): void
     {
+        // Arrange
         if (!class_exists(\ZipArchive::class)) {
+        // Assert
             self::markTestSkipped('ext-zip is unavailable.');
         }
         $target = $this->root . DIRECTORY_SEPARATOR . 'target.txt';
@@ -182,13 +213,16 @@ final class FilesystemTaskCoverageTest extends TestCase
             'output' => $this->root . DIRECTORY_SEPARATOR . 'link.zip',
         ], $this->logger);
 
+        // Act
         self::assertFalse($task->execute(false, true));
     }
 
     /** Archives a single file and verifies the stored entry and payload. */
     public function testZipTaskArchivesSingleFile(): void
     {
+        // Arrange
         if (!class_exists(\ZipArchive::class)) {
+        // Assert
             self::markTestSkipped('ext-zip is unavailable.');
         }
         $source = $this->root . DIRECTORY_SEPARATOR . 'single.txt';
@@ -197,6 +231,7 @@ final class FilesystemTaskCoverageTest extends TestCase
 
         $task = new ZipTask(['source' => $source, 'output' => $archive], $this->logger);
 
+        // Act
         self::assertSame('archive', $task->getType());
         self::assertTrue($task->execute(false, true));
         $zip = new \ZipArchive();
@@ -213,7 +248,9 @@ final class FilesystemTaskCoverageTest extends TestCase
     /** Archives nested files with normalized relative entry names. */
     public function testZipTaskArchivesNestedDirectoryTree(): void
     {
+        // Arrange
         if (!class_exists(\ZipArchive::class)) {
+        // Assert
             self::markTestSkipped('ext-zip is unavailable.');
         }
         $source = $this->root . DIRECTORY_SEPARATOR . 'source';
@@ -223,6 +260,7 @@ final class FilesystemTaskCoverageTest extends TestCase
 
         $task = new ZipTask(['source' => $source, 'output' => $archive], $this->logger);
 
+        // Act
         self::assertTrue($task->execute(false, true));
         $zip = new \ZipArchive();
         self::assertTrue($zip->open($archive));
@@ -237,7 +275,9 @@ final class FilesystemTaskCoverageTest extends TestCase
     /** Missing archive sources fail and do not leave an archive behind. */
     public function testZipTaskRejectsMissingSourceAtExecution(): void
     {
+        // Arrange
         if (!class_exists(\ZipArchive::class)) {
+        // Assert
             self::markTestSkipped('ext-zip is unavailable.');
         }
         $archive = $this->root . DIRECTORY_SEPARATOR . 'missing.zip';
@@ -246,6 +286,7 @@ final class FilesystemTaskCoverageTest extends TestCase
             'output' => $archive,
         ], $this->logger);
 
+        // Act
         self::assertFalse($task->execute(false, true));
         self::assertFileDoesNotExist($archive);
     }
@@ -253,7 +294,9 @@ final class FilesystemTaskCoverageTest extends TestCase
     /** Archive creation fails when its output parent is a regular file. */
     public function testZipTaskFailsWhenOutputParentIsAFile(): void
     {
+        // Arrange
         if (!class_exists(\ZipArchive::class)) {
+        // Assert
             self::markTestSkipped('ext-zip is unavailable.');
         }
         $source = $this->root . DIRECTORY_SEPARATOR . 'source.txt';
@@ -265,6 +308,7 @@ final class FilesystemTaskCoverageTest extends TestCase
             'output' => $blocker . DIRECTORY_SEPARATOR . 'archive.zip',
         ], $this->logger);
 
+        // Act
         self::assertFalse($task->execute(false, true));
         self::assertSame('not a directory', file_get_contents($blocker));
     }
@@ -272,7 +316,9 @@ final class FilesystemTaskCoverageTest extends TestCase
     /** A symlink encountered during recursive archive traversal aborts and removes the partial archive. */
     public function testZipTaskRejectsNestedSymlinkAndCleansPartialArchive(): void
     {
+        // Arrange
         if (!class_exists(\ZipArchive::class)) {
+        // Assert
             self::markTestSkipped('ext-zip is unavailable.');
         }
         $source = $this->root . DIRECTORY_SEPARATOR . 'source';
@@ -287,6 +333,7 @@ final class FilesystemTaskCoverageTest extends TestCase
 
         $task = new ZipTask(['source' => $source, 'output' => $archive], $this->logger);
 
+        // Act
         self::assertFalse($task->execute(false, true));
         self::assertFileDoesNotExist($archive);
     }
@@ -294,21 +341,27 @@ final class FilesystemTaskCoverageTest extends TestCase
     /** Copy task rejects malformed parameter types during construction. */
     public function testCopyTaskRejectsNonStringPaths(): void
     {
+        // Arrange
         $this->expectException(\InvalidArgumentException::class);
+        // Act
         new CopyTask(['source' => 123, 'dest' => 'destination.txt'], $this->logger);
     }
 
     /** Delete task rejects a missing or non-string path during construction. */
     public function testDeleteTaskRejectsNonStringPath(): void
     {
+        // Arrange
         $this->expectException(\InvalidArgumentException::class);
+        // Act
         new DeleteTask(['path' => 123], $this->logger);
     }
 
     /** Archive task rejects malformed source and output parameter types. */
     public function testZipTaskRejectsNonStringPaths(): void
     {
+        // Arrange
         $this->expectException(\InvalidArgumentException::class);
+        // Act
         new ZipTask(['source' => 'source.txt', 'output' => 123], $this->logger);
     }
 

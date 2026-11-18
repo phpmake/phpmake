@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 final class CliParserTest extends TestCase
 {
     /**
+/** Tests is behavior. */
      * This method is called before the first test method in the test class is executed.
      *
      * @doesNotPerformAssertions
@@ -18,6 +19,7 @@ final class CliParserTest extends TestCase
     public static function setUpBeforeClass(): void {}
 
     /**
+/** Tests has behavior. */
      * This method is called after the last test method in the test class has been executed.
      *
      * @doesNotPerformAssertions
@@ -148,10 +150,12 @@ final class CliParserTest extends TestCase
     /** Prints the complete command-line help text. */
     public function testShowHelpPrintsUsageAndOptions(): void
     {
+        // Arrange
         ob_start();
         CliParser::showHelp();
         $output = ob_get_clean();
 
+        // Assert
         self::assertIsString($output);
         self::assertStringContainsString('Usage: phpmake', $output);
         self::assertStringContainsString('--validate-build', $output);
@@ -161,20 +165,24 @@ final class CliParserTest extends TestCase
     /** Prints the configured PHPMake version. */
     public function testShowVersionPrintsConfiguredVersion(): void
     {
+        // Arrange
         ob_start();
         CliParser::showVersion();
         $output = ob_get_clean();
 
+        // Assert
         self::assertSame(\PhpMake\Config::TOOL_VERSION . PHP_EOL, $output);
     }
 
     /** Prints runtime and extension diagnostics. */
     public function testShowDiagnosticsPrintsRuntimeInformation(): void
     {
+        // Arrange
         ob_start();
         CliParser::showDiagnostics();
         $output = ob_get_clean();
 
+        // Assert
         self::assertIsString($output);
         self::assertStringContainsString('Diagnostics information:', $output);
         self::assertStringContainsString('PHP:', $output);

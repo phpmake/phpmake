@@ -18,6 +18,7 @@ final class BuildExecutorTest extends TestCase
     /** Executing an undefined target throws a descriptive exception. */
     public function testExecuteRejectsMissingTarget(): void
     {
+        // Arrange
         $logger = new Logger(false, true, true);
         $config = new BuildConfiguration(
             'BuildExecutorTest',
@@ -34,6 +35,7 @@ final class BuildExecutorTest extends TestCase
 
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage("Target 'missing' not found.");
+        // Act
         $executor->execute($config, 'missing', $logger);
     }
 }

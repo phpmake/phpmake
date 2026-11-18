@@ -36,9 +36,11 @@ final class LoggerCoverageTest extends TestCase
     /** Covers console modes, errors, persistent writes, log rotation, and safe failure modes. */
     public function testLoggerWritesRotatesAndSurvivesPersistenceFailures(): void
     {
+        // Arrange
         $visible = new Logger(true, false, false, 'visible.log');
         ob_start();
         try {
+        // Act
             $visible->info('info-line');
             $visible->debug('debug-line');
             $output = ob_get_contents();
@@ -46,6 +48,7 @@ final class LoggerCoverageTest extends TestCase
             ob_end_clean();
         }
 
+        // Assert
         self::assertIsString($output);
         self::assertStringContainsString('info-line', $output);
         self::assertStringContainsString('DEBUG: debug-line', $output);

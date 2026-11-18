@@ -12,6 +12,7 @@ final class ComposerPlatformConstraintTest extends TestCase
     /** Composer accepts PHP 8.3 and later compatible minor releases. */
     public function testPhpRequirementAllowsPhpEightThreeAndLater(): void
     {
+        // Arrange
         $composerPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'composer.json';
         $composer = json_decode(
             (string) file_get_contents($composerPath),
@@ -20,6 +21,7 @@ final class ComposerPlatformConstraintTest extends TestCase
             JSON_THROW_ON_ERROR
         );
 
+        // Assert
         self::assertSame('^8.3', $composer['require']['php'] ?? null);
     }
 }

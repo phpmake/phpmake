@@ -12,17 +12,20 @@ final class ComposerBinTest extends TestCase
     /** Runs the package binary with the consuming project's Composer autoloader. */
     public function testComposerInstalledBinaryUsesConsumerAutoloader(): void
     {
+        // Arrange
         $projectRoot = dirname(__DIR__, 2);
         $temporaryRoot = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-composer-bin-' . bin2hex(random_bytes(8));
         $autoloadDirectory = $temporaryRoot . DIRECTORY_SEPARATOR . 'vendor';
         $packageBinDirectory = $autoloadDirectory . DIRECTORY_SEPARATOR . 'phpmake' . DIRECTORY_SEPARATOR . 'phpmake' . DIRECTORY_SEPARATOR . 'bin';
 
+        // Assert
         self::assertTrue(mkdir($packageBinDirectory, 0777, true));
 
         $autoload = <<<'PHP'
 <?php
 
 namespace Composer\Autoload {
+/** Tests class loader behavior. */
     class ClassLoader {}
 }
 

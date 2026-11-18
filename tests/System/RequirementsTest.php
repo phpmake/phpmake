@@ -12,6 +12,7 @@ namespace PhpMake\Tests\System {
     final class RequirementsTest extends TestCase
     {
         /**
+/** Tests is behavior. */
          * This method is called before the first test method in the test class is executed.
          *
          * @doesNotPerformAssertions
@@ -21,6 +22,7 @@ namespace PhpMake\Tests\System {
         public static function setUpBeforeClass(): void {}
 
         /**
+/** Tests has behavior. */
          * This method is called after the last test method in the test class has been executed.
          *
          * @doesNotPerformAssertions
@@ -67,6 +69,7 @@ namespace PhpMake\Tests\System {
          */
         final public function testProjectRequiredPhpVersion(): void
         {
+            // Arrange
             $_result = (PHP_MAJOR_VERSION == 8) && (PHP_MINOR_VERSION >= 3);
             $this->assertTrue($_result);
         }
@@ -80,6 +83,7 @@ namespace PhpMake\Tests\System {
          */
         final public function testProjectRequiredPhpExtensions(): void
         {
+            // Arrange
             $extensions = [
                 'json',
                 'zip',
@@ -99,6 +103,7 @@ namespace PhpMake\Tests\System {
          */
         final public function testProjectDirectoriesExist(): void
         {
+            // Arrange
             $directories = [
                 '.github',
                 'bin',
@@ -123,6 +128,7 @@ namespace PhpMake\Tests\System {
          */
         final public function testProjectFilesExist(): void
         {
+            // Arrange
             $files = [
                 '.editorconfig',
                 '.gitattributes',

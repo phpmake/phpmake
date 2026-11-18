@@ -13,6 +13,8 @@ final class ConfigTest extends TestCase
     /** The tool version is exposed as a non-empty semantic version string. */
     public function testToolVersionIsSemanticVersion(): void
     {
+        // Arrange
+        // Assert
         self::assertIsString(Config::TOOL_VERSION);
         self::assertMatchesRegularExpression('/^\d+\.\d+\.\d+$/', Config::TOOL_VERSION);
     }

@@ -14,6 +14,7 @@ namespace PhpMake\Tests\System {
     final class EnvironmentTest extends TestCase
     {
         /**
+/** Tests is behavior. */
          * This method is called before the first test method in the test class is executed.
          *
          * @doesNotPerformAssertions
@@ -23,6 +24,7 @@ namespace PhpMake\Tests\System {
         public static function setUpBeforeClass(): void {}
 
         /**
+/** Tests has behavior. */
          * This method is called after the last test method in the test class has been executed.
          *
          * @doesNotPerformAssertions

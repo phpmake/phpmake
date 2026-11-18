@@ -12,11 +12,13 @@ final class BuildLoaderTest extends TestCase
 {
     private string $buildFile;
 
+    /** Initializes test fixtures. */
     protected function setUp(): void
     {
         $this->buildFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-build-' . bin2hex(random_bytes(8)) . '.json';
     }
 
+    /** Cleans up test fixtures. */
     protected function tearDown(): void
     {
         if (is_file($this->buildFile)) {
@@ -27,6 +29,7 @@ final class BuildLoaderTest extends TestCase
     /** Loads a complete, valid configuration and preserves its typed values. */
     public function testLoadValidBuildFile(): void
     {
+        // Arrange
         file_put_contents($this->buildFile, json_encode([
             'name' => 'TestProject',
             'description' => 'Test',
@@ -35,8 +38,10 @@ final class BuildLoaderTest extends TestCase
             'default_target' => 'test-target',
         ], JSON_THROW_ON_ERROR));
 
+        // Act
         $config = (new BuildLoader())->load($this->buildFile);
 
+        // Assert
         self::assertSame('TestProject', $config->getName());
         self::assertSame('Test', $config->getDescription());
         self::assertSame('2.0.2', $config->getVersion());
@@ -47,26 +52,31 @@ final class BuildLoaderTest extends TestCase
     /** Rejects a JSON array instead of a configuration object. */
     public function testRejectsTopLevelJsonArray(): void
     {
+        // Arrange
         file_put_contents($this->buildFile, '[]');
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('must be a JSON object');
+        // Act
         (new BuildLoader())->load($this->buildFile);
     }
 
     /** Rejects incomplete configurations instead of silently inserting defaults. */
     public function testRejectsMissingRequiredFields(): void
     {
+        // Arrange
         file_put_contents($this->buildFile, '{"name":"Incomplete"}');
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Missing required field: description');
+        // Act
         (new BuildLoader())->load($this->buildFile);
     }
 
     /** Rejects a syntactically valid JSON document with an invalid target definition. */
     public function testRejectsUnknownTaskType(): void
     {
+        // Arrange
         file_put_contents($this->buildFile, json_encode([
             'name' => 'Test',
             'description' => 'Invalid task',
@@ -77,15 +87,18 @@ final class BuildLoaderTest extends TestCase
 
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Unknown task type 'not-real'");
+        // Act
         (new BuildLoader())->load($this->buildFile);
     }
 
     /** Malformed JSON is rejected with a JSON decoding exception. */
     public function testRejectsMalformedJson(): void
     {
+        // Arrange
         file_put_contents($this->buildFile, '{"name":');
 
         $this->expectException(\JsonException::class);
+        // Act
         (new BuildLoader())->load($this->buildFile);
     }
 

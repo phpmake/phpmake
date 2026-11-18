@@ -39,8 +39,10 @@ final class CliBuildIntegrationTest extends TestCase
     /** Runs a dependency chain that copies files, executes PHP, and creates a ZIP archive. */
     public function testCliExecutesDependencyChainAndCreatesExpectedArchive(): void
     {
+        // Arrange
         file_put_contents($this->projectDirectory . DIRECTORY_SEPARATOR . 'input.txt', 'source-content');
 
+        // Act
         $this->writeBuildConfiguration([
             'prepare' => [
                 'tasks' => [
@@ -70,6 +72,7 @@ final class CliBuildIntegrationTest extends TestCase
 
         $result = $this->runCli(['--silent', '--no-log']);
 
+        // Assert
         self::assertSame(0, $result['exitCode'], $result['stderr']);
         self::assertFileExists($this->projectDirectory . DIRECTORY_SEPARATOR . 'build' . DIRECTORY_SEPARATOR . 'copied.txt');
         self::assertSame(
@@ -91,6 +94,8 @@ final class CliBuildIntegrationTest extends TestCase
     /** Validates a real build.json through the CLI validation option. */
     public function testCliValidatesBuildConfigurationWithoutExecutingTasks(): void
     {
+        // Arrange
+        // Act
         $this->writeBuildConfiguration([
             'default' => [
                 'tasks' => [
@@ -101,6 +106,7 @@ final class CliBuildIntegrationTest extends TestCase
 
         $result = $this->runCli(['--validate-build', '--no-log']);
 
+        // Assert
         self::assertSame(0, $result['exitCode'], $result['stderr']);
         self::assertStringContainsString('Build configuration is valid.', $result['stdout']);
         self::assertDirectoryDoesNotExist($this->projectDirectory . DIRECTORY_SEPARATOR . 'must-not-exist');
@@ -109,6 +115,8 @@ final class CliBuildIntegrationTest extends TestCase
     /** Returns a non-zero CLI exit code and stops subsequent tasks after a process failure. */
     public function testCliStopsBuildAfterExecTaskFails(): void
     {
+        // Arrange
+        // Act
         $this->writeBuildConfiguration([
             'default' => [
                 'tasks' => [
@@ -123,6 +131,7 @@ final class CliBuildIntegrationTest extends TestCase
 
         $result = $this->runCli(['--silent', '--no-log']);
 
+        // Assert
         self::assertSame(1, $result['exitCode']);
         self::assertDirectoryDoesNotExist($this->projectDirectory . DIRECTORY_SEPARATOR . 'must-not-exist');
     }
@@ -130,6 +139,8 @@ final class CliBuildIntegrationTest extends TestCase
     /** Rejects an invalid build configuration through the real CLI entry point. */
     public function testCliReturnsFailureForInvalidBuildConfiguration(): void
     {
+        // Arrange
+        // Act
         $this->writeBuildConfiguration([
             'default' => [
                 'tasks' => [
@@ -140,6 +151,7 @@ final class CliBuildIntegrationTest extends TestCase
 
         $result = $this->runCli(['--validate-build', '--no-log']);
 
+        // Assert
         self::assertSame(1, $result['exitCode']);
         self::assertStringContainsString("Unknown task type 'unknown_task'", $result['stderr']);
     }

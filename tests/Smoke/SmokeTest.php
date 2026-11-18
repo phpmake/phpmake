@@ -36,6 +36,7 @@ namespace PhpMake\Tests\Smoke {
         private BuildValidator $buildValidator;
 
         /**
+/** Tests is behavior. */
          * This method is called before the first test method in the test class is executed.
          *
          * @doesNotPerformAssertions
@@ -45,6 +46,7 @@ namespace PhpMake\Tests\Smoke {
         public static function setUpBeforeClass(): void {}
 
         /**
+/** Tests has behavior. */
          * This method is called after the last test method in the test class has been executed.
          *
          * @doesNotPerformAssertions
@@ -97,6 +99,7 @@ namespace PhpMake\Tests\Smoke {
          */
         public function testComposerCanLoadLibraryClass(): void
         {
+            // Arrange
             // AAA
             $this->assertTrue(class_exists(DependencyResolver::class));
             $this->assertTrue(class_exists(TaskExecutor::class));
@@ -115,6 +118,7 @@ namespace PhpMake\Tests\Smoke {
          */
         public function testDependencyResolverInstanceIsObject(): void
         {
+            // Arrange
             // AAA
             $this->assertNotNull($this->dependencyResolver);
             // AAA
@@ -130,6 +134,7 @@ namespace PhpMake\Tests\Smoke {
          */
         public function testTaskExecutorInstanceIsObject(): void
         {
+            // Arrange
             // AAA
             $this->assertNotNull($this->taskExecutor);
             // AAA
@@ -145,6 +150,7 @@ namespace PhpMake\Tests\Smoke {
          */
         public function testLoggerInstanceIsObject(): void
         {
+            // Arrange
             // AAA
             $this->assertNotNull($this->logger);
             // AAA
@@ -160,6 +166,7 @@ namespace PhpMake\Tests\Smoke {
          */
         public function testBuildConfigurationInstanceIsObject(): void
         {
+            // Arrange
             // AAA
             $this->assertNotNull($this->buildConfiguration);
             // AAA
@@ -175,6 +182,7 @@ namespace PhpMake\Tests\Smoke {
          */
         public function testBuildExecutorInstanceIsObject(): void
         {
+            // Arrange
             // AAA
             $this->assertNotNull($this->buildExecutor);
             // AAA
@@ -190,6 +198,7 @@ namespace PhpMake\Tests\Smoke {
          */
         public function testBuildLoaderInstanceIsObject(): void
         {
+            // Arrange
             // AAA
             $this->assertNotNull($this->buildLoader);
             // AAA
@@ -205,6 +214,7 @@ namespace PhpMake\Tests\Smoke {
          */
         public function testBuildValidatorInstanceIsObject(): void
         {
+            // Arrange
             // AAA
             $this->assertNotNull($this->buildValidator);
             // AAA

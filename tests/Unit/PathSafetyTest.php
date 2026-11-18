@@ -28,9 +28,11 @@ final class PathSafetyTest extends TestCase
      */
     public function testDeleteRejectsPathOutsideProject(): void
     {
+        // Arrange
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Safety Violation');
 
+        // Act
         new DeleteTask(['path' => sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'outside.txt'], $this->logger);
     }
 
@@ -41,9 +43,11 @@ final class PathSafetyTest extends TestCase
      */
     public function testCopyRejectsSourceOutsideProject(): void
     {
+        // Arrange
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Safety Violation');
 
+        // Act
         new CopyTask([
             'source' => sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'src.txt',
             'dest'   => 'inside.txt',
@@ -57,9 +61,11 @@ final class PathSafetyTest extends TestCase
      */
     public function testCreateDirectoryRejectsParentTraversal(): void
     {
+        // Arrange
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Safety Violation');
 
+        // Act
         new CreateDirectoryTask(['name' => '..' . DIRECTORY_SEPARATOR . 'outside-dir'], $this->logger);
     }
 
@@ -70,9 +76,11 @@ final class PathSafetyTest extends TestCase
      */
     public function testArchiveRejectsOutputOutsideProject(): void
     {
+        // Arrange
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Safety Violation');
 
+        // Act
         new ZipTask([
             'source' => 'src',
             'output' => sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'out.zip',
@@ -86,9 +94,11 @@ final class PathSafetyTest extends TestCase
      */
     public function testCreateDirectoryIsIdempotent(): void
     {
+        // Arrange
         $dir = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-test-idempotent-' . uniqid('', true);
 
         $task = new CreateDirectoryTask(['name' => $dir], $this->logger);
+        // Act
         $this->assertTrue($task->execute(false, true));
         $this->assertTrue(is_dir($dir));
 
@@ -102,6 +112,7 @@ final class PathSafetyTest extends TestCase
     /** Rejects paths that traverse a symlinked ancestor outside the project. */
     public function testRejectsSymlinkedAncestorEscapingProject(): void
     {
+        // Arrange
         $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-outside-' . uniqid('', true);
         $link = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-link-' . uniqid('', true);
         mkdir($outside);
@@ -112,6 +123,7 @@ final class PathSafetyTest extends TestCase
         try {
             $this->expectException(\InvalidArgumentException::class);
             $this->expectExceptionMessage('Safety Violation');
+        // Act
             new DeleteTask(['path' => $link . DIRECTORY_SEPARATOR . 'victim.txt'], $this->logger);
         } finally {
             unlink($link);
@@ -122,6 +134,7 @@ final class PathSafetyTest extends TestCase
     /** Reports failure when a recursive copy encounters a symlink. */
     public function testCopyPropagatesNestedSymlinkFailure(): void
     {
+        // Arrange
         $source = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-copy-src-' . uniqid('', true);
         $dest = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-copy-dest-' . uniqid('', true);
         $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-copy-outside-' . uniqid('', true);
@@ -136,6 +149,7 @@ final class PathSafetyTest extends TestCase
         }
         try {
             $task = new CopyTask(['source' => $source, 'dest' => $dest], $this->logger);
+        // Act
             $this->assertFalse($task->execute(false, true));
             $this->assertFileDoesNotExist($dest . DIRECTORY_SEPARATOR . 'linked' . DIRECTORY_SEPARATOR . 'secret.txt');
         } finally {
@@ -152,6 +166,7 @@ final class PathSafetyTest extends TestCase
     /** Removes an in-project symlink while preserving its external target. */
     public function testDeleteRemovesSymlinkWithoutDeletingItsTarget(): void
     {
+        // Arrange
         $target = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-delete-target-' . uniqid('', true);
         $link = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-delete-link-' . uniqid('', true);
         file_put_contents($target, 'keep me');
@@ -162,6 +177,7 @@ final class PathSafetyTest extends TestCase
 
         try {
             $task = new DeleteTask(['path' => $link], $this->logger);
+        // Act
             $this->assertTrue($task->execute(false, true));
             $this->assertFileDoesNotExist($link);
             $this->assertFileExists($target);

@@ -14,6 +14,7 @@ final class TaskExecutionTest extends TestCase
     private Logger $logger;
 
     /**
+/** Tests is behavior. */
      * This method is called before the first test method in the test class is executed.
      *
      * @doesNotPerformAssertions
@@ -23,6 +24,7 @@ final class TaskExecutionTest extends TestCase
     public static function setUpBeforeClass(): void {}
 
     /**
+/** Tests has behavior. */
      * This method is called after the last test method in the test class has been executed.
      *
      * @doesNotPerformAssertions
@@ -121,10 +123,13 @@ final class TaskExecutionTest extends TestCase
     /** Returns failure when a regular file blocks directory creation. */
     public function testCreateDirectoryTaskReportsFilesystemFailure(): void
     {
+        // Arrange
         $parentFile = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-parent-' . bin2hex(random_bytes(6));
         file_put_contents($parentFile, 'not a directory');
         $task = new CreateDirectoryTask(['name' => $parentFile . DIRECTORY_SEPARATOR . 'child'], $this->logger);
         try {
+        // Assert
+        // Act
             self::assertFalse($task->execute(false, true));
         } finally {
             unlink($parentFile);
@@ -134,8 +139,10 @@ final class TaskExecutionTest extends TestCase
     /** Rejects an exec timeout above the supported maximum. */
     public function testExecTaskRejectsTimeoutAboveMaximum(): void
     {
+        // Arrange
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('at most 86400');
+        // Act
         new ExecTask(['command' => PHP_BINARY, 'timeout' => 86401], $this->logger);
     }
 
@@ -144,6 +151,7 @@ final class TaskExecutionTest extends TestCase
     /** Successful task execution produces no console output in silent mode. */
     public function testTaskExecutorSuppressesAllSuccessfulTaskOutputInSilentMode(): void
     {
+        // Arrange
         $config = new \PhpMake\Build\BuildConfiguration(
             'SilentTest',
             'Silent output contract',
@@ -158,9 +166,11 @@ final class TaskExecutionTest extends TestCase
         $executor = new \PhpMake\Task\TaskExecutor();
 
         ob_start();
+        // Act
         $exitCode = $executor->executeTasks($config, ['build'], $taskFactory, false, true);
         $output = ob_get_clean();
 
+        // Assert
         self::assertSame(0, $exitCode);
         self::assertSame('', $output);
     }
@@ -170,6 +180,7 @@ final class TaskExecutionTest extends TestCase
     /** Invalid execution-order targets stop execution with a failure code. */
     public function testTaskExecutorRejectsMissingExecutionTarget(): void
     {
+        // Arrange
         $config = new \PhpMake\Build\BuildConfiguration(
             'InvalidOrder',
             'Missing target',
@@ -178,6 +189,7 @@ final class TaskExecutionTest extends TestCase
             'build'
         );
 
+        // Act
         $exitCode = (new \PhpMake\Task\TaskExecutor())->executeTasks(
             $config,
             ['missing'],
@@ -186,12 +198,14 @@ final class TaskExecutionTest extends TestCase
             true
         );
 
+        // Assert
         self::assertSame(1, $exitCode);
     }
 
     /** Targets without a task list fail instead of being silently skipped. */
     public function testTaskExecutorRejectsMalformedTaskList(): void
     {
+        // Arrange
         $config = new \PhpMake\Build\BuildConfiguration(
             'MalformedTasks',
             'Malformed task list',
@@ -200,6 +214,7 @@ final class TaskExecutionTest extends TestCase
             'build'
         );
 
+        // Act
         $exitCode = (new \PhpMake\Task\TaskExecutor())->executeTasks(
             $config,
             ['build'],
@@ -208,12 +223,14 @@ final class TaskExecutionTest extends TestCase
             true
         );
 
+        // Assert
         self::assertSame(1, $exitCode);
     }
 
     /** Invalid task configuration is caught and reported as a failed build. */
     public function testTaskExecutorHandlesTaskFactoryFailure(): void
     {
+        // Arrange
         $config = new \PhpMake\Build\BuildConfiguration(
             'InvalidTask',
             'Invalid task configuration',
@@ -222,6 +239,7 @@ final class TaskExecutionTest extends TestCase
             'build'
         );
 
+        // Act
         $exitCode = (new \PhpMake\Task\TaskExecutor())->executeTasks(
             $config,
             ['build'],
@@ -230,12 +248,14 @@ final class TaskExecutionTest extends TestCase
             true
         );
 
+        // Assert
         self::assertSame(1, $exitCode);
     }
 
     /** A task returning false stops the target and returns a failure code. */
     public function testTaskExecutorStopsAfterTaskFailure(): void
     {
+        // Arrange
         $config = new \PhpMake\Build\BuildConfiguration(
             'FailingTask',
             'Non-zero process exit',
@@ -247,6 +267,7 @@ final class TaskExecutionTest extends TestCase
             'build'
         );
 
+        // Act
         $exitCode = (new \PhpMake\Task\TaskExecutor())->executeTasks(
             $config,
             ['build'],
@@ -255,6 +276,7 @@ final class TaskExecutionTest extends TestCase
             true
         );
 
+        // Assert
         self::assertSame(1, $exitCode);
     }
 
@@ -262,6 +284,7 @@ final class TaskExecutionTest extends TestCase
     /** Non-array task entries fail safely without invoking the task factory. */
     public function testTaskExecutorRejectsNonArrayTaskEntry(): void
     {
+        // Arrange
         $config = new \PhpMake\Build\BuildConfiguration(
             'MalformedTaskEntry',
             'Task entry is not an object',
@@ -270,6 +293,7 @@ final class TaskExecutionTest extends TestCase
             'build'
         );
 
+        // Act
         $exitCode = (new \PhpMake\Task\TaskExecutor())->executeTasks(
             $config,
             ['build'],
@@ -278,6 +302,7 @@ final class TaskExecutionTest extends TestCase
             true
         );
 
+        // Assert
         self::assertSame(1, $exitCode);
     }
 
