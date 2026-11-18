@@ -209,7 +209,7 @@ final class CopyTask extends BaseTask
 
         $sourcePath = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $sourceReal), DIRECTORY_SEPARATOR);
         $destinationPath = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $destinationReal), DIRECTORY_SEPARATOR);
-        if (in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true)) {
+        if (PHP_OS_FAMILY === 'Windows') {
             $sourcePath = strtolower($sourcePath);
             $destinationPath = strtolower($destinationPath);
         }
