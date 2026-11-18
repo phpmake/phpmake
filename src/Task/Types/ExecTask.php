@@ -156,8 +156,11 @@ PHP;
     private function terminateProcessTree($process, ?int $processPid, bool $processGroupCreated): void
     {
         if (PHP_OS_FAMILY === 'Windows' && $processPid !== null) {
+            $systemRoot = getenv('SystemRoot') ?: 'C:\\Windows';
+            $taskkill = $systemRoot . DIRECTORY_SEPARATOR . 'System32'
+                . DIRECTORY_SEPARATOR . 'taskkill.exe';
             $terminator = @proc_open(
-                ['taskkill', '/PID', (string) $processPid, '/T', '/F'],
+                [$taskkill, '/PID', (string) $processPid, '/T', '/F'],
                 [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
                 $pipes,
                 null,
@@ -165,13 +168,24 @@ PHP;
                 ['bypass_shell' => true]
             );
             if (is_resource($terminator)) {
-                foreach ($pipes as $pipe) {
-                    fclose($pipe);
-                }
+                fclose($pipes[0]);
+                $stdout = stream_get_contents($pipes[1]);
+                $stderr = stream_get_contents($pipes[2]);
+                fclose($pipes[1]);
+                fclose($pipes[2]);
                 $terminationCode = proc_close($terminator);
                 if ($terminationCode === 0) {
                     return;
                 }
+                $this->logger->error(sprintf(
+                    'Windows process-tree termination failed for PID %s (exit %s): %s %s',
+                    (string) $processPid,
+                    (string) $terminationCode,
+                    trim((string) $stdout),
+                    trim((string) $stderr)
+                ));
+            } else {
+                $this->logger->error('Unable to start taskkill.exe for process-tree termination.');
             }
         }
 
