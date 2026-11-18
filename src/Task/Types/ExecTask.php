@@ -7,6 +7,7 @@ use PhpMake\Task\BaseTask;
 /** Runs an external process without invoking a command shell. */
 final class ExecTask extends BaseTask
 {
+    private const int MAX_CAPTURE_BYTES = 1048576;
     /** Starts the configured process, captures output, and enforces its timeout. */
     protected function runTask(bool $debug, bool $silent): bool
     {
@@ -41,10 +42,22 @@ final class ExecTask extends BaseTask
         $start = microtime(true);
         $timedOut = false;
         $observedExitCode = null;
+        $stdoutTruncated = false;
+        $stderrTruncated = false;
+        $outputLimitExceeded = false;
 
         do {
-            $stdout .= stream_get_contents($pipes[1]) ?: '';
-            $stderr .= stream_get_contents($pipes[2]) ?: '';
+            $this->captureOutput($pipes[1], $stdout, $stdoutTruncated);
+            $this->captureOutput($pipes[2], $stderr, $stderrTruncated);
+            if ($stdoutTruncated || $stderrTruncated) {
+                $outputLimitExceeded = true;
+                proc_terminate($process, 15);
+                usleep(200000);
+                if (proc_get_status($process)['running']) {
+                    proc_terminate($process, 9);
+                }
+                break;
+            }
             $status = proc_get_status($process);
             if (!$status['running']) {
                 $observedExitCode = $status['exitcode'];
@@ -62,8 +75,8 @@ final class ExecTask extends BaseTask
             usleep(20000);
         } while (true);
 
-        $stdout .= stream_get_contents($pipes[1]) ?: '';
-        $stderr .= stream_get_contents($pipes[2]) ?: '';
+        $this->captureOutput($pipes[1], $stdout, $stdoutTruncated);
+        $this->captureOutput($pipes[2], $stderr, $stderrTruncated);
         fclose($pipes[1]);
         fclose($pipes[2]);
         $closeCode = proc_close($process);
@@ -76,6 +89,10 @@ final class ExecTask extends BaseTask
         }
         if (trim($stderr) !== '') {
             $this->logger->error(trim($stderr));
+        }
+        if ($outputLimitExceeded) {
+            $this->logger->error(sprintf('Command output exceeded the %d-byte per-stream limit.', self::MAX_CAPTURE_BYTES));
+            return false;
         }
         if ($timedOut) {
             $this->logger->error(sprintf('Command timed out after %.1f seconds.', $timeout));
@@ -90,6 +107,24 @@ final class ExecTask extends BaseTask
     public function getType(): string
     {
         return 'exec';
+    }
+
+    /** Reads available process output while enforcing a per-stream memory limit. */
+    private function captureOutput($pipe, string &$buffer, bool &$truncated): void
+    {
+        while (!feof($pipe)) {
+            $chunk = fread($pipe, 8192);
+            if ($chunk === false || $chunk === '') {
+                break;
+            }
+            $remaining = self::MAX_CAPTURE_BYTES - strlen($buffer);
+            if ($remaining > 0) {
+                $buffer .= substr($chunk, 0, $remaining);
+            }
+            if (strlen($chunk) > $remaining) {
+                $truncated = true;
+            }
+        }
     }
 
     /** Validates the command, argument list, and optional timeout. */
