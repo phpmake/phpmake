@@ -165,7 +165,11 @@ final class CopyTask extends BaseTask
     /** Removes a newly-created partial destination tree after a failed copy. */
     private function removeCreatedTree(string $path): void
     {
-        if ($this->isSymbolicLinkOrJunction($path) || !is_dir($path)) {
+        if ($this->isSymbolicLinkOrJunction($path)) {
+            $this->removeSymbolicLinkOrJunction($path);
+            return;
+        }
+        if (!is_dir($path)) {
             @unlink($path);
             return;
         }
