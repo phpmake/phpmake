@@ -59,7 +59,7 @@ PHPMake provides a modular task architecture, dependency-aware targets, filesyst
 
 1. PHP >= 8.3
 2. Composer >= 2
-3. PHP extensions: `ctype`, `json`, and `zip`
+3. PHP extensions: `ctype`, `json`, `random`, and `zip`
 
 ### Versions
 
