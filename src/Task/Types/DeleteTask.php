@@ -91,7 +91,7 @@ final class DeleteTask extends BaseTask
             return;
         }
 
-        $this->assertSafePath($path, 'delete path');
+        $this->assertSafePath($path, 'delete path', false);
     }
 
     #[\Override]
