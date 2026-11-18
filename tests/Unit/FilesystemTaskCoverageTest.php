@@ -291,6 +291,27 @@ final class FilesystemTaskCoverageTest extends TestCase
         self::assertFileDoesNotExist($archive);
     }
 
+    /** Copy task rejects malformed parameter types during construction. */
+    public function testCopyTaskRejectsNonStringPaths(): void
+    {
+        $this->expectException(\\InvalidArgumentException::class);
+        new CopyTask(['source' => 123, 'dest' => 'destination.txt'], $this->logger);
+    }
+
+    /** Delete task rejects a missing or non-string path during construction. */
+    public function testDeleteTaskRejectsNonStringPath(): void
+    {
+        $this->expectException(\\InvalidArgumentException::class);
+        new DeleteTask(['path' => 123], $this->logger);
+    }
+
+    /** Archive task rejects malformed source and output parameter types. */
+    public function testZipTaskRejectsNonStringPaths(): void
+    {
+        $this->expectException(\\InvalidArgumentException::class);
+        new ZipTask(['source' => 'source.txt', 'output' => 123], $this->logger);
+    }
+
     /** Removes temporary files without following symbolic links. */
     private function removePath(string $path): void
     {
