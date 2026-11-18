@@ -33,13 +33,29 @@ final class ExecTask extends BaseTask
         }
 
         $pipes = [];
-        $process = proc_open($argv, [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, getcwd(), null, ['bypass_shell' => true]);
+        $processOptions = ['bypass_shell' => true];
+        if (PHP_OS_FAMILY === 'Windows') {
+            $processOptions['create_process_group'] = true;
+        }
+        $process = proc_open(
+            $argv,
+            [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+            $pipes,
+            getcwd(),
+            null,
+            $processOptions
+        );
         if (!is_resource($process)) {
             $this->logger->error('Unable to start command process.');
             return false;
         }
 
         fclose($pipes[0]);
+        $processPid = proc_get_status($process)['pid'] ?? null;
+        $processGroupCreated = PHP_OS_FAMILY !== 'Windows'
+            && is_int($processPid)
+            && function_exists('posix_setpgid')
+            && @posix_setpgid($processPid, $processPid);
         stream_set_blocking($pipes[1], false);
         stream_set_blocking($pipes[2], false);
         $stdout = $stderr = '';
@@ -55,22 +71,14 @@ final class ExecTask extends BaseTask
             $this->captureOutput($pipes[2], $stderr, $stderrTruncated);
             if ($stdoutTruncated || $stderrTruncated) {
                 $outputLimitExceeded = true;
-                proc_terminate($process, 15);
-                usleep(200000);
-                if (proc_get_status($process)['running']) {
-                    proc_terminate($process, 9);
-                }
+                $this->terminateProcessTree($process, $processPid, $processGroupCreated);
                 break;
             }
             $status = proc_get_status($process);
             if (microtime(true) - $start > $timeout) {
                 $timedOut = true;
                 if ($status['running']) {
-                    proc_terminate($process, 15);
-                    usleep(200000);
-                    if (proc_get_status($process)['running']) {
-                        proc_terminate($process, 9);
-                    }
+                    $this->terminateProcessTree($process, $processPid, $processGroupCreated);
                 }
                 break;
             }
@@ -113,6 +121,53 @@ final class ExecTask extends BaseTask
     public function getType(): string
     {
         return 'exec';
+    }
+
+    /**
+     * Terminates the process and descendants without invoking a shell.
+     *
+     * Windows uses taskkill's process-tree switch. POSIX platforms use a
+     * dedicated process group when the POSIX extension is available.
+     */
+    private function terminateProcessTree($process, ?int $processPid, bool $processGroupCreated): void
+    {
+        if (PHP_OS_FAMILY === 'Windows' && $processPid !== null) {
+            $terminator = @proc_open(
+                ['taskkill', '/PID', (string) $processPid, '/T', '/F'],
+                [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+                $pipes,
+                null,
+                null,
+                ['bypass_shell' => true]
+            );
+            if (is_resource($terminator)) {
+                foreach ($pipes as $pipe) {
+                    fclose($pipe);
+                }
+                proc_close($terminator);
+                return;
+            }
+        }
+
+        if (
+            $processGroupCreated
+            && $processPid !== null
+            && function_exists('posix_kill')
+        ) {
+            @posix_kill(-$processPid, SIGTERM);
+            usleep(200000);
+            if (@posix_kill(-$processPid, 0)) {
+                @posix_kill(-$processPid, SIGKILL);
+            }
+            return;
+        }
+
+        // Best-effort fallback when process groups are unavailable.
+        proc_terminate($process, 15);
+        usleep(200000);
+        if (proc_get_status($process)['running']) {
+            proc_terminate($process, 9);
+        }
     }
 
     /** Reads available process output while enforcing a per-stream memory limit. */
