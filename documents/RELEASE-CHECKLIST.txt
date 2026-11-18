@@ -5,11 +5,13 @@
 * Update /src/Config.php file.
 * Check/Update composer.json file.
 * Check/Update .github/workflows/default.yml
+* Verify Linux, Windows, and macOS CI jobs.
+* Install from a clean Composer project and test the generated vendor/bin proxy.
+* Validate build.json.example and run its default and package targets.
 * Check/Update .styleci.yml
 * Check/Update .php-cs-fixer.php
 * Check/Update rector.php
 * Update documents/CHANGELOG.txt file.
-* Update Checksums.sha256 file.
 * Commit changes with message: Release Major.Minor.Micro
 * Create a new version tag.
 * Create a new release on Git host.
