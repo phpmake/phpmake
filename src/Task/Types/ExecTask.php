@@ -180,10 +180,10 @@ PHP;
             && $processPid !== null
             && function_exists('posix_kill')
         ) {
-            if (@posix_kill(-$processPid, SIGTERM)) {
+            if (@posix_kill(-$processPid, 15)) {
                 usleep(200000);
                 if (@posix_kill(-$processPid, 0)) {
-                    @posix_kill(-$processPid, SIGKILL);
+                    @posix_kill(-$processPid, 9);
                 }
                 return;
             }
