@@ -15,16 +15,16 @@ final class ExecTask extends BaseTask
         $args = $this->params['args'] ?? [];
         $timeout = (float) ($this->params['timeout'] ?? 300);
         if (!is_finite($timeout) || $timeout <= 0 || $timeout > 86400) {
-            throw new \\InvalidArgumentException('Exec timeout must be greater than 0 and at most 86400 seconds.');
+            throw new \InvalidArgumentException('Exec timeout must be greater than 0 and at most 86400 seconds.');
         }
 
         if (!self::hasBalancedQuotes($command)) {
-            throw new \\InvalidArgumentException('Exec command contains an unbalanced quote.');
+            throw new \InvalidArgumentException('Exec command contains an unbalanced quote.');
         }
 
         $argv = self::tokenizeCommand($command);
         if ($argv === []) {
-            throw new \\InvalidArgumentException('Exec command is empty.');
+            throw new \InvalidArgumentException('Exec command is empty.');
         }
 
         $argv = array_merge($argv, array_map(static fn($arg): string => (string) $arg, $args));
