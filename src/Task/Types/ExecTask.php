@@ -138,7 +138,7 @@ final class ExecTask extends BaseTask
             throw new \InvalidArgumentException("Exec task requires a non-empty string 'command'.");
         }
         if (!self::hasBalancedQuotes($this->params['command'])) {
-            throw new \\InvalidArgumentException('Exec command contains an unbalanced quote.');
+            throw new \InvalidArgumentException('Exec command contains an unbalanced quote.');
         }
         if (isset($this->params['args']) && (!is_array($this->params['args']) || array_filter($this->params['args'], static fn($value) => !is_scalar($value)))) {
             throw new \InvalidArgumentException("Exec task 'args' must be an array of scalar values.");
