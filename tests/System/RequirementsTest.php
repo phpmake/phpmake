@@ -12,9 +12,9 @@ namespace PhpMake\Tests\System {
         /** Checks that the runtime meets the minimum supported PHP version. */
         public function testProjectRequiredPhpVersion(): void
         {
-            self::assertGreaterThanOrEqual(
-                [8, 3, 0],
-                [PHP_MAJOR_VERSION, PHP_MINOR_VERSION, PHP_RELEASE_VERSION]
+            self::assertTrue(
+                version_compare(PHP_VERSION, '8.3.0', '>='),
+                sprintf('PHP 8.3.0 or newer is required; %s is running.', PHP_VERSION)
             );
         }
 
