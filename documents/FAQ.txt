@@ -4,6 +4,9 @@ Q: How do I install PHPMake?
 A: Install via Composer:
 composer require --dev phpmake/phpmake
 
+Q: What runtime requirements does PHPMake have?
+A: PHP 8.3+, Composer 2+, and the `ctype`, `json`, and `zip` PHP extensions.
+
 Q: How do I create a sample build.json?
 A:
 php vendor/bin/phpmake --init
