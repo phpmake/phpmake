@@ -387,7 +387,7 @@ final class CoverageCompletionTest extends TestCase
         );
         self::assertSame(
             ['C:\runtime\php.exe'],
-            $tokenizer->invoke(null, "'C:\runtime\php.exe'")
+            $tokenizer->invoke(null, "'C:\\runtime\\php.exe'")
         );
         self::assertSame(
             ['C:\Program Files\PHP\php.exe'],
