@@ -2,7 +2,6 @@
 
 namespace PhpMake\Task;
 
-use PhpMake\Task\BaseTask;
 use PhpMake\Task\Types\DeleteTask;
 use PhpMake\Task\Types\CreateDirectoryTask;
 use PhpMake\Task\Types\CopyTask;
