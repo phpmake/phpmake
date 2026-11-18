@@ -60,6 +60,7 @@ PHPMake is a well-architected, modern PHP build tool that follows best practices
 
 1. PHP >= 8.3
 2. Composer >= 2
+3. PHP extensions: `ctype`, `json`, and `zip`
 
 ### Versions
 
