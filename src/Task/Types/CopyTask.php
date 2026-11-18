@@ -21,6 +21,10 @@ final class CopyTask extends BaseTask
         }
 
         if (!is_dir($source)) {
+            if (!is_file($source)) {
+                $this->logger->error(sprintf("Copy source '%s' is not a regular file or directory.", $source));
+                return false;
+            }
             return $this->copyFile($source, $dest);
         }
 
@@ -91,6 +95,10 @@ final class CopyTask extends BaseTask
             $target = $dest . DIRECTORY_SEPARATOR . $item;
             if ($this->isSymbolicLinkOrJunction($src)) {
                 $this->logger->error(sprintf("Refusing to copy symlink '%s'.", $src));
+                return false;
+            }
+            if (!is_dir($src) && !is_file($src)) {
+                $this->logger->error(sprintf("Refusing to copy unsupported filesystem entry '%s'.", $src));
                 return false;
             }
 
@@ -264,6 +272,6 @@ final class CopyTask extends BaseTask
         }
 
         $this->assertSafePath($this->params['source'], 'copy source');
-        $this->assertSafePath($this->params['dest'], 'copy dest');
+        $this->assertSafePath($this->params['dest'], 'copy dest', false);
     }
 }
