@@ -361,4 +361,38 @@ final class PathSafetyTest extends TestCase
     }
 
 
+
+    /** Rejects extended-length UNC paths as external Windows paths. */
+    public function testRejectsExtendedUncPathOnWindows(): void
+    {
+        if (PHP_OS_FAMILY !== 'Windows') {
+            self::assertTrue(true, 'Extended UNC path handling is Windows-specific.');
+            return;
+        }
+
+        // Assert
+        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Safety Violation');
+
+        // Act
+        new DeleteTask(['path' => '\\\\?\\UNC\\server\\share\\victim.txt'], $this->logger);
+    }
+
+    /** Rejects Windows drive-relative paths because their base depends on per-drive state. */
+    public function testRejectsDriveRelativePathOnWindows(): void
+    {
+        if (PHP_OS_FAMILY !== 'Windows') {
+            self::assertTrue(true, 'Drive-relative path handling is Windows-specific.');
+            return;
+        }
+
+        // Assert
+        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Drive-relative paths are not allowed');
+
+        // Act
+        new DeleteTask(['path' => 'C:relative\\victim.txt'], $this->logger);
+    }
+
+
 }
