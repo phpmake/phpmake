@@ -33,7 +33,7 @@ abstract class BaseTask implements TaskInterface
     /** Executes the task-specific operation. */
     abstract protected function runTask(bool $debug, bool $silent): bool;
     /** Validates task-specific parameters before execution. */
-    abstract protected function validateParams();
+    abstract protected function validateParams(): void;
 
     /** Detects POSIX symbolic links and Windows NTFS junctions. */
     protected function isSymbolicLinkOrJunction(string $path): bool
