@@ -8,7 +8,7 @@ use PhpMake\Utilities\Logger;
 use PHPUnit\Framework\TestCase;
 
 /** Covers logger persistence, lock handling, rotation, and best-effort failure isolation. */
-final class LoggerCoverageTest extends TestCase
+final class LoggerPersistenceTest extends TestCase
 {
     private string $previousDirectory;
 

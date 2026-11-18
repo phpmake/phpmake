@@ -33,10 +33,10 @@ $RECYCLE.BIN/
 # KDE directory preferences
 .directory
 
-# Linux trash folder which might appear on any partition or disk
+# Linux trash folder which might appear on a file system
 .Trash-*
 
-# .nfs files are created when an open file is removed but is still being accessed
+# .nfs files are created when a file is deleted but still open
 .nfs*
 
 ##### MacOS
@@ -79,5 +79,4 @@ composer.lock
 *.cache
 *.log
 /artifacts/
-/coverage.xml
 *-cache

@@ -144,7 +144,7 @@ final class CliBuildIntegrationTest extends TestCase
         $this->writeBuildConfiguration([
             'default' => [
                 'tasks' => [
-                    ['type' => 'unknown_task', 'params' => []],
+                    ['type' => 'unknown_task', 'params' => (object) []],
                 ],
             ],
         ], 'default');

@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-06/schema#",
-    "$id": "https://github.com/phpmake/schemas/build-schema.json",
+    "$id": "https://raw.githubusercontent.com/phpmake/phpmake/main/schema/build-schema.json",
     "title": "PHPMake Build Configuration Schema",
     "description": "Schema for validating build.json files used by PHPMake.",
     "type": "object",
