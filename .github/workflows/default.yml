@@ -4,7 +4,7 @@ name: Build and Test
 permissions:
   contents: read
 
-on:
+"on":
   push:
     paths-ignore:
       - "*.md"
@@ -19,7 +19,7 @@ on:
 
 env:
   COMPOSER_NO_INTERACTION: 1
-  COMPOSER_PROCESS_TIMEOUT: 300 # Seconds.
+  COMPOSER_PROCESS_TIMEOUT: 300  # Seconds.
 
 jobs:
   build:
@@ -77,7 +77,8 @@ jobs:
         uses: actions/cache@v6
         with:
           path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('composer.json', 'composer.lock') }}
+          key: >-
+            ${{ runner.os }}-composer-${{ hashFiles('composer.json', 'composer.lock') }}
           restore-keys: ${{ runner.os }}-composer-
 
       - name: Install dependencies
@@ -144,7 +145,9 @@ jobs:
           php-version: 8.3
           extensions: zip
           tools: composer:v2
-          ini-values: memory_limit=256M, zend.assertions=1, error_reporting=-1, display_errors=On
+          ini-values: >-
+            memory_limit=256M, zend.assertions=1,
+            error_reporting=-1, display_errors=On
 
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
