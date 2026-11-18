@@ -22,22 +22,24 @@ final class BuildLoader
         if (!$decoded instanceof \stdClass) {
             throw new \InvalidArgumentException('Build configuration must be a JSON object.');
         }
-        if (!isset($decoded->targets) || !$decoded->targets instanceof \stdClass) {
-            throw new \InvalidArgumentException("Field 'targets' must be a JSON object.");
-        }
-        foreach ($decoded->targets as $targetName => $target) {
-            if (!$target instanceof \stdClass) {
-                throw new \InvalidArgumentException(sprintf("Target '%s' must be a JSON object.", $targetName));
+        if (property_exists($decoded, 'targets')) {
+            if (!($decoded->targets instanceof \stdClass)) {
+                throw new \InvalidArgumentException("Field 'targets' must be a JSON object.");
             }
-            if (isset($target->tasks) && !is_array($target->tasks)) {
-                throw new \InvalidArgumentException(sprintf("Tasks for target '%s' must be a JSON array.", $targetName));
-            }
-            foreach ($target->tasks ?? [] as $index => $task) {
-                if (!$task instanceof \stdClass) {
-                    throw new \InvalidArgumentException(sprintf("Task %s in target '%s' must be a JSON object.", $index, $targetName));
+            foreach ($decoded->targets as $targetName => $target) {
+                if (!($target instanceof \stdClass)) {
+                    throw new \InvalidArgumentException(sprintf("Target '%s' must be a JSON object.", $targetName));
                 }
-                if (isset($task->params) && !$task->params instanceof \stdClass) {
-                    throw new \InvalidArgumentException(sprintf("Parameters for task %s in target '%s' must be a JSON object.", $index, $targetName));
+                if (isset($target->tasks) && !is_array($target->tasks)) {
+                    throw new \InvalidArgumentException(sprintf("Tasks for target '%s' must be a JSON array.", $targetName));
+                }
+                foreach ($target->tasks ?? [] as $index => $task) {
+                    if (!($task instanceof \stdClass)) {
+                        throw new \InvalidArgumentException(sprintf("Task %s in target '%s' must be a JSON object.", $index, $targetName));
+                    }
+                    if (isset($task->params) && !($task->params instanceof \stdClass)) {
+                        throw new \InvalidArgumentException(sprintf("Parameters for task %s in target '%s' must be a JSON object.", $index, $targetName));
+                    }
                 }
             }
         }
