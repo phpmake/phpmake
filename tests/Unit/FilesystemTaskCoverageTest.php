@@ -168,7 +168,7 @@ final class FilesystemTaskCoverageTest extends TestCase
     /** A symlink used as the archive source is rejected rather than followed. */
     public function testZipTaskRejectsSymlinkSource(): void
     {
-        if (!class_exists(\\ZipArchive::class)) {
+        if (!class_exists(\ZipArchive::class)) {
             self::markTestSkipped('ext-zip is unavailable.');
         }
         $target = $this->root . DIRECTORY_SEPARATOR . 'target.txt';
