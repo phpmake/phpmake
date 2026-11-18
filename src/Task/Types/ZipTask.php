@@ -92,7 +92,8 @@ final class ZipTask extends BaseTask
                 continue;
             }
             $real = $file->getRealPath();
-            if ($real === false || $real === $output) {
+            $samePath = $real !== false && (PHP_OS_FAMILY === 'Windows' ? strcasecmp($real, $output) === 0 : $real === $output);
+            if ($real === false || $samePath) {
                 continue; // Exclude the output archive, including when it is inside the source tree.
             }
             $relative = ltrim(substr($real, strlen($root)), DIRECTORY_SEPARATOR);
