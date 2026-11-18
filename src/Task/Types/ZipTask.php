@@ -21,7 +21,7 @@ final class ZipTask extends BaseTask
         }
 
         if ($this->isSymbolicLinkOrJunction($output)) {
-            throw new \\RuntimeException('Archive output cannot be a symbolic link or junction.');
+            throw new \RuntimeException('Archive output cannot be a symbolic link or junction.');
         }
 
         $outputDir = dirname($output);
@@ -35,14 +35,14 @@ final class ZipTask extends BaseTask
             throw new \RuntimeException('Unable to resolve archive source or output directory.');
         }
         $outputReal = $outputParent . DIRECTORY_SEPARATOR . basename($output);
-        $sourcePath = str_replace(['/', '\\\\'], DIRECTORY_SEPARATOR, $sourceReal);
-        $outputPath = str_replace(['/', '\\\\'], DIRECTORY_SEPARATOR, $outputReal);
+        $sourcePath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $sourceReal);
+        $outputPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $outputReal);
         if (PHP_OS_FAMILY === 'Windows') {
             $sourcePath = strtolower($sourcePath);
             $outputPath = strtolower($outputPath);
         }
         if ($sourcePath === $outputPath) {
-            throw new \\RuntimeException('Archive output must not overwrite its source.');
+            throw new \RuntimeException('Archive output must not overwrite its source.');
         }
 
         $zip = new ZipArchive();
