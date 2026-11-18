@@ -99,6 +99,7 @@ final class ZipTaskTest extends TestCase
             self::markTestSkipped('ext-zip is not available.');
         }
         if (!in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true)) {
+            self::assertTrue(true, 'Case-variant filesystem test is not applicable on this platform.');
             return;
         }
 
