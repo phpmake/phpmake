@@ -4,74 +4,59 @@ namespace PhpMake\Target;
 
 use PhpMake\Build\BuildConfiguration;
 
-/**
- * DependencyResolver Class
- *
- * Resolves dependencies between build targets to determine
- * the correct execution order.
- *
- * @package    PHPMake
- * @subpackage Target
- */
+/** Resolves target dependencies into a stable, duplicate-free execution order. */
 final class DependencyResolver
 {
-    /**
-     * @var array Tracks visited targets to prevent circular dependencies.
-     */
-    private array $visited = [];
+    /** @var array<string, true> Targets currently on the DFS recursion stack. */
+    private array $visiting = [];
 
-    /**
-     * Resolve dependencies for the given target.
-     *
-     * Determines correct execution order based on dependencies.
-     *
-     * @param BuildConfiguration $config Build configuration object.
-     * @param string             $target Target whose dependencies need resolution.
-     *
-     * @return array Ordered list of targets for execution.
-     */
+    /** @var array<string, true> Targets already appended to the execution order. */
+    private array $resolved = [];
+
+    /** @var list<string> Resolved targets in dependency-first order. */
+    private array $order = [];
+
+    /** Resolves dependencies for a target and resets state for every invocation. */
     public function resolve(BuildConfiguration $config, string $target): array
     {
-        $this->visited = []; // Reset for each resolve call.
-        return $this->resolveRecursive($config, $target);
+        $this->visiting = [];
+        $this->resolved = [];
+        $this->order = [];
+        $this->visit($config, $target);
+
+        return $this->order;
     }
 
-    /**
-     * Recursively resolve dependencies.
-     *
-     * Traverses dependency tree and ensures circular dependencies are detected.
-     *
-     * @param BuildConfiguration $config Build configuration object.
-     * @param string             $target Target whose dependencies are being resolved.
-     *
-     * @return array Ordered list of dependencies including target.
-     *
-     * @throws \Exception If a circular dependency is detected.
-     */
-    private function resolveRecursive(BuildConfiguration $config, string $target): array
+    /** Performs depth-first traversal with O(1) membership checks. */
+    private function visit(BuildConfiguration $config, string $target): void
     {
-        if (in_array($target, $this->visited)) {
-            throw new \Exception(sprintf("Circular dependency detected in target '%s'.", $target));
+        if (isset($this->resolved[$target])) {
+            return;
+        }
+        if (isset($this->visiting[$target])) {
+            throw new \\RuntimeException(sprintf("Circular dependency detected in target '%s'.", $target));
         }
 
-        $this->visited[] = $target;
         $targets = $config->getTargets();
         if (!array_key_exists($target, $targets)) {
-            throw new \InvalidArgumentException(sprintf("Target '%s' does not exist.", $target));
-        }
-        $targetConfig = $targets[$target];
-        $depends = $targetConfig['depends'] ?? [];
-        if (!is_array($depends)) {
-            throw new \InvalidArgumentException(sprintf("Dependencies for target '%s' must be an array.", $target));
-        }
-        $order = [];
-
-        foreach ($depends as $dep) {
-            $order = array_merge($order, $this->resolveRecursive($config, $dep));
+            throw new \\InvalidArgumentException(sprintf("Target '%s' does not exist.", $target));
         }
 
-        $order[] = $target;
-        array_pop($this->visited); // Backtrack after resolving dependencies.
-        return array_values(array_unique($order));
+        $dependencies = $targets[$target]['depends'] ?? [];
+        if (!is_array($dependencies)) {
+            throw new \\InvalidArgumentException(sprintf("Dependencies for target '%s' must be an array.", $target));
+        }
+
+        $this->visiting[$target] = true;
+        foreach ($dependencies as $dependency) {
+            if (!is_string($dependency) || $dependency === '') {
+                throw new \\InvalidArgumentException(sprintf("Target '%s' has an invalid dependency.", $target));
+            }
+            $this->visit($config, $dependency);
+        }
+        unset($this->visiting[$target]);
+
+        $this->resolved[$target] = true;
+        $this->order[] = $target;
     }
 }
