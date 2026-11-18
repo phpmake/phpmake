@@ -70,7 +70,7 @@ abstract class BaseTask implements TaskInterface
      * Validate lexical containment and resolve every existing path prefix.
      * This rejects symlinked ancestors that redirect operations outside CWD.
      */
-    protected function assertSafePath(string $path, string $label): void
+    protected function assertSafePath(string $path, string $label, bool $allowProjectRoot = true): void
     {
         $path = trim($path);
         if ($path === '' || str_contains($path, "\0") || in_array($path, ['/', '\\', '.', '..'], true)) {
@@ -85,6 +85,9 @@ abstract class BaseTask implements TaskInterface
         $candidate = $this->isAbsolutePath($path) ? $path : $cwd . DIRECTORY_SEPARATOR . $path;
         $candidate = $this->normalizePath($candidate);
         $this->assertWithinDirectory($candidate, $cwd, $label);
+        if (!$allowProjectRoot && $this->pathsEqual($candidate, $cwd)) {
+            throw new \\InvalidArgumentException(sprintf("Safety Violation: Refusing to operate on the project root for %s.", $label));
+        }
 
         // Resolve the deepest existing prefix. realpath() follows symlinks,
         // exposing symlink escapes even when the final path does not exist.
@@ -117,6 +120,14 @@ abstract class BaseTask implements TaskInterface
         if ($path !== $cwd && !str_starts_with($path, $cwd . DIRECTORY_SEPARATOR)) {
             throw new \InvalidArgumentException(sprintf("Safety Violation: Path for %s escapes project directory: '%s'.", $label, $path));
         }
+    }
+
+    /** Compares normalized paths using the host filesystem's case semantics. */
+    private function pathsEqual(string $left, string $right): bool
+    {
+        $left = rtrim($this->normalizePath($left), DIRECTORY_SEPARATOR);
+        $right = rtrim($this->normalizePath($right), DIRECTORY_SEPARATOR);
+        return PHP_OS_FAMILY === 'Windows' ? strcasecmp($left, $right) === 0 : $left === $right;
     }
 
     /** Determines whether a path uses an absolute-path format. */
