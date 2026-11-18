@@ -1,4 +1,3 @@
 * Add a dedicated case-sensitive APFS test volume to macOS CI; the current path test exercises case-only siblings when the runner filesystem supports them.
 * Define and test a process-tree termination strategy for POSIX environments without the POSIX extension; current fallback terminates only the direct process.
 * Document the limits of process-group termination for descendants that deliberately detach or create a new session.
-* Extend Windows path tests to cover extended-length UNC paths and drive-relative path forms.
