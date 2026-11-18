@@ -71,6 +71,26 @@ final class LoggerCoverageTest extends TestCase
         $errors = new Logger(false, true, true);
         $errors->error('stderr-message');
 
+        // A missing lock directory exercises the non-fatal lock-open failure.
+        (new Logger(false, true, false, 'missing-directory/build.log'))->info('lock open failure');
+
+        if (!in_array('phpmake-log-rename-fail', stream_get_wrappers(), true)) {
+            self::assertTrue(stream_wrapper_register('phpmake-log-rename-fail', RenameFailureLogStreamWrapper::class));
+        }
+        if (!in_array('phpmake-log-write-fail', stream_get_wrappers(), true)) {
+            self::assertTrue(stream_wrapper_register('phpmake-log-write-fail', WriteFailureLogStreamWrapper::class));
+        }
+        try {
+            RenameFailureLogStreamWrapper::$backupFourExists = true;
+            (new Logger(false, true, false, 'phpmake-log-rename-fail://logs/current.log'))->info('backup rotation failure');
+            RenameFailureLogStreamWrapper::$backupFourExists = false;
+            (new Logger(false, true, false, 'phpmake-log-rename-fail://logs/current.log'))->info('main log rotation failure');
+            (new Logger(false, true, false, 'phpmake-log-write-fail://logs/write.log'))->info('write failure');
+        } finally {
+            stream_wrapper_unregister('phpmake-log-rename-fail');
+            stream_wrapper_unregister('phpmake-log-write-fail');
+        }
+
         file_put_contents('rotating.log', str_repeat('x', 10 * 1024 * 1024));
         for ($index = 1; $index <= 5; ++$index) {
             file_put_contents('rotating.log.' . $index, 'old-' . $index);
@@ -163,5 +183,98 @@ final class OpenFailureStreamWrapper
     public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
     {
         throw new \RuntimeException('Simulated log stream failure.');
+    }
+}
+
+
+/** Simulates a large log file whose backup or primary rotation fails. */
+final class RenameFailureLogStreamWrapper
+{
+    public static bool $backupFourExists = false;
+
+    public mixed $context;
+
+    /** Opens the virtual stream and lets Logger acquire its lock. */
+    public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
+    {
+        return true;
+    }
+
+    /** Allows Logger to acquire and release its virtual lock. */
+    public function stream_lock(int $operation): bool
+    {
+        return true;
+    }
+
+    /** Reports the configured log and optional backup as existing files. */
+    public function url_stat(string $path, int $flags): array|false
+    {
+        if (str_ends_with($path, '.4') && self::$backupFourExists) {
+            return $this->stat(1);
+        }
+
+        if (str_ends_with($path, 'current.log')) {
+            return $this->stat(10 * 1024 * 1024);
+        }
+
+        return false;
+    }
+
+    /** Fails both backup and primary rotation to exercise Logger's exception guards. */
+    public function url_rename(string $from, string $to): bool
+    {
+        return false;
+    }
+
+    /** Accepts stream writes when no failure is being simulated. */
+    public function stream_write(string $data): int
+    {
+        return strlen($data);
+    }
+
+    /** Returns stat information for virtual files. */
+    private function stat(int $size): array
+    {
+        return [
+            2 => 0100666,
+            7 => $size,
+            'mode' => 0100666,
+            'size' => $size,
+        ];
+    }
+}
+
+/** Simulates a writable log stream whose write operation fails. */
+final class WriteFailureLogStreamWrapper
+{
+    public mixed $context;
+
+    /** Opens the virtual log and lock streams. */
+    public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
+    {
+        return true;
+    }
+
+    /** Allows Logger to acquire and release its lock. */
+    public function stream_lock(int $operation): bool
+    {
+        return true;
+    }
+
+    /** Returns regular-file metadata so the log can be opened for append. */
+    public function url_stat(string $path, int $flags): array
+    {
+        return [
+            2 => 0100666,
+            7 => 0,
+            'mode' => 0100666,
+            'size' => 0,
+        ];
+    }
+
+    /** Forces fwrite() to return false so Logger handles the persistence failure. */
+    public function stream_write(string $data)
+    {
+        return false;
     }
 }
