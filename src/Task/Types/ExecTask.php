@@ -63,17 +63,19 @@ final class ExecTask extends BaseTask
                 break;
             }
             $status = proc_get_status($process);
-            if (!$status['running']) {
-                $observedExitCode = $status['exitcode'];
-                break;
-            }
             if (microtime(true) - $start > $timeout) {
                 $timedOut = true;
-                proc_terminate($process, 15);
-                usleep(200000);
-                if (proc_get_status($process)['running']) {
-                    proc_terminate($process, 9);
+                if ($status['running']) {
+                    proc_terminate($process, 15);
+                    usleep(200000);
+                    if (proc_get_status($process)['running']) {
+                        proc_terminate($process, 9);
+                    }
                 }
+                break;
+            }
+            if (!$status['running']) {
+                $observedExitCode = $status['exitcode'];
                 break;
             }
             usleep(20000);
