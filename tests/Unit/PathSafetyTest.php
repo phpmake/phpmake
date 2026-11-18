@@ -126,13 +126,14 @@ final class PathSafetyTest extends TestCase
         $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-outside-' . uniqid('', true);
         mkdir($project);
         mkdir($outside);
+        $project = realpath($project);
         $outside = realpath($outside);
+        self::assertNotFalse($project);
+        self::assertNotFalse($outside);
+        $link = $project . DIRECTORY_SEPARATOR . 'link';
 
         try {
             self::assertTrue(chdir($project));
-            $project = realpath(getcwd());
-            self::assertNotFalse($project);
-            $link = $project . DIRECTORY_SEPARATOR . 'link';
             $this->createDirectoryLink($outside, $link);
 
             $this->expectException(\InvalidArgumentException::class);
@@ -149,6 +150,7 @@ final class PathSafetyTest extends TestCase
         }
     }
 
+    /** Reports failure when a recursive copy encounters a symlink. */
     public function testCopyPropagatesNestedSymlinkFailure(): void
     {
         // Arrange
@@ -157,16 +159,15 @@ final class PathSafetyTest extends TestCase
         $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-copy-outside-' . uniqid('', true);
         mkdir($project);
         mkdir($outside);
+        $project = realpath($project);
         $outside = realpath($outside);
+        self::assertNotFalse($project);
+        self::assertNotFalse($outside);
 
         $source = $project . DIRECTORY_SEPARATOR . 'source';
         $dest = $project . DIRECTORY_SEPARATOR . 'destination';
         try {
             self::assertTrue(chdir($project));
-            $project = realpath(getcwd());
-            self::assertNotFalse($project);
-            $source = $project . DIRECTORY_SEPARATOR . 'source';
-            $dest = $project . DIRECTORY_SEPARATOR . 'destination';
             mkdir($source);
             file_put_contents($outside . DIRECTORY_SEPARATOR . 'secret.txt', 'secret');
             $this->createDirectoryLink($outside, $source . DIRECTORY_SEPARATOR . 'linked');
@@ -189,6 +190,7 @@ final class PathSafetyTest extends TestCase
         }
     }
 
+    /** Removes an in-project symlink while preserving its external target. */
     public function testDeleteRemovesSymlinkWithoutDeletingItsTarget(): void
     {
         // Arrange
@@ -197,14 +199,15 @@ final class PathSafetyTest extends TestCase
         $target = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-delete-target-' . uniqid('', true);
         mkdir($project);
         mkdir($target);
+        $project = realpath($project);
         $target = realpath($target);
+        self::assertNotFalse($project);
+        self::assertNotFalse($target);
+        $link = $project . DIRECTORY_SEPARATOR . 'link';
         file_put_contents($target . DIRECTORY_SEPARATOR . 'keep.txt', 'keep me');
 
         try {
             self::assertTrue(chdir($project));
-            $project = realpath(getcwd());
-            self::assertNotFalse($project);
-            $link = $project . DIRECTORY_SEPARATOR . 'link';
             $this->createDirectoryLink($target, $link);
             $task = new DeleteTask(['path' => $link], $this->logger);
             // Act
