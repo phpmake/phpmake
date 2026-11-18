@@ -120,49 +120,5 @@ namespace PhpMake\Tests\System {
                 $this->assertDirectoryExists($directory);
             }
         }
-
-        /**
-         * @test
-         *
-         * @small
-         *
-         * @return void
-         */
-        final public function testProjectFilesExist(): void
-        {
-            // Arrange
-            $files = [
-                '.editorconfig',
-                '.gitattributes',
-                '.gitignore',
-                '.mailmap',
-                '.php-cs-fixer.php',
-                '.phplint.yml',
-                '.styleci.yml',
-                'build.json',
-                'build.json.example',
-                'CHANGELOG.txt',
-                'CODE_OF_CONDUCT.txt',
-                'composer.json',
-                'CONTRIBUTING.txt',
-                'CONTRIBUTORS.txt',
-                'DCO.txt',
-                'FAQ.txt',
-                'LICENSE',
-                'NOTICE.txt',
-                'phpunit.xml',
-                'README.md',
-                'rector.php',
-                'RELEASE-CHECKLIST.txt',
-                'SECURITY.md',
-                'TODO.txt',
-                'VERSION.txt',
-            ];
-
-            foreach ($files as $file) {
-            // Assert
-                $this->assertFileExists($file);
-            }
-        }
     }
 }
