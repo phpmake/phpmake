@@ -354,7 +354,7 @@ final class TaskExecutionTest extends TestCase
     public function testExecTaskRejectsUnbalancedCommandQuotes(): void
     {
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('unbalanced quote');
 
         // Act
