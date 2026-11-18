@@ -109,6 +109,33 @@ final class FilesystemTaskCoverageTest extends TestCase
         self::assertFileDoesNotExist($this->root . DIRECTORY_SEPARATOR . 'copy.txt');
     }
 
+    /** A failed copy operation is reported when the destination itself is a directory. */
+    public function testCopyTaskReturnsFalseWhenDestinationIsDirectory(): void
+    {
+        $source = $this->root . DIRECTORY_SEPARATOR . 'source.txt';
+        $destination = $this->root . DIRECTORY_SEPARATOR . 'destination';
+        file_put_contents($source, 'payload');
+        mkdir($destination);
+        $task = new CopyTask(['source' => $source, 'dest' => $destination], $this->logger);
+
+        self::assertFalse($task->execute(false, true));
+        self::assertDirectoryExists($destination);
+    }
+
+    /** A directory copy fails cleanly when its destination path is occupied by a file. */
+    public function testCopyTaskReturnsFalseWhenDirectoryDestinationIsAFile(): void
+    {
+        $source = $this->root . DIRECTORY_SEPARATOR . 'source';
+        mkdir($source);
+        file_put_contents($source . DIRECTORY_SEPARATOR . 'item.txt', 'payload');
+        $destination = $this->root . DIRECTORY_SEPARATOR . 'destination';
+        file_put_contents($destination, 'blocker');
+        $task = new CopyTask(['source' => $source, 'dest' => $destination], $this->logger);
+
+        self::assertFalse($task->execute(false, true));
+        self::assertSame('blocker', file_get_contents($destination));
+    }
+
     /** Deletes a file and treats an already absent path as a successful no-op. */
     public function testDeleteTaskDeletesFileAndIsIdempotent(): void
     {
@@ -136,6 +163,26 @@ final class FilesystemTaskCoverageTest extends TestCase
 
         self::assertTrue($task->execute(false, true));
         self::assertDirectoryDoesNotExist($directory);
+    }
+
+    /** A symlink used as the archive source is rejected rather than followed. */
+    public function testZipTaskRejectsSymlinkSource(): void
+    {
+        if (!class_exists(\\ZipArchive::class)) {
+            self::markTestSkipped('ext-zip is unavailable.');
+        }
+        $target = $this->root . DIRECTORY_SEPARATOR . 'target.txt';
+        $link = $this->root . DIRECTORY_SEPARATOR . 'source-link.txt';
+        file_put_contents($target, 'target');
+        if (!@symlink($target, $link)) {
+            self::markTestSkipped('Symlink creation is unavailable.');
+        }
+        $task = new ZipTask([
+            'source' => $link,
+            'output' => $this->root . DIRECTORY_SEPARATOR . 'link.zip',
+        ], $this->logger);
+
+        self::assertFalse($task->execute(false, true));
     }
 
     /** Archives a single file and verifies the stored entry and payload. */
