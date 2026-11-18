@@ -354,6 +354,44 @@ final class FilesystemTaskCoverageTest extends TestCase
         new ZipTask(['source' => 'source.txt', 'output' => 123], $this->logger);
     }
 
+    /** Rejects copies into the source directory itself or one of its descendants. */
+    public function testCopyTaskRejectsDestinationInsideSourceDirectory(): void
+    {
+        // Arrange
+        $source = $this->root . DIRECTORY_SEPARATOR . 'source';
+        mkdir($source);
+        file_put_contents($source . DIRECTORY_SEPARATOR . 'original.txt', 'preserve');
+        $destination = $source . DIRECTORY_SEPARATOR . 'nested' . DIRECTORY_SEPARATOR . 'copy';
+
+        $task = new CopyTask(['source' => $source, 'dest' => $destination], $this->logger);
+
+        // Act
+        $result = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($result);
+        self::assertFileExists($source . DIRECTORY_SEPARATOR . 'original.txt');
+        self::assertDirectoryDoesNotExist($source . DIRECTORY_SEPARATOR . 'nested');
+    }
+
+    /** Rejects a destination that aliases the source directory itself. */
+    public function testCopyTaskRejectsDestinationEqualToSourceDirectory(): void
+    {
+        // Arrange
+        $source = $this->root . DIRECTORY_SEPARATOR . 'source';
+        mkdir($source);
+        file_put_contents($source . DIRECTORY_SEPARATOR . 'original.txt', 'preserve');
+
+        $task = new CopyTask(['source' => $source, 'dest' => $source], $this->logger);
+
+        // Act
+        $result = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($result);
+        self::assertSame('preserve', file_get_contents($source . DIRECTORY_SEPARATOR . 'original.txt'));
+    }
+
     /** Removes temporary files without following symbolic links. */
     private function removePath(string $path): void
     {
