@@ -17,21 +17,7 @@ final class ExecTask extends BaseTask
             throw new \InvalidArgumentException('Exec timeout must be greater than 0 and at most 86400 seconds.');
         }
 
-        preg_match_all('/"((?:\\\\.|[^"])*)"|\'((?:\\\\.|[^\'])*)\'|(\S+)/', $command, $matches, PREG_SET_ORDER);
-        $argv = [];
-        foreach ($matches as $match) {
-            if ($match[1] !== '') {
-                // Preserve Windows path separators; only unescape quoted characters.
-                $token = preg_replace('/\\\\(["\\\\])/', '$1', $match[1]);
-            } elseif ($match[2] !== '') {
-                // Single-quoted tokens only escape a quote or a literal backslash.
-                $token = preg_replace('/\\\\([\'\\\\])/', '$1', $match[2]);
-            } else {
-                $token = $match[3];
-            }
-
-            $argv[] = $token;
-        }
+        $argv = self::tokenizeCommand($command);
         if ($argv === []) {
             throw new \InvalidArgumentException('Exec command is empty.');
         }
@@ -123,4 +109,31 @@ final class ExecTask extends BaseTask
             throw new \InvalidArgumentException("Exec task 'timeout' must be greater than 0 and at most 86400 seconds.");
         }
     }
+    /**
+     * Splits a command into argv tokens without interpreting Windows path separators as escapes.
+     *
+     * @return list<string>
+     */
+    private static function tokenizeCommand(string $command): array
+    {
+        preg_match_all('/"((?:\\\\.|[^"])*)"|\'((?:\\\\.|[^\'])*)\'|(\S+)/', $command, $matches, PREG_SET_ORDER);
+        $argv = [];
+
+        foreach ($matches as $match) {
+            if ($match[1] !== '') {
+                // Double-quoted tokens only escape a quote or a literal backslash.
+                $token = preg_replace('/\\\\(["\\\\])/', '$1', $match[1]);
+            } elseif ($match[2] !== '') {
+                // Single-quoted tokens only escape a quote or a literal backslash.
+                $token = preg_replace('/\\\\([\'\\\\])/', '$1', $match[2]);
+            } else {
+                $token = $match[3];
+            }
+
+            $argv[] = $token;
+        }
+
+        return $argv;
+    }
+
 }
