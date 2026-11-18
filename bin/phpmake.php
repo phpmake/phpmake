@@ -74,7 +74,8 @@ try {
         }
 
         $destFile = getcwd() . DIRECTORY_SEPARATOR . 'build.json';
-        if (file_exists($destFile)) {
+        clearstatcache(true, $destFile);
+        if (file_exists($destFile) || is_link($destFile) || @lstat($destFile) !== false) {
             fwrite(STDERR, "Error: '{$destFile}' already exists.\n");
             exit(1);
         }
@@ -84,11 +85,32 @@ try {
             exit(1);
         }
 
-        if (copy($sampleFile, $destFile)) {
+        $source = @fopen($sampleFile, 'rb');
+        if ($source === false) {
+            fwrite(STDERR, "Error: Failed to read sample build configuration.\n");
+            exit(1);
+        }
+
+        // Exclusive creation never follows an existing file or symbolic link.
+        $destination = @fopen($destFile, 'xb');
+        if ($destination === false) {
+            fclose($source);
+            fwrite(STDERR, "Error: Failed to create build.json.\n");
+            exit(1);
+        }
+
+        $expectedSize = filesize($sampleFile);
+        $copied = stream_copy_to_stream($source, $destination);
+        $flushed = fflush($destination);
+        fclose($source);
+        fclose($destination);
+
+        if ($copied !== false && $expectedSize !== false && $copied === $expectedSize && $flushed) {
             echo "Sample build.json created successfully.\n";
             exit(0);
         }
 
+        @unlink($destFile);
         fwrite(STDERR, "Error: Failed to create build.json.\n");
         exit(1);
     }

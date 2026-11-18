@@ -68,11 +68,17 @@ Each task contains:
 | `create_directory` | `name`             | Create directories          |
 | `delete`           | `path`             | Delete files or directories |
 | `copy`             | `source`, `dest`   | Copy files and directories  |
-| `exec`             | `command`          | Execute external processes  |
+| `exec`             | `command`, optional `args`, optional `timeout` | Execute external processes without a shell |
 | `echo`             | `message`          | Output messages             |
 | `archive`          | `source`, `output` | Create ZIP archives         |
 
 The `exec` task also supports optional arguments and timeout configuration.
+
+## 5. Platform Compatibility
+
+- Supported runtime: PHP 8.3+ with Composer 2+.
+- Supported operating systems: Windows, GNU/Linux, and macOS.
+- Filesystem and process behavior must be exercised on each supported platform in CI.
 
 ## 6. Security and Reliability
 

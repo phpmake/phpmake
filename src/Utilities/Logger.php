@@ -98,8 +98,14 @@ final class Logger
 
             try {
                 $line = date('Y-m-d H:i:s') . ' ' . $message . PHP_EOL;
-                if (fwrite($fp, $line) === false) {
-                    throw new \RuntimeException('Unable to write build log.');
+                $offset = 0;
+                $length = strlen($line);
+                while ($offset < $length) {
+                    $written = fwrite($fp, substr($line, $offset));
+                    if ($written === false || $written === 0) {
+                        throw new \RuntimeException('Unable to write complete build log entry.');
+                    }
+                    $offset += $written;
                 }
                 fflush($fp);
             } finally {

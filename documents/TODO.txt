@@ -1,2 +1,4 @@
-* Add more tests.
-* Add support for more internal tasks.
+* Add process-tree termination for commands that spawn child processes, with platform-specific tests.
+* Expand path boundary tests for UNC paths, junction ancestors, and case-sensitive macOS volumes.
+* Keep Linux, Windows, and macOS filesystem tests in CI.
+* Add an automated schema/runtime parity test whenever a built-in task or parameter changes.

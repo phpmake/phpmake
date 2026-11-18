@@ -37,7 +37,7 @@ final class ZipTask extends BaseTask
         $outputReal = $outputParent . DIRECTORY_SEPARATOR . basename($output);
         $sourcePath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $sourceReal);
         $outputPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $outputReal);
-        if (PHP_OS_FAMILY === 'Windows') {
+        if (in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true)) {
             $sourcePath = strtolower($sourcePath);
             $outputPath = strtolower($outputPath);
         }
@@ -92,7 +92,8 @@ final class ZipTask extends BaseTask
                 continue;
             }
             $real = $file->getRealPath();
-            if ($real === false || $real === $output) {
+            $samePath = $real !== false && (in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true) ? strcasecmp($real, $output) === 0 : $real === $output);
+            if ($real === false || $samePath) {
                 continue; // Exclude the output archive, including when it is inside the source tree.
             }
             $relative = ltrim(substr($real, strlen($root)), DIRECTORY_SEPARATOR);

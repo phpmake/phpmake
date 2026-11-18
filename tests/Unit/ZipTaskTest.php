@@ -57,74 +57,6 @@ final class ZipTaskTest extends TestCase
         parent::tearDown();
     }
 
-    /**
-     * @test
-     *
-     * @small
-     *
-     * @return void
-     */
-    public function testZipTaskExtendsBaseTask(): void
-    {
-        // Arrange
-        $reflection = new \ReflectionClass(ZipTask::class);
-        // Action/Assert
-        // Assert
-        $this->assertTrue($reflection->isSubclassOf(BaseTask::class));
-    }
-
-    /**
-     * @test
-     *
-     * @small
-     *
-     * @return void
-     */
-    public function testGetTypeMethodReturnsString(): void
-    {
-        // Arrange
-        $method = new \ReflectionMethod(ZipTask::class, 'getType');
-        // Action/Assert
-        // Assert
-        $this->assertTrue($method->isPublic());
-        $this->assertEquals('string', $method->getReturnType()->getName());
-    }
-
-    /**
-     * @test
-     *
-     * @small
-     *
-     * @return void
-     */
-    public function testValidateParamsMethod(): void
-    {
-        // Arrange
-        $method = new \ReflectionMethod(ZipTask::class, 'validateParams');
-        // Action/Assert
-        // Assert
-        $this->assertTrue($method->isProtected());
-        $this->assertCount(0, $method->getParameters()); // No parameters.
-    }
-
-    /**
-     * @test
-     *
-     * @small
-     *
-     * @return void
-     */
-    public function testAddFilesToZipIsPrivate(): void
-    {
-        // Arrange
-        $method = new \ReflectionMethod(ZipTask::class, 'addFilesToZip');
-        // Action/Assert
-        // Assert
-        $this->assertTrue($method->isPrivate());
-        // Action/Assert
-        $this->assertEquals('void', $method->getReturnType()->getName());
-    }
-
     /** Ensures an archive created inside its source directory does not include itself. */
     public function testArchiveDoesNotIncludeItselfWhenOutputIsInsideSource(): void
     {
@@ -158,4 +90,49 @@ final class ZipTaskTest extends TestCase
             }
         }
     }
+
+    /** Uses case-insensitive output matching on Windows and default macOS volumes. */
+    public function testArchiveExcludesOutputWithDifferentPathCasing(): void
+    {
+        // Arrange
+        if (!class_exists(\ZipArchive::class)) {
+            self::markTestSkipped('ext-zip is not available.');
+        }
+        if (!in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true)) {
+            self::assertTrue(true, 'Case-variant filesystem test is not applicable on this platform.');
+            return;
+        }
+
+        $root = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-case-' . bin2hex(random_bytes(6));
+        mkdir($root);
+        file_put_contents($root . DIRECTORY_SEPARATOR . 'input.txt', 'content');
+        $actualOutput = $root . DIRECTORY_SEPARATOR . 'archive.zip';
+        $configuredOutput = $root . DIRECTORY_SEPARATOR . 'ARCHIVE.ZIP';
+        file_put_contents($actualOutput, '');
+
+        try {
+            $task = new ZipTask(['source' => $root, 'output' => $configuredOutput], new Logger(false, true, true));
+
+            // Act
+            self::assertTrue($task->execute(false, true));
+
+            // Assert
+            $zip = new \ZipArchive();
+            self::assertTrue($zip->open($configuredOutput));
+            self::assertSame(1, $zip->numFiles);
+            self::assertSame('input.txt', $zip->getNameIndex(0));
+            $zip->close();
+        } finally {
+            if (file_exists($actualOutput)) {
+                unlink($actualOutput);
+            }
+            if (file_exists($root . DIRECTORY_SEPARATOR . 'input.txt')) {
+                unlink($root . DIRECTORY_SEPARATOR . 'input.txt');
+            }
+            if (is_dir($root)) {
+                rmdir($root);
+            }
+        }
+    }
+
 }

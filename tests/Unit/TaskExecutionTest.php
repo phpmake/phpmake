@@ -333,4 +333,50 @@ final class TaskExecutionTest extends TestCase
         self::assertTrue($result);
     }
 
+
+    /** Terminates commands that exceed the bounded output capture limit. */
+    public function testExecTaskRejectsExcessiveOutput(): void
+    {
+        // Arrange
+        $task = new ExecTask([
+            'command' => PHP_BINARY,
+            'args' => ['-r', 'echo str_repeat("x", 1100000);'],
+        ], $this->logger);
+
+        // Act
+        $result = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($result);
+    }
+
+
+    /** Stops a process that exceeds its configured execution timeout. */
+    public function testExecTaskEnforcesTimeout(): void
+    {
+        // Arrange
+        $task = new ExecTask([
+            'command' => PHP_BINARY,
+            'args' => ['-r', 'sleep(2);'],
+            'timeout' => 0.1,
+        ], $this->logger);
+
+        // Act
+        $result = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($result);
+    }
+
+    /** Rejects unbalanced quotes before attempting to launch a process. */
+    public function testExecTaskRejectsUnbalancedCommandQuotes(): void
+    {
+        // Assert
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('unbalanced quote');
+
+        // Act
+        new ExecTask(['command' => PHP_BINARY . ' "unterminated'], $this->logger);
+    }
+
 }

@@ -9,6 +9,11 @@ final class BuildValidator
     public function validate(array $config): array
     {
         $errors = [];
+        foreach (array_keys($config) as $key) {
+            if (!in_array($key, ['name', 'description', 'version', 'targets', 'default_target'], true)) {
+                $errors[] = sprintf("Unknown top-level property '%s'.", (string) $key);
+            }
+        }
         foreach (['name', 'description', 'version', 'targets', 'default_target'] as $field) {
             if (!array_key_exists($field, $config)) {
                 $errors[] = sprintf('Missing required field: %s.', $field);
@@ -36,12 +41,24 @@ final class BuildValidator
         }
 
         foreach ($targets as $targetName => $target) {
+            if (!is_string($targetName) || trim($targetName) === '') {
+                $errors[] = 'Target names must be non-empty strings.';
+            }
             if (!is_array($target)) {
                 $errors[] = sprintf("Target '%s' must be an object.", (string) $targetName);
                 continue;
             }
 
-            $depends = $target['depends'] ?? [];
+            foreach (array_keys($target) as $key) {
+                if (!in_array($key, ['description', 'depends', 'tasks'], true)) {
+                    $errors[] = sprintf("Unknown property '%s' in target '%s'.", (string) $key, (string) $targetName);
+                }
+            }
+            if (array_key_exists('description', $target) && !is_string($target['description'])) {
+                $errors[] = sprintf("Target '%s' description must be a string.", (string) $targetName);
+            }
+
+            $depends = array_key_exists('depends', $target) ? $target['depends'] : [];
             if (!is_array($depends)) {
                 $errors[] = sprintf("Target '%s' dependencies must be an array.", (string) $targetName);
             } else {
@@ -67,6 +84,11 @@ final class BuildValidator
                     continue;
                 }
 
+                foreach (array_keys($task) as $key) {
+                    if (!in_array($key, ['type', 'params'], true)) {
+                        $errors[] = sprintf("Unknown property '%s' in task %s of target '%s'.", (string) $key, (string) $index, (string) $targetName);
+                    }
+                }
                 $type = $task['type'] ?? null;
                 if (!is_string($type) || $type === '') {
                     $errors[] = sprintf("Task %s in target '%s' has no valid 'type'.", (string) $index, (string) $targetName);
@@ -94,19 +116,35 @@ final class BuildValidator
                     continue;
                 }
 
+                $allowedParams = match ($type) {
+                    'delete' => ['path'],
+                    'create_directory' => ['name'],
+                    'copy' => ['source', 'dest'],
+                    'exec' => ['command', 'args', 'timeout'],
+                    'echo' => ['message'],
+                    'archive' => ['source', 'output'],
+                };
+                foreach (array_keys($params) as $key) {
+                    if (!in_array($key, $allowedParams, true)) {
+                        $errors[] = sprintf("Unknown parameter '%s' for %s task in target '%s'.", (string) $key, $type, (string) $targetName);
+                    }
+                }
+
                 foreach ($required as $key) {
-                    if (!isset($params[$key]) || !is_string($params[$key]) || trim($params[$key]) === '') {
+                    $allowEmptyEcho = $type === 'echo' && $key === 'message';
+                    if (!array_key_exists($key, $params) || !is_string($params[$key]) || (!$allowEmptyEcho && trim($params[$key]) === '')) {
                         $errors[] = sprintf("%s task in target '%s' requires non-empty string '%s'.", ucfirst($type), (string) $targetName, $key);
                     }
                 }
 
                 if ($type === 'exec') {
-                    if (isset($params['args']) && (!is_array($params['args']) || array_filter($params['args'], static fn($value) => !is_scalar($value)))) {
+                    if (array_key_exists('args', $params) && (!is_array($params['args']) || array_filter($params['args'], static fn($value) => !is_scalar($value)) !== [])) {
                         $errors[] = sprintf("Exec task in target '%s' has invalid 'args' (expected scalar array).", (string) $targetName);
                     }
 
-                    if (isset($params['timeout']) && (
-                        !is_numeric($params['timeout'])
+                    if (array_key_exists('timeout', $params) && (
+                        (!is_int($params['timeout']) && !is_float($params['timeout']))
+                        || !is_finite((float) $params['timeout'])
                         || (float) $params['timeout'] <= 0
                         || (float) $params['timeout'] > 86400
                     )) {

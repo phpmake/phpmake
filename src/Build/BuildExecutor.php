@@ -2,7 +2,6 @@
 
 namespace PhpMake\Build;
 
-use PhpMake\Build\BuildConfiguration;
 use PhpMake\Task\TaskFactory;
 use PhpMake\Utilities\Logger;
 use PhpMake\Target\DependencyResolver;

@@ -20,9 +20,15 @@ final class CopyTask extends BaseTask
             return false;
         }
 
-        return is_dir($source)
-            ? $this->copyDirectory($source, $dest)
-            : $this->copyFile($source, $dest);
+        if (!is_dir($source)) {
+            if (!is_file($source)) {
+                $this->logger->error(sprintf("Copy source '%s' is not a regular file or directory.", $source));
+                return false;
+            }
+            return $this->copyFile($source, $dest);
+        }
+
+        return $this->copyDirectoryTransactionally($source, $dest);
     }
 
     /** Copies one file after ensuring its destination directory exists. */
@@ -91,6 +97,10 @@ final class CopyTask extends BaseTask
                 $this->logger->error(sprintf("Refusing to copy symlink '%s'.", $src));
                 return false;
             }
+            if (!is_dir($src) && !is_file($src)) {
+                $this->logger->error(sprintf("Refusing to copy unsupported filesystem entry '%s'.", $src));
+                return false;
+            }
 
             $ok = is_dir($src)
                 ? $this->copyDirectory($src, $target)
@@ -102,6 +112,89 @@ final class CopyTask extends BaseTask
 
         $this->logger->debug(sprintf("Copied directory '%s' → '%s'.", $source, $dest));
         return true;
+    }
+
+    /** Copies into a staging tree and swaps it into place only after success. */
+    private function copyDirectoryTransactionally(string $source, string $destination): bool
+    {
+        if ($this->destinationIsWithinSource($source, $destination)) {
+            $this->logger->error(sprintf(
+                "Refusing to copy directory '%s' into itself or one of its descendants.",
+                $source
+            ));
+            return false;
+        }
+        if ($this->isSymbolicLinkOrJunction($destination)) {
+            $this->logger->error(sprintf("Refusing to replace destination link '%s'.", $destination));
+            return false;
+        }
+        if (file_exists($destination) && !is_dir($destination)) {
+            $this->logger->error(sprintf("Directory copy destination '%s' is not a directory.", $destination));
+            return false;
+        }
+
+        $base = rtrim($destination, DIRECTORY_SEPARATOR);
+        $suffix = '.phpmake-' . bin2hex(random_bytes(8));
+        $staging = $base . $suffix . '.staging';
+        $backup = $base . $suffix . '.backup';
+
+        if (is_dir($destination) && !$this->copyDirectory($destination, $staging)) {
+            $this->removeCreatedTree($staging);
+            return false;
+        }
+        if (!$this->copyDirectory($source, $staging)) {
+            $this->removeCreatedTree($staging);
+            return false;
+        }
+
+        $hadDestination = file_exists($destination);
+        if ($hadDestination && !@rename($destination, $backup)) {
+            $this->logger->error(sprintf("Unable to stage existing destination '%s'.", $destination));
+            $this->removeCreatedTree($staging);
+            return false;
+        }
+
+        if (!@rename($staging, $destination)) {
+            $this->logger->error(sprintf("Unable to publish copied directory '%s'.", $destination));
+            if ($hadDestination) {
+                @rename($backup, $destination);
+            }
+            $this->removeCreatedTree($staging);
+            return false;
+        }
+
+        if ($hadDestination) {
+            $this->removeCreatedTree($backup);
+        }
+        return true;
+    }
+
+    /** Removes a newly-created partial destination tree after a failed copy. */
+    private function removeCreatedTree(string $path): void
+    {
+        if ($this->isSymbolicLinkOrJunction($path)) {
+            $this->removeSymbolicLinkOrJunction($path);
+            return;
+        }
+        if (!is_dir($path)) {
+            @unlink($path);
+            return;
+        }
+        $items = @scandir($path);
+        if ($items !== false) {
+            foreach ($items as $item) {
+                if ($item === '.' || $item === '..') {
+                    continue;
+                }
+                $child = $path . DIRECTORY_SEPARATOR . $item;
+                if ($this->isSymbolicLinkOrJunction($child) || !is_dir($child)) {
+                    @unlink($child);
+                } else {
+                    $this->removeCreatedTree($child);
+                }
+            }
+        }
+        @rmdir($path);
     }
 
     /** Rejects destination paths that resolve to the source or one of its descendants. */
@@ -116,7 +209,7 @@ final class CopyTask extends BaseTask
 
         $sourcePath = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $sourceReal), DIRECTORY_SEPARATOR);
         $destinationPath = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $destinationReal), DIRECTORY_SEPARATOR);
-        if (PHP_OS_FAMILY === 'Windows') {
+        if (in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true)) {
             $sourcePath = strtolower($sourcePath);
             $destinationPath = strtolower($destinationPath);
         }
@@ -190,6 +283,6 @@ final class CopyTask extends BaseTask
         }
 
         $this->assertSafePath($this->params['source'], 'copy source');
-        $this->assertSafePath($this->params['dest'], 'copy dest');
+        $this->assertSafePath($this->params['dest'], 'copy dest', false);
     }
 }

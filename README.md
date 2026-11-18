@@ -2,7 +2,7 @@
 
 A PHP build automation tool using JSON configuration file.
 
-[![current version](https://img.shields.io/packagist/v/phpmake/phpmake.svg)](https://packagist.org/packages/phpmake/phpmake) [![Build and Test](https://github.com/phpmake/phpmake/actions/workflows/default.yml/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/default.yml) [![CodeQL](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql) [![Dependabot Updates](https://github.com/phpmake/phpmake/actions/workflows/dependabot/dependabot-updates)](https://github.com/phpmake/phpmake/actions/workflows/dependabot/dependabot-updates/badge.svg?branch=main)
+[![current version](https://img.shields.io/packagist/v/phpmake/phpmake.svg)](https://packagist.org/packages/phpmake/phpmake) [![Build and Test](https://github.com/phpmake/phpmake/actions/workflows/default.yml/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/default.yml) [![CodeQL](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql) [![Dependabot Updates](https://github.com/phpmake/phpmake/actions/workflows/dependabot/dependabot-updates/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/dependabot/dependabot-updates)
 [![PHP](https://img.shields.io/badge/PHP-8.3-617CBE)](https://php.net/) [![issues](https://img.shields.io/github/issues/phpmake/phpmake)](https://github.com/phpmake/phpmake/issues) ![repo size](https://img.shields.io/github/repo-size/phpmake/phpmake) [![GitHub license](https://img.shields.io/github/license/phpmake/phpmake)](LICENSE) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](documents/CONTRIBUTING.txt)
 
 ![Logo](resources/images/logo.png)
@@ -33,15 +33,15 @@ PHPMake is a well-architected, modern PHP build tool that follows best practices
 
 ## Features
 
-* No dependency-hell and even dependency-free!
+* No runtime PHP package dependencies; PHP extensions and Composer are still required.
 * Define build processes in human-readable JSON
 * Specify execution order with dependencies
-* Works on Microsoft Windows & GNU+Linux
+* Works on Microsoft Windows, GNU+Linux, and Apple macOS
 * Built-in tasks:
   * `create_directory` (create directories)
   * `delete` (remove files/directories)
   * `copy` (file/directory copying)
-  * `exec` (execute shell commands)
+  * `exec` (execute processes without a shell)
   * `echo` (output messages)
   * `archive` (archive/compress a file or directory)
 * Filesystem tasks are restricted to paths inside the project directory (CWD)
@@ -53,13 +53,14 @@ PHPMake is a well-architected, modern PHP build tool that follows best practices
 * `--diagnostics` to show environment info
 * `--init` to create a sample `build.json`
 * CI/CD pipeline integration
-* PHP 8.3 (active) and 7.4 (maintenance branch)
-* Microsoft Windows, GNU+Linux, Apple MacOS
+* PHP 8.3+ (active)
+* Microsoft Windows, GNU+Linux, Apple macOS
 
 ## Requirements
 
 1. PHP >= 8.3
 2. Composer >= 2
+3. PHP extensions: `ctype`, `json`, and `zip`
 
 ### Versions
 
@@ -67,7 +68,6 @@ PHPMake is a well-architected, modern PHP build tool that follows best practices
 |-----------------|---------------|-------------|----------------|
 | dev-main        | `main`        | 8.3         | Active         |
 | 2.*             | `main`        | 8.3         | Active         |
-| 1.*             | `main-php7.4` | 7.4         | Maintenance    |
 
 * **Active**: Full support
 * **Maintenance**: Bug/Security fixes only
@@ -111,7 +111,7 @@ composer global require phpmake/phpmake
                 "tasks": [
                     { "type": "create_directory", "params": { "name": "build" } },
                     { "type": "copy", "params": { "source": "src/", "dest": "build/" } },
-                    { "type": "exec", "params": { "command": "php compiler.php" } }
+                    { "type": "echo", "params": { "message": "Replace this step with your project's compiler command." } }
                 ]
             }
         },
@@ -192,11 +192,11 @@ vendor/bin/phpunit tests/
 | `create_directory` | `name` (string)                              | Create directory       |
 | `delete`           | `path` (string)                              | Delete file/directory  |
 | `copy`             | `source` (string), `dest` (string)           | Copy files/directories |
-| `exec`             | `command` (string)                           | Execute shell command  |
+| `exec`             | `command` (string), optional `args` (scalar array), `timeout` (seconds, 0<timeout<=86400) | Execute a process without a shell |
 | `echo`             | `message` (string)                           | Output message         |
 | `archive`          | `source` (string), `output` (string)         | Archive a file/directory to ZIP |
 
-Filesystem task paths must resolve inside the project working directory. Paths that escape the project (for example via `..` or absolute paths outside CWD) are rejected.
+`exec` passes an argument vector directly to the process (no shell expansion or pipelines). Its default timeout is 300 seconds; each output stream is capped at 1 MiB. Filesystem task paths must resolve inside the project working directory. Destructive tasks reject the project root, and paths that escape the project (for example via `..` or absolute paths outside CWD) are rejected.
 
 ### Example build file
 

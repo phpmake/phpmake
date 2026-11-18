@@ -169,11 +169,13 @@ final class PathSafetyTest extends TestCase
         try {
             self::assertTrue(chdir($project));
             mkdir($source);
+            file_put_contents($source . DIRECTORY_SEPARATOR . 'a-first.txt', 'partial');
             file_put_contents($outside . DIRECTORY_SEPARATOR . 'secret.txt', 'secret');
             $this->createDirectoryLink($outside, $source . DIRECTORY_SEPARATOR . 'linked');
             $task = new CopyTask(['source' => $source, 'dest' => $dest], $this->logger);
             // Act
             $this->assertFalse($task->execute(false, true));
+            $this->assertDirectoryDoesNotExist($dest);
             $this->assertFileDoesNotExist($dest . DIRECTORY_SEPARATOR . 'linked' . DIRECTORY_SEPARATOR . 'secret.txt');
         } finally {
             if (is_dir($source . DIRECTORY_SEPARATOR . 'linked') || is_link($source . DIRECTORY_SEPARATOR . 'linked')) {
@@ -181,6 +183,9 @@ final class PathSafetyTest extends TestCase
             }
             if (is_dir($dest)) {
                 rmdir($dest);
+            }
+            if (is_file($source . DIRECTORY_SEPARATOR . 'a-first.txt')) {
+                unlink($source . DIRECTORY_SEPARATOR . 'a-first.txt');
             }
             unlink($outside . DIRECTORY_SEPARATOR . 'secret.txt');
             chdir($originalCwd);
@@ -227,4 +232,71 @@ final class PathSafetyTest extends TestCase
             rmdir($project);
         }
     }
+
+    /** Refuses to delete the project root, including normalized aliases. */
+    public function testDeleteRejectsProjectRoot(): void
+    {
+        // Arrange
+        $root = getcwd();
+        // Act
+        try {
+            new DeleteTask(['path' => $root . DIRECTORY_SEPARATOR . '.' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . basename($root)], $this->logger);
+            self::fail('Deleting the project root must be rejected.');
+        } catch (\InvalidArgumentException $exception) {
+            // Assert
+            self::assertStringContainsString('project root', $exception->getMessage());
+        }
+    }
+
+
+    /** Preserves an existing destination tree when a staged copy fails. */
+    public function testFailedCopyPreservesExistingDestination(): void
+    {
+        // Arrange
+        $originalCwd = getcwd();
+        $project = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-copy-rollback-' . bin2hex(random_bytes(6));
+        $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-copy-target-' . bin2hex(random_bytes(6));
+        mkdir($project);
+        mkdir($outside);
+        $project = realpath($project);
+        $outside = realpath($outside);
+        self::assertNotFalse($project);
+        self::assertNotFalse($outside);
+        $source = $project . DIRECTORY_SEPARATOR . 'source';
+        $dest = $project . DIRECTORY_SEPARATOR . 'destination';
+        mkdir($source);
+        mkdir($dest);
+        file_put_contents($dest . DIRECTORY_SEPARATOR . 'keep.txt', 'original');
+        file_put_contents($source . DIRECTORY_SEPARATOR . 'a-first.txt', 'new');
+        $link = $source . DIRECTORY_SEPARATOR . 'z-link';
+
+        try {
+            self::assertTrue(chdir($project));
+            $this->createDirectoryLink($outside, $link);
+            $task = new CopyTask(['source' => $source, 'dest' => $dest], $this->logger);
+
+            // Act
+            self::assertFalse($task->execute(false, true));
+
+            // Assert
+            self::assertSame('original', file_get_contents($dest . DIRECTORY_SEPARATOR . 'keep.txt'));
+            self::assertFileDoesNotExist($dest . DIRECTORY_SEPARATOR . 'a-first.txt');
+        } finally {
+            if (is_dir($link) || is_link($link)) {
+                $this->removeDirectoryLink($link);
+            }
+            if (is_file($source . DIRECTORY_SEPARATOR . 'a-first.txt')) {
+                unlink($source . DIRECTORY_SEPARATOR . 'a-first.txt');
+            }
+            if (is_file($dest . DIRECTORY_SEPARATOR . 'keep.txt')) {
+                unlink($dest . DIRECTORY_SEPARATOR . 'keep.txt');
+            }
+            chdir($originalCwd);
+            rmdir($source);
+            rmdir($dest);
+            rmdir($outside);
+            rmdir($project);
+        }
+    }
+
 }

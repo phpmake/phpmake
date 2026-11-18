@@ -78,5 +78,7 @@ composer.lock
 ##### Custom
 *.cache
 *.log
+*.log.lock
+*.log.[1-5]
 /artifacts/
 *-cache

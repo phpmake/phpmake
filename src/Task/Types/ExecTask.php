@@ -7,6 +7,7 @@ use PhpMake\Task\BaseTask;
 /** Runs an external process without invoking a command shell. */
 final class ExecTask extends BaseTask
 {
+    private const int MAX_CAPTURE_BYTES = 1048576;
     /** Starts the configured process, captures output, and enforces its timeout. */
     protected function runTask(bool $debug, bool $silent): bool
     {
@@ -15,6 +16,10 @@ final class ExecTask extends BaseTask
         $timeout = (float) ($this->params['timeout'] ?? 300);
         if (!is_finite($timeout) || $timeout <= 0 || $timeout > 86400) {
             throw new \InvalidArgumentException('Exec timeout must be greater than 0 and at most 86400 seconds.');
+        }
+
+        if (!self::hasBalancedQuotes($command)) {
+            throw new \InvalidArgumentException('Exec command contains an unbalanced quote.');
         }
 
         $argv = self::tokenizeCommand($command);
@@ -41,17 +46,15 @@ final class ExecTask extends BaseTask
         $start = microtime(true);
         $timedOut = false;
         $observedExitCode = null;
+        $stdoutTruncated = false;
+        $stderrTruncated = false;
+        $outputLimitExceeded = false;
 
         do {
-            $stdout .= stream_get_contents($pipes[1]) ?: '';
-            $stderr .= stream_get_contents($pipes[2]) ?: '';
-            $status = proc_get_status($process);
-            if (!$status['running']) {
-                $observedExitCode = $status['exitcode'];
-                break;
-            }
-            if (microtime(true) - $start > $timeout) {
-                $timedOut = true;
+            $this->captureOutput($pipes[1], $stdout, $stdoutTruncated);
+            $this->captureOutput($pipes[2], $stderr, $stderrTruncated);
+            if ($stdoutTruncated || $stderrTruncated) {
+                $outputLimitExceeded = true;
                 proc_terminate($process, 15);
                 usleep(200000);
                 if (proc_get_status($process)['running']) {
@@ -59,11 +62,27 @@ final class ExecTask extends BaseTask
                 }
                 break;
             }
+            $status = proc_get_status($process);
+            if (microtime(true) - $start > $timeout) {
+                $timedOut = true;
+                if ($status['running']) {
+                    proc_terminate($process, 15);
+                    usleep(200000);
+                    if (proc_get_status($process)['running']) {
+                        proc_terminate($process, 9);
+                    }
+                }
+                break;
+            }
+            if (!$status['running']) {
+                $observedExitCode = $status['exitcode'];
+                break;
+            }
             usleep(20000);
         } while (true);
 
-        $stdout .= stream_get_contents($pipes[1]) ?: '';
-        $stderr .= stream_get_contents($pipes[2]) ?: '';
+        $this->captureOutput($pipes[1], $stdout, $stdoutTruncated);
+        $this->captureOutput($pipes[2], $stderr, $stderrTruncated);
         fclose($pipes[1]);
         fclose($pipes[2]);
         $closeCode = proc_close($process);
@@ -76,6 +95,10 @@ final class ExecTask extends BaseTask
         }
         if (trim($stderr) !== '') {
             $this->logger->error(trim($stderr));
+        }
+        if ($outputLimitExceeded) {
+            $this->logger->error(sprintf('Command output exceeded the %d-byte per-stream limit.', self::MAX_CAPTURE_BYTES));
+            return false;
         }
         if ($timedOut) {
             $this->logger->error(sprintf('Command timed out after %.1f seconds.', $timeout));
@@ -92,22 +115,69 @@ final class ExecTask extends BaseTask
         return 'exec';
     }
 
+    /** Reads available process output while enforcing a per-stream memory limit. */
+    private function captureOutput($pipe, string &$buffer, bool &$truncated): void
+    {
+        while (!feof($pipe)) {
+            $chunk = fread($pipe, 8192);
+            if ($chunk === false || $chunk === '') {
+                break;
+            }
+            $remaining = self::MAX_CAPTURE_BYTES - strlen($buffer);
+            if ($remaining > 0) {
+                $buffer .= substr($chunk, 0, $remaining);
+            }
+            if (strlen($chunk) > $remaining) {
+                $truncated = true;
+            }
+        }
+    }
+
     /** Validates the command, argument list, and optional timeout. */
     protected function validateParams(): void
     {
         if (!isset($this->params['command']) || !is_string($this->params['command']) || trim($this->params['command']) === '') {
             throw new \InvalidArgumentException("Exec task requires a non-empty string 'command'.");
         }
-        if (isset($this->params['args']) && (!is_array($this->params['args']) || array_filter($this->params['args'], static fn($value) => !is_scalar($value)))) {
+        if (!self::hasBalancedQuotes($this->params['command'])) {
+            throw new \InvalidArgumentException('Exec command contains an unbalanced quote.');
+        }
+        if (array_key_exists('args', $this->params) && (!is_array($this->params['args']) || array_filter($this->params['args'], static fn($value) => !is_scalar($value)))) {
             throw new \InvalidArgumentException("Exec task 'args' must be an array of scalar values.");
         }
-        if (isset($this->params['timeout']) && (
-            !is_numeric($this->params['timeout'])
+        if (array_key_exists('timeout', $this->params) && (
+            (!is_int($this->params['timeout']) && !is_float($this->params['timeout']))
+            || !is_finite((float) $this->params['timeout'])
             || (float) $this->params['timeout'] <= 0
             || (float) $this->params['timeout'] > 86400
         )) {
             throw new \InvalidArgumentException("Exec task 'timeout' must be greater than 0 and at most 86400 seconds.");
         }
+    }
+
+    /** Checks that single and double quoted command segments are closed. */
+    private static function hasBalancedQuotes(string $command): bool
+    {
+        $quote = null;
+        $length = strlen($command);
+        for ($i = 0; $i < $length; ++$i) {
+            $character = $command[$i];
+            if ($quote !== null) {
+                if ($character === '\\' && $i + 1 < $length
+                    && ($command[$i + 1] === $quote || $command[$i + 1] === '\\')) {
+                    ++$i;
+                    continue;
+                }
+                if ($character === $quote) {
+                    $quote = null;
+                }
+                continue;
+            }
+            if ($character === '"' || $character === "'") {
+                $quote = $character;
+            }
+        }
+        return $quote === null;
     }
 
     /**

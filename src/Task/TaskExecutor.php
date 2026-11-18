@@ -18,16 +18,12 @@ final class TaskExecutor
         $targets = $config->getTargets();
         foreach ($executionOrder as $targetName) {
             if (!is_string($targetName) || !array_key_exists($targetName, $targets) || !is_array($targets[$targetName])) {
-                if (!$silent) {
-                    fwrite(STDERR, sprintf("Error: Execution order references missing target '%s'.%s", (string) $targetName, PHP_EOL));
-                }
+                fwrite(STDERR, sprintf("Error: Execution order references missing target '%s'.%s", (string) $targetName, PHP_EOL));
                 return 1;
             }
             $currentTarget = $targets[$targetName];
             if (!isset($currentTarget['tasks']) || !is_array($currentTarget['tasks'])) {
-                if (!$silent) {
-                    fwrite(STDERR, sprintf("Error: Target '%s' has no valid tasks array.%s", $targetName, PHP_EOL));
-                }
+                fwrite(STDERR, sprintf("Error: Target '%s' has no valid tasks array.%s", $targetName, PHP_EOL));
                 return 1;
             }
             if (!$silent) {
@@ -35,14 +31,13 @@ final class TaskExecutor
             }
             foreach ($currentTarget['tasks'] as $taskConfig) {
                 if (!is_array($taskConfig)) {
+                    fwrite(STDERR, 'Error: Task configuration must be an object.' . PHP_EOL);
                     return 1;
                 }
                 try {
                     $task = $taskFactory->create($taskConfig);
                 } catch (\Throwable $e) {
-                    if (!$silent) {
-                        fwrite(STDERR, 'Error: ' . $e->getMessage() . PHP_EOL);
-                    }
+                    fwrite(STDERR, 'Error: ' . $e->getMessage() . PHP_EOL);
                     return 1;
                 }
                 $taskType = $task->getType();
@@ -50,6 +45,7 @@ final class TaskExecutor
                     echo sprintf('  Running task: %s%s', $taskType, PHP_EOL);
                 }
                 if (!$task->execute($debug, $silent)) {
+                    fwrite(STDERR, sprintf("Error: Task '%s' failed.%s", $taskType, PHP_EOL));
                     if (!$silent) {
                         echo "  ✗ Task failed.\n";
                     }
