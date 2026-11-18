@@ -357,7 +357,7 @@ final class TaskExecutionTest extends TestCase
         // Arrange
         $task = new ExecTask([
             'command' => PHP_BINARY,
-            'args' => ['-r', 'usleep(2000000);'],
+            'args' => ['-r', 'sleep(2);'],
             'timeout' => 0.1,
         ], $this->logger);
 
