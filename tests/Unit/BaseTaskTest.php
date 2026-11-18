@@ -5,12 +5,10 @@ namespace PhpMake\Tests\Unit;
 use PhpMake\Task\BaseTask;
 use PHPUnit\Framework\TestCase;
 
-/** Tests behavior behavior. */
     /** Tests the shared task contract and base-class behavior. */
 final class BaseTaskTest extends TestCase
 {
     /**
-/** Tests is behavior. */
      * This method is called before the first test method in the test class is executed.
      *
      * @doesNotPerformAssertions
@@ -20,7 +18,6 @@ final class BaseTaskTest extends TestCase
     public static function setUpBeforeClass(): void {}
 
     /**
-/** Tests has behavior. */
      * This method is called after the last test method in the test class has been executed.
      *
      * @doesNotPerformAssertions
@@ -75,7 +72,6 @@ final class BaseTaskTest extends TestCase
         $this->assertTrue($reflection->hasMethod('validateParams'));
     }
 
-/** Tests as behavior. */
     /** The base implementation returns the concrete task class as its type. */
     public function testBaseTaskReturnsConcreteClassNameByDefault(): void
     {
