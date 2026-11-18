@@ -107,6 +107,34 @@ jobs:
       - name: Run PHPUnit tests
         run: composer test
 
+      - name: Verify clean Composer consumer installation
+        shell: bash
+        run: |
+          consumer="$(mktemp -d)"
+          trap 'rm -rf "$consumer"' EXIT
+          cat > "$consumer/composer.json" <<JSON
+          {
+            "repositories": [{
+              "type": "path",
+              "url": "${GITHUB_WORKSPACE}",
+              "options": {
+                "symlink": false,
+                "versions": {"phpmake/phpmake": "2.0.2"}
+              }
+            }],
+            "require": {"phpmake/phpmake": "2.0.2"}
+          }
+          JSON
+          cd "$consumer"
+          composer install --no-interaction --no-progress --prefer-dist
+          mkdir -p src
+          printf '%s\\n' '<?php echo "consumer";' > src/index.php
+          php vendor/bin/phpmake --version
+          php vendor/bin/phpmake --init
+          php vendor/bin/phpmake --validate-build
+          php vendor/bin/phpmake
+          php vendor/bin/phpmake package
+
       - name: Clear packages cache
         run: composer clear-cache
 
