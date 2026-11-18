@@ -20,6 +20,7 @@ final class InitSymlinkTest extends TestCase
         $link = $project . DIRECTORY_SEPARATOR . 'build.json';
         if (!@symlink($target, $link)) {
             rmdir($project);
+            self::assertFalse(is_link($link));
             return;
         }
 
