@@ -12,7 +12,7 @@
 | Programming language | PHP 8.3+ |
 | Dependency management and installation | Composer 2+ |
 | Configuration | JSON |
-| Required PHP extensions | ctype, json, zip |
+| Required PHP extensions | ctype, json, random, zip |
 | Archive support | PHP ZipArchive |
 | Testing | PHPUnit 12 |
 | Execution interface | CLI |
