@@ -281,4 +281,22 @@ final class BuildValidatorTest extends TestCase
         self::assertSame([], $errors);
     }
 
+
+    /** Rejects null dependencies rather than treating them as an omitted list. */
+    public function testNullDependenciesAreInvalid(): void
+    {
+        // Arrange
+        $config = [
+            'name' => 'Test', 'description' => 'Null dependencies', 'version' => '1.0',
+            'targets' => ['build' => ['depends' => null, 'tasks' => []]],
+            'default_target' => 'build',
+        ];
+
+        // Act
+        $errors = (new BuildValidator())->validate($config);
+
+        // Assert
+        self::assertStringContainsString('dependencies must be an array', implode("\n", $errors));
+    }
+
 }
