@@ -91,7 +91,7 @@ composer global require phpmake/phpmake
 1. **Create a `build.json` file** (or generate a sample):
 
     ```sh
-    php vendor/bin/phpmake --init
+    php vendor/bin/phpmake.php --init
     ```
 
     Example configuration:
@@ -129,30 +129,30 @@ chmod +x bin/phpmake.php
 Then
 
 ```sh
-vendor/bin/phpmake
+vendor/bin/phpmake.php
 ```
 
 Or
 
 ```sh
-php vendor/bin/phpmake
+php vendor/bin/phpmake.php
 ```
 
 Or
 
 ```sh
 # Validate configuration.
-php vendor/bin/phpmake --validate-build
+php vendor/bin/phpmake.php --validate-build
 
 # Run default target with debug logging.
-php vendor/bin/phpmake --debug
+php vendor/bin/phpmake.php --debug
 ```
 
 Or
 
 ```sh
 # Run test target silently.
-php vendor/bin/phpmake test --silent
+php vendor/bin/phpmake.php test --silent
 ```
 
 ### QA/QC test
