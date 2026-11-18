@@ -20,7 +20,16 @@ final class ExecTask extends BaseTask
         preg_match_all('/"((?:\\\\.|[^"])*)"|\'((?:\\\\.|[^\'])*)\'|(\S+)/', $command, $matches, PREG_SET_ORDER);
         $argv = [];
         foreach ($matches as $match) {
-            $token = $match[1] !== '' ? stripcslashes($match[1]) : ($match[2] !== '' ? stripcslashes($match[2]) : $match[3]);
+            if ($match[1] !== '') {
+                // Preserve Windows path separators; only unescape quoted characters.
+                $token = preg_replace('/\\\\(["\\\\])/', '$1', $match[1]);
+            } elseif ($match[2] !== '') {
+                // Single-quoted tokens only escape a quote or a literal backslash.
+                $token = preg_replace('/\\\\([\\'\\\\])/', '$1', $match[2]);
+            } else {
+                $token = $match[3];
+            }
+
             $argv[] = $token;
         }
         if ($argv === []) {
