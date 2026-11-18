@@ -192,14 +192,4 @@ final class PathSafetyTest extends TestCase
             }
         }
     }
-    /** Removes a directory symlink or Windows junction without traversing its target. */
-    private function removeDirectoryLink(string $path): void
-    {
-        if (PHP_OS_FAMILY === 'Windows' && is_dir($path)) {
-            rmdir($path);
-            return;
-        }
-        unlink($path);
-    }
-
 }
