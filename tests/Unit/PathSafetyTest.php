@@ -130,7 +130,7 @@ final class PathSafetyTest extends TestCase
 
         try {
             self::assertTrue(chdir($project));
-            $project = getcwd();
+            $project = realpath(getcwd());
             self::assertNotFalse($project);
             $link = $project . DIRECTORY_SEPARATOR . 'link';
             $this->createDirectoryLink($outside, $link);
@@ -163,7 +163,7 @@ final class PathSafetyTest extends TestCase
         $dest = $project . DIRECTORY_SEPARATOR . 'destination';
         try {
             self::assertTrue(chdir($project));
-            $project = getcwd();
+            $project = realpath(getcwd());
             self::assertNotFalse($project);
             $source = $project . DIRECTORY_SEPARATOR . 'source';
             $dest = $project . DIRECTORY_SEPARATOR . 'destination';
@@ -202,7 +202,7 @@ final class PathSafetyTest extends TestCase
 
         try {
             self::assertTrue(chdir($project));
-            $project = getcwd();
+            $project = realpath(getcwd());
             self::assertNotFalse($project);
             $link = $project . DIRECTORY_SEPARATOR . 'link';
             $this->createDirectoryLink($target, $link);
