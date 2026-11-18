@@ -1,4 +1,4 @@
 * Add process-tree termination for commands that spawn child processes, with platform-specific tests.
-* Add CLI regression coverage for conflicting flags, empty arguments, and dangling destination symlinks.
+* Expand path boundary tests for UNC paths, junction ancestors, and case-sensitive macOS volumes.
 * Keep Linux, Windows, and macOS filesystem tests in CI.
-* Add a schema/runtime parity test whenever a built-in task or parameter changes.
+* Add an automated schema/runtime parity test whenever a built-in task or parameter changes.
