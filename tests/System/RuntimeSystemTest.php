@@ -51,6 +51,20 @@ final class RuntimeSystemTest extends TestCase
         self::assertSame('', $result['stderr']);
     }
 
+
+    /** Ensures the release version file and runtime constant stay synchronized. */
+    public function testVersionFileMatchesRuntimeConstant(): void
+    {
+        // Arrange
+        $versionFile = $this->projectRoot . DIRECTORY_SEPARATOR . 'VERSION.txt';
+
+        // Act
+        $version = trim((string) file_get_contents($versionFile));
+
+        // Assert
+        self::assertSame(Config::TOOL_VERSION, $version);
+    }
+
     /** Confirms the help command reports its usage and supported operational options. */
     public function testHelpCommandExitsSuccessfully(): void
     {
