@@ -169,11 +169,13 @@ final class PathSafetyTest extends TestCase
         try {
             self::assertTrue(chdir($project));
             mkdir($source);
+            file_put_contents($source . DIRECTORY_SEPARATOR . 'a-first.txt', 'partial');
             file_put_contents($outside . DIRECTORY_SEPARATOR . 'secret.txt', 'secret');
             $this->createDirectoryLink($outside, $source . DIRECTORY_SEPARATOR . 'linked');
             $task = new CopyTask(['source' => $source, 'dest' => $dest], $this->logger);
             // Act
             $this->assertFalse($task->execute(false, true));
+            $this->assertDirectoryDoesNotExist($dest);
             $this->assertFileDoesNotExist($dest . DIRECTORY_SEPARATOR . 'linked' . DIRECTORY_SEPARATOR . 'secret.txt');
         } finally {
             if (is_dir($source . DIRECTORY_SEPARATOR . 'linked') || is_link($source . DIRECTORY_SEPARATOR . 'linked')) {
@@ -227,4 +229,20 @@ final class PathSafetyTest extends TestCase
             rmdir($project);
         }
     }
+
+    /** Refuses to delete the project root, including normalized aliases. */
+    public function testDeleteRejectsProjectRoot(): void
+    {
+        // Arrange
+        $root = getcwd();
+        // Act
+        try {
+            new DeleteTask(['path' => $root . DIRECTORY_SEPARATOR . '.' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . basename($root)], $this->logger);
+            self::fail('Deleting the project root must be rejected.');
+        } catch (\\InvalidArgumentException $exception) {
+            // Assert
+            self::assertStringContainsString('project root', $exception->getMessage());
+        }
+    }
+
 }
