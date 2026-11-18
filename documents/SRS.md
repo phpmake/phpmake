@@ -28,22 +28,28 @@ This document specifies the functional and non-functional requirements of PHPMak
 | FR-13 | The system shall provide environment diagnostics.                                   |
 | FR-14 | The system shall support debug, silent, and no-log options.                         |
 | FR-15 | The system shall support custom task implementations through its task architecture. |
+| FR-16 | The system shall cap captured stdout and stderr independently at 1 MiB per process. |
+| FR-17 | The system shall enforce a default process timeout of 300 seconds and a maximum of 86400 seconds. |
+| FR-18 | On process timeout or output overflow, the system shall terminate the process tree using platform-supported process-group or tree termination. |
+| FR-19 | The logger shall serialize concurrent file writes and rotation using a persistent lock file.
 
 ## 3. Non-Functional Requirements
 
 ### 3.1 Security
 
 - Filesystem operations must remain within the permitted working directory.
-- Unsafe paths and symbolic-link escapes must be rejected.
+- Paths must be normalized and resolved within the working directory; symlink and Windows junction ancestor escapes must be rejected.
+- Project-root deletion and replacement must be rejected.
 - External processes must be executed without unintended shell interpretation.
-- Process execution must support configurable timeouts.
+- Process execution must support configurable timeouts and bounded output capture.
+- Process-tree termination must be attempted on supported Windows and POSIX platforms.
 - Errors must not be silently converted into successful execution results.
 
 ### 3.2 Performance
 
 - Dependency resolution should avoid unnecessary repeated work.
 - Filesystem operations should handle normal project-sized workloads efficiently.
-- Logging should avoid unnecessary overhead.
+- Logging should avoid unnecessary overhead and preserve complete entries when writes are partial or concurrent.
 
 ### 3.3 Reliability
 
