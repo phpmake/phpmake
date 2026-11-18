@@ -96,10 +96,10 @@ jobs:
         run: composer refactor-check
 
       - name: Check unused Composer dependencies
-        run: composer-unused
+        run: vendor/bin/composer-unused
 
       - name: Check declared Composer requirements
-        run: composer-require-checker check
+        run: vendor/bin/composer-require-checker check
 
       - name: Check Composer normalization
         run: composer normalize --dry-run
