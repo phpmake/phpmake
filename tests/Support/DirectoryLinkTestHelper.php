@@ -31,18 +31,19 @@ trait DirectoryLinkTestHelper
     /** Creates a symbolic link or, on Windows, an NTFS junction. */
     private function createDirectoryLink(string $target, string $link): void
     {
-        if (@symlink($target, $link)) {
-            clearstatcache(true, $link);
-            return;
-        }
-
         if (PHP_OS_FAMILY === 'Windows') {
+            // Prefer junctions so Windows coverage does not depend on symlink privileges.
             $command = 'cmd /c mklink /J ' . escapeshellarg($link) . ' ' . escapeshellarg($target);
             exec($command, $output, $exitCode);
             clearstatcache(true, $link);
             if ($exitCode === 0 && is_dir($link)) {
                 return;
             }
+        }
+
+        if (@symlink($target, $link)) {
+            clearstatcache(true, $link);
+            return;
         }
 
         self::fail(sprintf('Unable to create a directory link from "%s" to "%s".', $link, $target));
