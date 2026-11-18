@@ -372,6 +372,29 @@ final class CoverageCompletionTest extends TestCase
         $this->assertThrows(\Exception::class, fn() => new EchoTask([], $this->logger()), 'Missing');
     }
 
+    /** Ensures quoted Windows executable paths retain backslashes before ordinary letters. */
+    public function testExecCommandTokenizerPreservesWindowsPathSeparators(): void
+    {
+        $tokenizer = new \ReflectionMethod(ExecTask::class, 'tokenizeCommand');
+
+        self::assertSame(
+            ['C:\tools\php.exe'],
+            $tokenizer->invoke(null, '"C:\tools\php.exe"')
+        );
+        self::assertSame(
+            ['C:\new\php.exe'],
+            $tokenizer->invoke(null, '"C:\new\php.exe"')
+        );
+        self::assertSame(
+            ['C:\runtime\php.exe'],
+            $tokenizer->invoke(null, "'C:\\runtime\\php.exe'")
+        );
+        self::assertSame(
+            ['C:\Program Files\PHP\php.exe'],
+            $tokenizer->invoke(null, '"C:\Program Files\PHP\php.exe"')
+        );
+    }
+
     /** Covers successful and failing external processes, captured stderr, timeouts, and validation. */
     public function testExecTaskHandlesProcessResultsAndTimeouts(): void
     {
