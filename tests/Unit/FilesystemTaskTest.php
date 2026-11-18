@@ -171,6 +171,30 @@ final class FilesystemTaskTest extends TestCase
         self::assertSame('blocker', file_get_contents($destination));
     }
 
+    /** Rejects a destination junction instead of writing through it. */
+    public function testCopyTaskRejectsDestinationDirectoryLink(): void
+    {
+        // Arrange
+        $source = $this->root . DIRECTORY_SEPARATOR . 'source';
+        $target = $this->root . DIRECTORY_SEPARATOR . 'target';
+        $link = $this->root . DIRECTORY_SEPARATOR . 'destination-link';
+        mkdir($source);
+        mkdir($target);
+        file_put_contents($source . DIRECTORY_SEPARATOR . 'source.txt', 'source');
+        file_put_contents($target . DIRECTORY_SEPARATOR . 'target.txt', 'preserve');
+        $this->createDirectoryLink($target, $link);
+
+        $task = new CopyTask(['source' => $source, 'dest' => $link], $this->logger);
+
+        // Act
+        $result = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($result);
+        self::assertSame('preserve', file_get_contents($target . DIRECTORY_SEPARATOR . 'target.txt'));
+        self::assertFileDoesNotExist($target . DIRECTORY_SEPARATOR . 'source.txt');
+    }
+
     /** Deletes a file and treats an already absent path as a successful no-op. */
     public function testDeleteTaskDeletesFileAndIsIdempotent(): void
     {
