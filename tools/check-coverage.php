@@ -14,39 +14,49 @@ if (!is_file($reportPath) || !is_readable($reportPath)) {
     exit(1);
 }
 
-$document = new DOMDocument();
-$previousErrors = libxml_use_internal_errors(true);
-$loaded = $document->load($reportPath);
-libxml_clear_errors();
-libxml_use_internal_errors($previousErrors);
-
-if (!$loaded) {
-    fwrite(STDERR, sprintf("Coverage report '%s' is not valid XML.%s", $reportPath, PHP_EOL));
+$report = file_get_contents($reportPath);
+if (
+    $report === false
+    || !str_contains($report, '<coverage')
+    || !str_contains($report, '</coverage>')
+) {
+    fwrite(STDERR, sprintf("Coverage report '%s' is not a valid Clover XML document.%s", $reportPath, PHP_EOL));
     exit(1);
 }
 
-$xpath = new DOMXPath($document);
-$classes = $xpath->query('/coverage/project/package/file/class');
-if ($classes === false) {
-    fwrite(STDERR, "Unable to read class metrics from the coverage report." . PHP_EOL);
+$classMatches = [];
+$matchedClasses = preg_match_all(
+    '/<class\b[^>]*>\s*<metrics\b([^>]*)\/>\s*<\/class>/s',
+    $report,
+    $classMatches
+);
+
+if ($matchedClasses === false || $matchedClasses === 0) {
+    fwrite(STDERR, "Coverage report contains no class metrics." . PHP_EOL);
     exit(1);
 }
+
+/** Reads an integer attribute from a Clover metrics tag. */
+$readMetric = static function (string $attributes, string $name): int {
+    $matched = preg_match(
+        '/(?:^|\s)' . preg_quote($name, '/') . '="(\d+)"/',
+        $attributes,
+        $match
+    );
+
+    return $matched === 1 ? (int) $match[1] : 0;
+};
 
 $totalClasses = 0;
 $coveredClasses = 0;
 $totalMethods = 0;
 $coveredMethods = 0;
 
-foreach ($classes as $class) {
-    $metrics = $xpath->query('./metrics', $class)?->item(0);
-    if (!$metrics instanceof DOMElement) {
-        continue;
-    }
-
-    $methodCount = (int) $metrics->getAttribute('methods');
-    $coveredMethodCount = (int) $metrics->getAttribute('coveredmethods');
-    $elementCount = (int) $metrics->getAttribute('elements');
-    $coveredElementCount = (int) $metrics->getAttribute('coveredelements');
+foreach ($classMatches[1] as $attributes) {
+    $methodCount = $readMetric($attributes, 'methods');
+    $coveredMethodCount = $readMetric($attributes, 'coveredmethods');
+    $elementCount = $readMetric($attributes, 'elements');
+    $coveredElementCount = $readMetric($attributes, 'coveredelements');
 
     // Ignore classes with no executable methods, such as constant-only Config.
     if ($methodCount === 0) {
