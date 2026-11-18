@@ -34,12 +34,15 @@ A:
 - `create_directory`: Create directories (`name`)
 - `delete`: Remove files/directories (`path`)
 - `copy`: Copy files/directories (`source`, `dest`)
-- `exec`: Execute shell commands (`command`)
+- `exec`: Run a process without a shell (`command`, optional `args`, optional `timeout`)
 - `echo`: Output messages (`message`)
 - `archive`: Archive/compress a file or directory (`source`, `output`)
 
 Q: Are paths outside the project allowed?
 A: No. Filesystem tasks (`create_directory`, `delete`, `copy`, `archive`) only accept paths that resolve inside the current working directory. Attempts to use `..` or absolute paths outside the project are rejected as a safety violation.
+
+Q: How do I pass arguments and set a process timeout?
+A: Use an `args` JSON array and an optional numeric `timeout` in seconds (greater than 0 and at most 86400). Arguments are passed directly; shell operators, variable expansion, and pipelines are not interpreted.
 
 Q: How do I enable debug/verbose logging?
 A: Add the `--debug` flag:
@@ -63,6 +66,8 @@ A:
 1. Create a new class in `src/Task/Types` extending `BaseTask`.
 2. Implement `runTask()`, `validateParams()`, and `getType()`.
 3. Update `TaskFactory` to map the new task type.
+4. Add parameter validation to `BuildValidator` and `schema/build-schema.json`.
+5. Add tests for success, failure, and unsafe inputs.
 
 Q: Where are logs stored?
 A: By default, logs are in the project's root in `build.log`, unless `--no-log` is used. Logs rotate at 10MB and keep up to 5 rotated files.
