@@ -177,12 +177,30 @@ PHP;
                 if ($terminationCode === 0) {
                     return;
                 }
+                $tasklist = @proc_open(
+                    [$systemRoot . DIRECTORY_SEPARATOR . 'System32' . DIRECTORY_SEPARATOR . 'tasklist.exe',
+                        '/FI', 'PID eq ' . (string) $processPid, '/FO', 'CSV'],
+                    [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+                    $diagnosticPipes,
+                    null,
+                    null,
+                    ['bypass_shell' => true]
+                );
+                $processListing = '';
+                if (is_resource($tasklist)) {
+                    fclose($diagnosticPipes[0]);
+                    $processListing = (string) stream_get_contents($diagnosticPipes[1]);
+                    fclose($diagnosticPipes[1]);
+                    fclose($diagnosticPipes[2]);
+                    proc_close($tasklist);
+                }
                 $this->logger->error(sprintf(
-                    'Windows process-tree termination failed for PID %s (exit %s): %s %s',
+                    'Windows process-tree termination failed for PID %s (exit %s): %s %s; tasklist: %s',
                     (string) $processPid,
                     (string) $terminationCode,
                     trim((string) $stdout),
-                    trim((string) $stderr)
+                    trim((string) $stderr),
+                    trim($processListing)
                 ));
             } else {
                 $this->logger->error('Unable to start taskkill.exe for process-tree termination.');
