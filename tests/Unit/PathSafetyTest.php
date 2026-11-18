@@ -312,7 +312,7 @@ final class PathSafetyTest extends TestCase
         }
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Safety Violation');
 
         // Act
@@ -344,7 +344,7 @@ final class PathSafetyTest extends TestCase
             self::assertTrue(chdir($project));
 
             // Assert
-            $this->expectException(\\InvalidArgumentException::class);
+            $this->expectException(\InvalidArgumentException::class);
             $this->expectExceptionMessage('Safety Violation');
 
             // Act
@@ -371,7 +371,7 @@ final class PathSafetyTest extends TestCase
         }
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Safety Violation');
 
         // Act
@@ -387,7 +387,7 @@ final class PathSafetyTest extends TestCase
         }
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Drive-relative paths are not allowed');
 
         // Act
