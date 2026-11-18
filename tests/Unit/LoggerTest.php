@@ -15,7 +15,6 @@ final class LoggerTest extends TestCase
     private Logger $logger;
 
     /**
-/** Tests is behavior. */
      * This method is called before the first test method in the test class is executed.
      *
      * @doesNotPerformAssertions
@@ -25,7 +24,6 @@ final class LoggerTest extends TestCase
     public static function setUpBeforeClass(): void {}
 
     /**
-/** Tests has behavior. */
      * This method is called after the last test method in the test class has been executed.
      *
      * @doesNotPerformAssertions
