@@ -193,7 +193,7 @@ final class CliParserTest extends TestCase
     public function testRejectsEmptyArgument(): void
     {
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Empty command-line argument');
         // Act
         (new CliParser())->parse(['script.php', '']);
@@ -203,7 +203,7 @@ final class CliParserTest extends TestCase
     public function testRejectsDuplicatePositionalTargets(): void
     {
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Extra argument detected');
         // Act
         (new CliParser())->parse(['script.php', 'build', 'test']);
@@ -213,7 +213,7 @@ final class CliParserTest extends TestCase
     public function testRejectsConflictingActionFlags(): void
     {
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Conflicting command actions');
         // Act
         (new CliParser())->parse(['script.php', '--help', '--version']);
