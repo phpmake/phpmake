@@ -74,7 +74,8 @@ try {
         }
 
         $destFile = getcwd() . DIRECTORY_SEPARATOR . 'build.json';
-        if (file_exists($destFile)) {
+        clearstatcache(true, $destFile);
+        if (file_exists($destFile) || is_link($destFile) || @lstat($destFile) !== false) {
             fwrite(STDERR, "Error: '{$destFile}' already exists.\n");
             exit(1);
         }
