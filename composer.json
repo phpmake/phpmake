@@ -7,7 +7,8 @@
     "authors": [{"name": "PHPMake", "email": "phpmake.github@gmail.com", "homepage": "https://github.com/phpmake", "role": "Maintainer, Developer"}],
     "homepage": "https://github.com/phpmake/phpmake",
     "support": {"email": "phpmake.github@gmail.com", "issues": "https://github.com/phpmake/phpmake/issues", "source": "https://github.com/phpmake/phpmake"},
-    "require": {"php": "^8.3", "ext-json": "*", "ext-zip": "*"},
+    "require": {"php": "^8.3", "ext-ctype": "*",
+        "ext-json": "*", "ext-zip": "*"},
     "require-dev": {
         "friendsofphp/php-cs-fixer": "3.*",
         "ergebnis/composer-normalize": "2.*",
