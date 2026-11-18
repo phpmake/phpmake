@@ -195,7 +195,7 @@ vendor/bin/phpunit tests/
 | `echo`             | `message` (string)                           | Output message         |
 | `archive`          | `source` (string), `output` (string)         | Archive a file/directory to ZIP |
 
-`exec` passes an argument vector directly to the process (no shell expansion or pipelines). Its default timeout is 300 seconds (maximum 86400); each output stream is capped at 1 MiB. On timeout or output overflow, PHPMake terminates the process tree using Windows `taskkill /T` or a POSIX process group when the POSIX extension is available; otherwise it falls back to terminating the direct process. Filesystem task paths are normalized and must resolve inside the project working directory. Symlink/junction ancestors that escape the project are rejected. Destructive tasks reject the project root; `..` is permitted only when the normalized result remains inside CWD.
+`exec` passes an argument vector directly to the process (no shell expansion or pipelines). Its default timeout is 300 seconds (maximum 86400); each output stream is capped at 1 MiB. On timeout or output overflow, PHPMake terminates the process tree using Windows `taskkill /T` or a POSIX process group when the POSIX extension is available; otherwise it falls back to terminating the direct process. Filesystem task paths are normalized and must resolve inside the project working directory. Symlink/junction ancestors that escape the project are rejected. UNC and drive-relative Windows paths are rejected. Destructive tasks reject the project root; `..` is permitted only when the normalized result remains inside CWD.
 
 ### Example build file
 
