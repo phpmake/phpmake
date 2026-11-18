@@ -12,7 +12,7 @@ PHPMake - Unreleased
 * Fix Composer-installed CLI execution by reusing the consuming project's
   Composer autoloader instead of requiring a package-local vendor/autoload.php.
 * Add an integration regression test for the Composer-installed binary.
-* Add 15 regression/unit tests without mocks.
+* Add regression/unit tests without mocks for validation, filesystem safety, process execution, and logging.
 
 PHPMake 2.0.2 - 2026-11-07
 -------------------------
