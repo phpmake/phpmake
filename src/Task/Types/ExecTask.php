@@ -109,6 +109,7 @@ final class ExecTask extends BaseTask
             throw new \InvalidArgumentException("Exec task 'timeout' must be greater than 0 and at most 86400 seconds.");
         }
     }
+
     /**
      * Splits a command into argv tokens without interpreting Windows path separators as escapes.
      *
