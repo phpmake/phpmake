@@ -78,7 +78,7 @@ jobs:
         with:
           path: vendor
           key: >-
-            ${{ runner.os }}-composer-${{ hashFiles('composer.json', 'composer.lock') }}
+            ${{ runner.os }}-composer-${{ hashFiles('composer.json') }}
           restore-keys: ${{ runner.os }}-composer-
 
       - name: Install dependencies
