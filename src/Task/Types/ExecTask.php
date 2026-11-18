@@ -103,9 +103,7 @@ PHP;
             $status = proc_get_status($process);
             if (microtime(true) - $start > $timeout) {
                 $timedOut = true;
-                if ($status['running']) {
-                    $this->terminateProcessTree($process, $processPid, $processGroupCreated);
-                }
+                $this->terminateProcessTree($process, $processPid, $processGroupCreated);
                 break;
             }
             if (!$status['running']) {
