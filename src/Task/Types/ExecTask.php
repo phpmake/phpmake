@@ -167,43 +167,63 @@ PHP;
                 null,
                 ['bypass_shell' => true]
             );
+            $taskkillError = '';
             if (is_resource($terminator)) {
                 fclose($pipes[0]);
-                $stdout = stream_get_contents($pipes[1]);
-                $stderr = stream_get_contents($pipes[2]);
+                stream_get_contents($pipes[1]);
+                $taskkillError = (string) stream_get_contents($pipes[2]);
                 fclose($pipes[1]);
                 fclose($pipes[2]);
-                $terminationCode = proc_close($terminator);
-                if ($terminationCode === 0) {
+                if (proc_close($terminator) === 0) {
                     return;
                 }
-                $tasklist = @proc_open(
-                    [$systemRoot . DIRECTORY_SEPARATOR . 'System32' . DIRECTORY_SEPARATOR . 'tasklist.exe',
-                        '/FI', 'PID eq ' . (string) $processPid, '/FO', 'CSV'],
-                    [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
-                    $diagnosticPipes,
-                    null,
-                    null,
-                    ['bypass_shell' => true]
-                );
-                $processListing = '';
-                if (is_resource($tasklist)) {
-                    fclose($diagnosticPipes[0]);
-                    $processListing = (string) stream_get_contents($diagnosticPipes[1]);
-                    fclose($diagnosticPipes[1]);
-                    fclose($diagnosticPipes[2]);
-                    proc_close($tasklist);
+            }
+
+            // taskkill cannot enumerate descendants after the original parent
+            // has already exited. Use the recorded ParentProcessId chain as a fallback.
+            $powerShell = $systemRoot . DIRECTORY_SEPARATOR . 'System32'
+                . DIRECTORY_SEPARATOR . 'WindowsPowerShell' . DIRECTORY_SEPARATOR
+                . 'v1.0' . DIRECTORY_SEPARATOR . 'powershell.exe';
+            $script = '$rootPid = ' . $processPid . '; '
+                . '$all = @(Get-CimInstance -ClassName Win32_Process); '
+                . '$queue = [System.Collections.Generic.Queue[int]]::new(); '
+                . '$descendants = [System.Collections.Generic.List[int]]::new(); '
+                . '$queue.Enqueue($rootPid); '
+                . 'while ($queue.Count -gt 0) { $parent = $queue.Dequeue(); '
+                . 'foreach ($item in $all) { if ([int]$item.ParentProcessId -eq $parent) { '
+                . '$child = [int]$item.ProcessId; if (-not $descendants.Contains($child)) { '
+                . '$descendants.Add($child); $queue.Enqueue($child) } } } }; '
+                . 'foreach ($child in $descendants) { Stop-Process -Id $child -Force -ErrorAction SilentlyContinue }; '
+                . 'Stop-Process -Id $rootPid -Force -ErrorAction SilentlyContinue';
+            $fallback = @proc_open(
+                [$powerShell, '-NoProfile', '-NonInteractive', '-Command', $script],
+                [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+                $fallbackPipes,
+                null,
+                null,
+                ['bypass_shell' => true]
+            );
+            if (is_resource($fallback)) {
+                fclose($fallbackPipes[0]);
+                stream_get_contents($fallbackPipes[1]);
+                $fallbackError = (string) stream_get_contents($fallbackPipes[2]);
+                fclose($fallbackPipes[1]);
+                fclose($fallbackPipes[2]);
+                if (proc_close($fallback) === 0) {
+                    return;
                 }
                 $this->logger->error(sprintf(
-                    'Windows process-tree termination failed for PID %s (exit %s): %s %s; tasklist: %s',
+                    'Windows process-tree termination failed for PID %s: taskkill=%s PowerShell=%s',
                     (string) $processPid,
-                    (string) $terminationCode,
-                    trim((string) $stdout),
-                    trim((string) $stderr),
-                    trim($processListing)
+                    trim($taskkillError),
+                    trim($fallbackError)
                 ));
             } else {
-                $this->logger->error('Unable to start taskkill.exe for process-tree termination.');
+                $this->logger->error(sprintf(
+                    'Unable to start Windows process-tree termination fallback for PID %s: %s',
+                    (string) $processPid,
+                    trim($taskkillError)
+                ));
             }
         }
 
