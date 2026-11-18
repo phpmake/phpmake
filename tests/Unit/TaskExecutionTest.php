@@ -313,7 +313,7 @@ final class TaskExecutionTest extends TestCase
         $params = [];
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Missing 'message' parameter for echo task.");
 
         // Act
