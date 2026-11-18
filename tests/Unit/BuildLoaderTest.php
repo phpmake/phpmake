@@ -113,7 +113,7 @@ final class BuildLoaderTest extends TestCase
         file_put_contents($this->buildFile, '{"name":"Test","description":"Test","version":"1","targets":[],"default_target":"build"}');
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Field 'targets' must be a JSON object.");
         // Act
         (new BuildLoader())->load($this->buildFile);
@@ -126,7 +126,7 @@ final class BuildLoaderTest extends TestCase
         file_put_contents($this->buildFile, '{"name":"Test","description":"Test","version":"1","targets":{"build":{"tasks":{}}},"default_target":"build"}');
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Tasks for target 'build' must be a JSON array.");
         // Act
         (new BuildLoader())->load($this->buildFile);
