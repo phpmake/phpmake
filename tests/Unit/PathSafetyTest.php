@@ -239,7 +239,7 @@ final class PathSafetyTest extends TestCase
         try {
             new DeleteTask(['path' => $root . DIRECTORY_SEPARATOR . '.' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . basename($root)], $this->logger);
             self::fail('Deleting the project root must be rejected.');
-        } catch (\\InvalidArgumentException $exception) {
+        } catch (\InvalidArgumentException $exception) {
             // Assert
             self::assertStringContainsString('project root', $exception->getMessage());
         }
