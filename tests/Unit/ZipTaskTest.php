@@ -90,4 +90,48 @@ final class ZipTaskTest extends TestCase
             }
         }
     }
+
+    /** Uses case-insensitive output matching on Windows and default macOS volumes. */
+    public function testArchiveExcludesOutputWithDifferentPathCasing(): void
+    {
+        // Arrange
+        if (!class_exists(\\ZipArchive::class)) {
+            self::markTestSkipped('ext-zip is not available.');
+        }
+        if (!in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true)) {
+            self::markTestSkipped('This regression applies to case-insensitive filesystems.');
+        }
+
+        $root = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-case-' . bin2hex(random_bytes(6));
+        mkdir($root);
+        file_put_contents($root . DIRECTORY_SEPARATOR . 'input.txt', 'content');
+        $actualOutput = $root . DIRECTORY_SEPARATOR . 'archive.zip';
+        $configuredOutput = $root . DIRECTORY_SEPARATOR . 'ARCHIVE.ZIP';
+        file_put_contents($actualOutput, '');
+
+        try {
+            $task = new ZipTask(['source' => $root, 'output' => $configuredOutput], new Logger(false, true, true));
+
+            // Act
+            self::assertTrue($task->execute(false, true));
+
+            // Assert
+            $zip = new \\ZipArchive();
+            self::assertTrue($zip->open($configuredOutput));
+            self::assertSame(1, $zip->numFiles);
+            self::assertSame('input.txt', $zip->getNameIndex(0));
+            $zip->close();
+        } finally {
+            if (file_exists($actualOutput)) {
+                unlink($actualOutput);
+            }
+            if (file_exists($root . DIRECTORY_SEPARATOR . 'input.txt')) {
+                unlink($root . DIRECTORY_SEPARATOR . 'input.txt');
+            }
+            if (is_dir($root)) {
+                rmdir($root);
+            }
+        }
+    }
+
 }
