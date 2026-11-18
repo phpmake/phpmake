@@ -346,6 +346,10 @@ final class FilesystemTaskCoverageTest extends TestCase
     /** Removes temporary files without following symbolic links. */
     private function removePath(string $path): void
     {
+        if (PHP_OS_FAMILY === 'Windows' && is_dir($path) && (is_link($path) || $this->isDirectoryJunction($path))) {
+            @rmdir($path);
+            return;
+        }
         if (is_link($path) || $this->isDirectoryJunction($path) || is_file($path)) {
             if ($this->isDirectoryJunction($path)) {
                 @rmdir($path);
