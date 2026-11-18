@@ -20,9 +20,16 @@ final class CopyTask extends BaseTask
             return false;
         }
 
-        return is_dir($source)
-            ? $this->copyDirectory($source, $dest)
-            : $this->copyFile($source, $dest);
+        if (!is_dir($source)) {
+            return $this->copyFile($source, $dest);
+        }
+
+        $destinationExisted = file_exists($dest) || is_link($dest);
+        $copied = $this->copyDirectory($source, $dest);
+        if (!$copied && !$destinationExisted && is_dir($dest)) {
+            $this->removeCreatedTree($dest);
+        }
+        return $copied;
     }
 
     /** Copies one file after ensuring its destination directory exists. */
@@ -102,6 +109,30 @@ final class CopyTask extends BaseTask
 
         $this->logger->debug(sprintf("Copied directory '%s' → '%s'.", $source, $dest));
         return true;
+    }
+
+    /** Removes a newly-created partial destination tree after a failed copy. */
+    private function removeCreatedTree(string $path): void
+    {
+        if ($this->isSymbolicLinkOrJunction($path) || !is_dir($path)) {
+            @unlink($path);
+            return;
+        }
+        $items = @scandir($path);
+        if ($items !== false) {
+            foreach ($items as $item) {
+                if ($item === '.' || $item === '..') {
+                    continue;
+                }
+                $child = $path . DIRECTORY_SEPARATOR . $item;
+                if ($this->isSymbolicLinkOrJunction($child) || !is_dir($child)) {
+                    @unlink($child);
+                } else {
+                    $this->removeCreatedTree($child);
+                }
+            }
+        }
+        @rmdir($path);
     }
 
     /** Rejects destination paths that resolve to the source or one of its descendants. */
