@@ -77,6 +77,20 @@ abstract class BaseTask implements TaskInterface
             throw new \InvalidArgumentException(sprintf("Safety Violation: Invalid or protected path for %s.", $label));
         }
 
+        if (
+            PHP_OS_FAMILY === 'Windows'
+            && strlen($path) >= 2
+            && ctype_alpha($path[0])
+            && $path[1] === ':'
+            && (strlen($path) === 2 || ($path[2] !== '\\' && $path[2] !== '/'))
+        ) {
+            throw new \\InvalidArgumentException(sprintf(
+                "Safety Violation: Drive-relative paths are not allowed for %s.",
+                $label
+            ));
+        }
+
+
         $cwd = realpath(getcwd());
         if ($cwd === false) {
             throw new \RuntimeException('Unable to resolve current working directory.');
