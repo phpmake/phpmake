@@ -379,4 +379,44 @@ final class TaskExecutionTest extends TestCase
         new ExecTask(['command' => PHP_BINARY . ' "unterminated'], $this->logger);
     }
 
+
+    /** Ensures timeout handling terminates descendants, not only the parent process. */
+    public function testExecTaskTerminatesProcessTreeOnTimeout(): void
+    {
+        // Arrange
+        if (PHP_OS_FAMILY !== 'Windows') {
+            self::assertTrue(
+                function_exists('posix_setpgid') && function_exists('posix_kill'),
+                'POSIX process-group support is required for descendant termination tests.'
+            );
+        }
+
+        $marker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-child-survived-' . bin2hex(random_bytes(8));
+        $childCode = 'usleep(1600000); file_put_contents($argv[1], "survived");';
+        $parentCode = '$pipes = []; usleep(200000); $child = proc_open([PHP_BINARY, "-r", '
+            . var_export($childCode, true)
+            . ', $argv[1]], [0 => ["pipe", "r"], 1 => ["pipe", "w"], 2 => ["pipe", "w"]], $pipes);'
+            . ' if (!is_resource($child)) { exit(9); } foreach ($pipes as $pipe) { fclose($pipe); } sleep(10);';
+
+        $task = new ExecTask([
+            'command' => PHP_BINARY,
+            'args' => ['-r', $parentCode, $marker],
+            'timeout' => 0.7,
+        ], $this->logger);
+
+        try {
+            // Act
+            $result = $task->execute(false, true);
+            usleep(1900000);
+
+            // Assert
+            self::assertFalse($result);
+            self::assertFileDoesNotExist($marker);
+        } finally {
+            if (is_file($marker)) {
+                unlink($marker);
+            }
+        }
+    }
+
 }
