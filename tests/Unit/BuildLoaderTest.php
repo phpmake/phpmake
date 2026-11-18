@@ -132,4 +132,18 @@ final class BuildLoaderTest extends TestCase
         (new BuildLoader())->load($this->buildFile);
     }
 
+
+    /** Rejects exec args encoded as a JSON object rather than an array. */
+    public function testRejectsExecArgsJsonObject(): void
+    {
+        // Arrange
+        file_put_contents($this->buildFile, '{"name":"Test","description":"Test","version":"1","targets":{"build":{"tasks":[{"type":"exec","params":{"command":"php","args":{"0":"--version"}}}]}},"default_target":"build"}');
+
+        // Assert
+        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectExceptionMessage('must be a JSON array');
+        // Act
+        (new BuildLoader())->load($this->buildFile);
+    }
+
 }
