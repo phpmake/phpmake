@@ -84,7 +84,7 @@ abstract class BaseTask implements TaskInterface
             && $path[1] === ':'
             && (strlen($path) === 2 || ($path[2] !== '\\' && $path[2] !== '/'))
         ) {
-            throw new \\InvalidArgumentException(sprintf(
+            throw new \InvalidArgumentException(sprintf(
                 "Safety Violation: Drive-relative paths are not allowed for %s.",
                 $label
             ));
