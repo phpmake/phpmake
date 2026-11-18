@@ -8,11 +8,14 @@ use PhpMake\Task\Types\CopyTask;
 use PhpMake\Task\Types\DeleteTask;
 use PhpMake\Task\Types\ZipTask;
 use PhpMake\Utilities\Logger;
+use PhpMake\Tests\Support\DirectoryLinkTestHelper;
 use PHPUnit\Framework\TestCase;
 
 /** Exercises filesystem task behavior against real temporary files and directories. */
 final class FilesystemTaskCoverageTest extends TestCase
 {
+    use DirectoryLinkTestHelper;
+
     private Logger $logger;
     private string $root;
 
@@ -108,22 +111,20 @@ final class FilesystemTaskCoverageTest extends TestCase
     public function testCopyTaskRejectsSourceSymlink(): void
     {
         // Arrange
-        $target = $this->root . DIRECTORY_SEPARATOR . 'target.txt';
-        $link = $this->root . DIRECTORY_SEPARATOR . 'link.txt';
-        file_put_contents($target, 'target');
-        if (!@symlink($target, $link)) {
-        // Assert
-            self::markTestSkipped('Symlink creation is unavailable.');
-        }
+        $target = $this->root . DIRECTORY_SEPARATOR . 'target';
+        $link = $this->root . DIRECTORY_SEPARATOR . 'link';
+        mkdir($target);
+        file_put_contents($target . DIRECTORY_SEPARATOR . 'target.txt', 'target');
+        $this->createDirectoryLink($target, $link);
 
         $task = new CopyTask([
             'source' => $link,
-            'dest' => $this->root . DIRECTORY_SEPARATOR . 'copy.txt',
+            'dest' => $this->root . DIRECTORY_SEPARATOR . 'copy',
         ], $this->logger);
 
         // Act
         self::assertFalse($task->execute(false, true));
-        self::assertFileDoesNotExist($this->root . DIRECTORY_SEPARATOR . 'copy.txt');
+        self::assertDirectoryDoesNotExist($this->root . DIRECTORY_SEPARATOR . 'copy');
     }
 
     /** A failed copy operation is reported when the destination itself is a directory. */
@@ -202,12 +203,11 @@ final class FilesystemTaskCoverageTest extends TestCase
         // Assert
             self::markTestSkipped('ext-zip is unavailable.');
         }
-        $target = $this->root . DIRECTORY_SEPARATOR . 'target.txt';
-        $link = $this->root . DIRECTORY_SEPARATOR . 'source-link.txt';
-        file_put_contents($target, 'target');
-        if (!@symlink($target, $link)) {
-            self::markTestSkipped('Symlink creation is unavailable.');
-        }
+        $target = $this->root . DIRECTORY_SEPARATOR . 'target';
+        $link = $this->root . DIRECTORY_SEPARATOR . 'source-link';
+        mkdir($target);
+        file_put_contents($target . DIRECTORY_SEPARATOR . 'target.txt', 'target');
+        $this->createDirectoryLink($target, $link);
         $task = new ZipTask([
             'source' => $link,
             'output' => $this->root . DIRECTORY_SEPARATOR . 'link.zip',
@@ -324,11 +324,10 @@ final class FilesystemTaskCoverageTest extends TestCase
         $source = $this->root . DIRECTORY_SEPARATOR . 'source';
         mkdir($source);
         file_put_contents($source . DIRECTORY_SEPARATOR . 'before.txt', 'before');
-        $target = $this->root . DIRECTORY_SEPARATOR . 'target.txt';
-        file_put_contents($target, 'target');
-        if (!@symlink($target, $source . DIRECTORY_SEPARATOR . 'linked.txt')) {
-            self::markTestSkipped('Symlink creation is unavailable.');
-        }
+        $target = $this->root . DIRECTORY_SEPARATOR . 'target';
+        mkdir($target);
+        file_put_contents($target . DIRECTORY_SEPARATOR . 'target.txt', 'target');
+        $this->createDirectoryLink($target, $source . DIRECTORY_SEPARATOR . 'linked');
         $archive = $this->root . DIRECTORY_SEPARATOR . 'partial.zip';
 
         $task = new ZipTask(['source' => $source, 'output' => $archive], $this->logger);
