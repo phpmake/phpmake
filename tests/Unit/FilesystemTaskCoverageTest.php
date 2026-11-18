@@ -354,6 +354,22 @@ final class FilesystemTaskCoverageTest extends TestCase
         new ZipTask(['source' => 'source.txt', 'output' => 123], $this->logger);
     }
 
+    /** Prevents archiving a file onto itself before ZipArchive can truncate it. */
+    public function testZipTaskRejectsOutputThatWouldOverwriteSourceFile(): void
+    {
+        // Arrange
+        $source = $this->root . DIRECTORY_SEPARATOR . 'same-file.txt';
+        file_put_contents($source, 'must remain intact');
+        $task = new ZipTask(['source' => $source, 'output' => $source], $this->logger);
+
+        // Act
+        $result = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($result);
+        self::assertSame('must remain intact', file_get_contents($source));
+    }
+
     /** Rejects copies into the source directory itself or one of its descendants. */
     public function testCopyTaskRejectsDestinationInsideSourceDirectory(): void
     {
