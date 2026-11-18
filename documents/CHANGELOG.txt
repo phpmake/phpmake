@@ -27,6 +27,6 @@ PHPMake 2.0.1 - 2025-05-18
 * Cleanup codes.
 * Update dependencies.
 
-PHPMake 2.0.0 - 2025-5-18
+PHPMake 2.0.0 - 2025-05-18
 -------------------------
 * Initial release.
