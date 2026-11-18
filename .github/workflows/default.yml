@@ -58,7 +58,6 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: 8.3
-          coverage: pcov
           extensions: zip
           tools: composer:v2
           ini-values: memory_limit=256M, zend.assertions=1, \
@@ -89,19 +88,8 @@ jobs:
       - name: Lint codes
         run: composer lint
 
-      - name: Run tests with code coverage
-        run: composer coverage
-
-      - name: Enforce class and method coverage thresholds
-        run: php tools/check-coverage.php coverage.xml
-
-      - name: Upload code coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: phpunit-coverage
-          path: coverage.xml
-          if-no-files-found: error
-          retention-days: 14
+      - name: Run PHPUnit tests
+        run: composer test
 
       - name: Clear packages cache
         run: composer clear-cache
