@@ -15,7 +15,7 @@
             "tasks": [
                 {"type": "create_directory", "params": {"name": "build"}},
                 {"type": "copy", "params": {"source": "src/", "dest": "build/"}},
-                {"type": "exec", "params": {"command": "php compiler.php"}},
+                {"type": "echo", "params": {"message": "Replace this step with your project compiler command."}},
                 {"type": "echo", "params": {"message": "Build completed successfully."}}
             ]
         },
@@ -23,7 +23,7 @@
             "description": "Run unit tests",
             "depends": ["build"],
             "tasks": [
-                {"type": "exec", "params": {"command": "vendor/bin/phpunit tests/"}}
+                {"type": "echo", "params": {"message": "Configure your project test runner here."}}
             ]
         },
         "package": {
