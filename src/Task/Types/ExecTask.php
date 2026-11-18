@@ -25,7 +25,7 @@ final class ExecTask extends BaseTask
                 $token = preg_replace('/\\\\(["\\\\])/', '$1', $match[1]);
             } elseif ($match[2] !== '') {
                 // Single-quoted tokens only escape a quote or a literal backslash.
-                $token = preg_replace('/\\\\([\\'\\\\])/', '$1', $match[2]);
+                $token = preg_replace('/\\\\([\'\\\\])/', '$1', $match[2]);
             } else {
                 $token = $match[3];
             }
