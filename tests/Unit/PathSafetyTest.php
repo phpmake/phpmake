@@ -124,12 +124,15 @@ final class PathSafetyTest extends TestCase
         $originalCwd = getcwd();
         $project = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-project-' . uniqid('', true);
         $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-outside-' . uniqid('', true);
-        $link = $project . DIRECTORY_SEPARATOR . 'link';
         mkdir($project);
         mkdir($outside);
+        $outside = realpath($outside);
 
         try {
             self::assertTrue(chdir($project));
+            $project = getcwd();
+            self::assertNotFalse($project);
+            $link = $project . DIRECTORY_SEPARATOR . 'link';
             $this->createDirectoryLink($outside, $link);
 
             $this->expectException(\InvalidArgumentException::class);
@@ -151,16 +154,21 @@ final class PathSafetyTest extends TestCase
         // Arrange
         $originalCwd = getcwd();
         $project = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-copy-project-' . uniqid('', true);
-        $source = $project . DIRECTORY_SEPARATOR . 'source';
-        $dest = $project . DIRECTORY_SEPARATOR . 'destination';
         $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-copy-outside-' . uniqid('', true);
         mkdir($project);
-        mkdir($source);
         mkdir($outside);
-        file_put_contents($outside . DIRECTORY_SEPARATOR . 'secret.txt', 'secret');
+        $outside = realpath($outside);
 
+        $source = $project . DIRECTORY_SEPARATOR . 'source';
+        $dest = $project . DIRECTORY_SEPARATOR . 'destination';
         try {
             self::assertTrue(chdir($project));
+            $project = getcwd();
+            self::assertNotFalse($project);
+            $source = $project . DIRECTORY_SEPARATOR . 'source';
+            $dest = $project . DIRECTORY_SEPARATOR . 'destination';
+            mkdir($source);
+            file_put_contents($outside . DIRECTORY_SEPARATOR . 'secret.txt', 'secret');
             $this->createDirectoryLink($outside, $source . DIRECTORY_SEPARATOR . 'linked');
             $task = new CopyTask(['source' => $source, 'dest' => $dest], $this->logger);
             // Act
@@ -187,13 +195,16 @@ final class PathSafetyTest extends TestCase
         $originalCwd = getcwd();
         $project = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-delete-project-' . uniqid('', true);
         $target = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-delete-target-' . uniqid('', true);
-        $link = $project . DIRECTORY_SEPARATOR . 'link';
         mkdir($project);
         mkdir($target);
+        $target = realpath($target);
         file_put_contents($target . DIRECTORY_SEPARATOR . 'keep.txt', 'keep me');
 
         try {
             self::assertTrue(chdir($project));
+            $project = getcwd();
+            self::assertNotFalse($project);
+            $link = $project . DIRECTORY_SEPARATOR . 'link';
             $this->createDirectoryLink($target, $link);
             $task = new DeleteTask(['path' => $link], $this->logger);
             // Act
