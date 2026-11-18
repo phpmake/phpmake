@@ -32,7 +32,7 @@ trait DirectoryLinkTestHelper
     private function createDirectoryLink(string $target, string $link): void
     {
         if (PHP_OS_FAMILY === 'Windows') {
-            // Prefer junctions so Windows coverage does not depend on symlink privileges.
+            // Prefer junctions so Windows tests do not depend on symlink privileges.
             $command = 'cmd /c mklink /J ' . escapeshellarg($link) . ' ' . escapeshellarg($target);
             exec($command, $output, $exitCode);
             clearstatcache(true, $link);

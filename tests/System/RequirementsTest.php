@@ -6,118 +6,84 @@ namespace PhpMake\Tests\System {
 
     use PHPUnit\Framework\TestCase;
 
-    /**
-     * @group Requirements
-     */
+    /** Verifies runtime requirements and the expected repository layout. */
     final class RequirementsTest extends TestCase
     {
-        /**
-         * This method is called before the first test method in the test class is executed.
-         *
-         * @doesNotPerformAssertions
-         *
-         * @return void
-         */
-        public static function setUpBeforeClass(): void {}
-
-        /**
-         * This method is called after the last test method in the test class has been executed.
-         *
-         * @doesNotPerformAssertions
-         *
-         * @return void
-         */
-        public static function tearDownAfterClass(): void
+        /** Checks that the runtime meets the minimum supported PHP version. */
+        public function testProjectRequiredPhpVersion(): void
         {
-            gc_collect_cycles();
+            self::assertTrue(
+                version_compare(PHP_VERSION, '8.3.0', '>='),
+                sprintf('PHP 8.3.0 or newer is required; %s is running.', PHP_VERSION)
+            );
         }
 
-        /**
-         * This method is called BEFORE each test method.
-         *
-         * @doesNotPerformAssertions
-         *
-         * @return void
-         */
-        protected function setUp(): void
+        /** Checks that required PHP extensions are loaded. */
+        public function testProjectRequiredPhpExtensions(): void
         {
-            parent::setUp();
-            // Methods initialization codes.
-        }
-
-        /**
-         * This method is called AFTER each test method.
-         *
-         * @doesNotPerformAssertions
-         *
-         * @return void
-         */
-        protected function tearDown(): void
-        {
-            // Methods finalization codes.
-            parent::tearDown();
-        }
-
-        /**
-         * @test
-         *
-         * @small
-         *
-         * @return void
-         */
-        final public function testProjectRequiredPhpVersion(): void
-        {
-            // Arrange
-            $_result = (PHP_MAJOR_VERSION == 8) && (PHP_MINOR_VERSION >= 3);
-            // Assert
-            $this->assertTrue($_result);
-        }
-
-        /**
-         * @test
-         *
-         * @small
-         *
-         * @return void
-         */
-        final public function testProjectRequiredPhpExtensions(): void
-        {
-            // Arrange
-            $extensions = [
-                'json',
-                'zip',
-            ];
-
-            foreach ($extensions as $extension) {
-            // Assert
-            // Act
-                $this->assertTrue(extension_loaded($extension));
+            foreach (['json', 'zip'] as $extension) {
+                self::assertTrue(extension_loaded($extension), sprintf('Required extension "%s" is not loaded.', $extension));
             }
         }
 
-        /**
-         * @test
-         *
-         * @small
-         *
-         * @return void
-         */
-        final public function testProjectDirectoriesExist(): void
+        /** Checks tracked and generated project directories using absolute paths. */
+        public function testProjectDirectoriesExist(): void
         {
-            // Arrange
-            $directories = [
+            $projectRoot = dirname(__DIR__, 2);
+            foreach ([
                 '.github',
                 'bin',
+                'documents',
                 'resources',
                 'schema',
                 'src',
                 'tests',
                 'vendor',
+            ] as $directory) {
+                self::assertDirectoryExists(
+                    $projectRoot . DIRECTORY_SEPARATOR . $directory,
+                    sprintf('Required project directory "%s" is missing.', $directory)
+                );
+            }
+        }
+
+        /** Checks repository files at their actual tracked locations. */
+        public function testProjectFilesExist(): void
+        {
+            $projectRoot = dirname(__DIR__, 2);
+            $files = [
+                '.editorconfig',
+                '.gitattributes',
+                '.gitignore',
+                '.mailmap',
+                '.php-cs-fixer.php',
+                '.phplint.yml',
+                '.styleci.yml',
+                'build.json',
+                'build.json.example',
+                'composer.json',
+                'documents/CHANGELOG.txt',
+                'documents/CODE_OF_CONDUCT.txt',
+                'documents/CONTRIBUTING.txt',
+                'documents/CONTRIBUTORS.txt',
+                'documents/DCO.txt',
+                'documents/FAQ.txt',
+                'documents/NOTICE.txt',
+                'documents/RELEASE-CHECKLIST.txt',
+                'documents/TODO.txt',
+                'LICENSE',
+                'phpunit.xml',
+                'README.md',
+                'rector.php',
+                'SECURITY.md',
+                'VERSION.txt',
             ];
 
-            foreach ($directories as $directory) {
-            // Assert
-                $this->assertDirectoryExists($directory);
+            foreach ($files as $file) {
+                self::assertFileExists(
+                    $projectRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $file),
+                    sprintf('Required project file "%s" is missing.', $file)
+                );
             }
         }
     }

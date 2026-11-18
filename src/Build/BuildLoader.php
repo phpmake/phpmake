@@ -22,6 +22,30 @@ final class BuildLoader
         if (!$decoded instanceof \stdClass) {
             throw new \InvalidArgumentException('Build configuration must be a JSON object.');
         }
+        if (property_exists($decoded, 'targets')) {
+            if (!($decoded->targets instanceof \stdClass)) {
+                throw new \InvalidArgumentException("Field 'targets' must be a JSON object.");
+            }
+            foreach ($decoded->targets as $targetName => $target) {
+                if (!($target instanceof \stdClass)) {
+                    throw new \InvalidArgumentException(sprintf("Target '%s' must be a JSON object.", $targetName));
+                }
+                if (property_exists($target, 'depends') && !is_array($target->depends)) {
+                    throw new \InvalidArgumentException(sprintf("Dependencies for target '%s' must be a JSON array.", $targetName));
+                }
+                if (isset($target->tasks) && !is_array($target->tasks)) {
+                    throw new \InvalidArgumentException(sprintf("Tasks for target '%s' must be a JSON array.", $targetName));
+                }
+                foreach ($target->tasks ?? [] as $index => $task) {
+                    if (!($task instanceof \stdClass)) {
+                        throw new \InvalidArgumentException(sprintf("Task %s in target '%s' must be a JSON object.", $index, $targetName));
+                    }
+                    if (isset($task->params) && !($task->params instanceof \stdClass)) {
+                        throw new \InvalidArgumentException(sprintf("Parameters for task %s in target '%s' must be a JSON object.", $index, $targetName));
+                    }
+                }
+            }
+        }
 
         $config = json_decode($rawContents, true, 512, JSON_THROW_ON_ERROR);
         $errors = (new BuildValidator())->validate($config);

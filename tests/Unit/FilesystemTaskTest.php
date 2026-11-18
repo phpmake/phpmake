@@ -12,7 +12,7 @@ use PhpMake\Tests\Support\DirectoryLinkTestHelper;
 use PHPUnit\Framework\TestCase;
 
 /** Exercises filesystem task behavior against real temporary files and directories. */
-final class FilesystemTaskCoverageTest extends TestCase
+final class FilesystemTaskTest extends TestCase
 {
     use DirectoryLinkTestHelper;
 
@@ -169,6 +169,30 @@ final class FilesystemTaskCoverageTest extends TestCase
         // Act
         self::assertFalse($task->execute(false, true));
         self::assertSame('blocker', file_get_contents($destination));
+    }
+
+    /** Rejects a destination junction instead of writing through it. */
+    public function testCopyTaskRejectsDestinationDirectoryLink(): void
+    {
+        // Arrange
+        $source = $this->root . DIRECTORY_SEPARATOR . 'source';
+        $target = $this->root . DIRECTORY_SEPARATOR . 'target';
+        $link = $this->root . DIRECTORY_SEPARATOR . 'destination-link';
+        mkdir($source);
+        mkdir($target);
+        file_put_contents($source . DIRECTORY_SEPARATOR . 'source.txt', 'source');
+        file_put_contents($target . DIRECTORY_SEPARATOR . 'target.txt', 'preserve');
+        $this->createDirectoryLink($target, $link);
+
+        $task = new CopyTask(['source' => $source, 'dest' => $link], $this->logger);
+
+        // Act
+        $result = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($result);
+        self::assertSame('preserve', file_get_contents($target . DIRECTORY_SEPARATOR . 'target.txt'));
+        self::assertFileDoesNotExist($target . DIRECTORY_SEPARATOR . 'source.txt');
     }
 
     /** Deletes a file and treats an already absent path as a successful no-op. */
@@ -352,6 +376,60 @@ final class FilesystemTaskCoverageTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         // Act
         new ZipTask(['source' => 'source.txt', 'output' => 123], $this->logger);
+    }
+
+    /** Prevents archiving a file onto itself before ZipArchive can truncate it. */
+    public function testZipTaskRejectsOutputThatWouldOverwriteSourceFile(): void
+    {
+        // Arrange
+        $source = $this->root . DIRECTORY_SEPARATOR . 'same-file.txt';
+        file_put_contents($source, 'must remain intact');
+        $task = new ZipTask(['source' => $source, 'output' => $source], $this->logger);
+
+        // Act
+        $result = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($result);
+        self::assertSame('must remain intact', file_get_contents($source));
+    }
+
+    /** Rejects copies into the source directory itself or one of its descendants. */
+    public function testCopyTaskRejectsDestinationInsideSourceDirectory(): void
+    {
+        // Arrange
+        $source = $this->root . DIRECTORY_SEPARATOR . 'source';
+        mkdir($source);
+        file_put_contents($source . DIRECTORY_SEPARATOR . 'original.txt', 'preserve');
+        $destination = $source . DIRECTORY_SEPARATOR . 'nested' . DIRECTORY_SEPARATOR . 'copy';
+
+        $task = new CopyTask(['source' => $source, 'dest' => $destination], $this->logger);
+
+        // Act
+        $result = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($result);
+        self::assertFileExists($source . DIRECTORY_SEPARATOR . 'original.txt');
+        self::assertDirectoryDoesNotExist($source . DIRECTORY_SEPARATOR . 'nested');
+    }
+
+    /** Rejects a destination that aliases the source directory itself. */
+    public function testCopyTaskRejectsDestinationEqualToSourceDirectory(): void
+    {
+        // Arrange
+        $source = $this->root . DIRECTORY_SEPARATOR . 'source';
+        mkdir($source);
+        file_put_contents($source . DIRECTORY_SEPARATOR . 'original.txt', 'preserve');
+
+        $task = new CopyTask(['source' => $source, 'dest' => $source], $this->logger);
+
+        // Act
+        $result = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($result);
+        self::assertSame('preserve', file_get_contents($source . DIRECTORY_SEPARATOR . 'original.txt'));
     }
 
     /** Removes temporary files without following symbolic links. */

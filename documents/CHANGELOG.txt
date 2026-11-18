@@ -3,11 +3,6 @@ PHPMake - Unreleased
 * Fix Composer-installed CLI execution by reusing the consuming project's
   Composer autoloader instead of requiring a package-local vendor/autoload.php.
 * Add an integration regression test for the Composer-installed binary.
-* Add PHPUnit code coverage reporting with PCOV and Clover output.
-* Publish the coverage report as a GitHub Actions artifact.
-* Expand PHPUnit coverage for previously untested classes and methods,
-  including Config, TaskInterface, CliParser, BaseTask, BuildExecutor,
-  TaskExecutor, and Logger.
 * Add 15 regression/unit tests without mocks.
 
 PHPMake 2.0.2 - 2026-11-07

@@ -83,7 +83,7 @@ final class BuildLoaderTest extends TestCase
             'name' => 'Test',
             'description' => 'Invalid task',
             'version' => '1.0',
-            'targets' => ['build' => ['tasks' => [['type' => 'not-real', 'params' => []]]]],
+            'targets' => ['build' => ['tasks' => [['type' => 'not-real', 'params' => (object) []]]]],
             'default_target' => 'build',
         ], JSON_THROW_ON_ERROR));
 
@@ -106,5 +106,30 @@ final class BuildLoaderTest extends TestCase
         (new BuildLoader())->load($this->buildFile);
     }
 
+    /** Rejects targets encoded as a JSON array instead of an object. */
+    public function testRejectsTargetsJsonArray(): void
+    {
+        // Arrange
+        file_put_contents($this->buildFile, '{"name":"Test","description":"Test","version":"1","targets":[],"default_target":"build"}');
+
+        // Assert
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("Field 'targets' must be a JSON object.");
+        // Act
+        (new BuildLoader())->load($this->buildFile);
+    }
+
+    /** Rejects task definitions whose JSON object/array shapes do not match the schema. */
+    public function testRejectsMalformedJsonTaskShapes(): void
+    {
+        // Arrange
+        file_put_contents($this->buildFile, '{"name":"Test","description":"Test","version":"1","targets":{"build":{"tasks":{}}},"default_target":"build"}');
+
+        // Assert
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("Tasks for target 'build' must be a JSON array.");
+        // Act
+        (new BuildLoader())->load($this->buildFile);
+    }
 
 }
