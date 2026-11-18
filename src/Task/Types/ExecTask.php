@@ -137,7 +137,8 @@ final class ExecTask extends BaseTask
             throw new \InvalidArgumentException("Exec task 'args' must be an array of scalar values.");
         }
         if (isset($this->params['timeout']) && (
-            !is_numeric($this->params['timeout'])
+            (!is_int($this->params['timeout']) && !is_float($this->params['timeout']))
+            || !is_finite((float) $this->params['timeout'])
             || (float) $this->params['timeout'] <= 0
             || (float) $this->params['timeout'] > 86400
         )) {
