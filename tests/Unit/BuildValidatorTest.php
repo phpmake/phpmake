@@ -242,4 +242,43 @@ final class BuildValidatorTest extends TestCase
     }
 
 
+
+    /** Rejects unknown properties that the JSON schema disallows. */
+    public function testRejectsUnknownTaskAndTargetProperties(): void
+    {
+        // Arrange
+        $config = [
+            'name' => 'Test', 'description' => 'Test', 'version' => '1.0',
+            'targets' => ['build' => [
+                'unexpected' => true,
+                'tasks' => [['type' => 'echo', 'params' => ['message' => 'ok'], 'extra' => true]],
+            ]],
+            'default_target' => 'build',
+        ];
+
+        // Act
+        $errors = (new BuildValidator())->validate($config);
+
+        // Assert
+        self::assertStringContainsString("Unknown property 'unexpected'", implode("\\n", $errors));
+        self::assertStringContainsString("Unknown property 'extra'", implode("\\n", $errors));
+    }
+
+    /** Allows an intentionally empty echo message, as the schema does. */
+    public function testEmptyEchoMessageIsValid(): void
+    {
+        // Arrange
+        $config = [
+            'name' => 'Test', 'description' => 'Test', 'version' => '1.0',
+            'targets' => ['build' => ['tasks' => [['type' => 'echo', 'params' => ['message' => '']]]]],
+            'default_target' => 'build',
+        ];
+
+        // Act
+        $errors = (new BuildValidator())->validate($config);
+
+        // Assert
+        self::assertSame([], $errors);
+    }
+
 }
