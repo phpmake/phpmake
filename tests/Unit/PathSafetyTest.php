@@ -184,6 +184,9 @@ final class PathSafetyTest extends TestCase
             if (is_dir($dest)) {
                 rmdir($dest);
             }
+            if (is_file($source . DIRECTORY_SEPARATOR . 'a-first.txt')) {
+                unlink($source . DIRECTORY_SEPARATOR . 'a-first.txt');
+            }
             unlink($outside . DIRECTORY_SEPARATOR . 'secret.txt');
             chdir($originalCwd);
             rmdir($source);
