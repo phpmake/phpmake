@@ -59,8 +59,8 @@ abstract class BaseTask implements TaskInterface
     /** Removes a link itself without traversing its target. */
     protected function removeSymbolicLinkOrJunction(string $path): bool
     {
-        if (PHP_OS_FAMILY === 'Windows' && is_dir($path)) {
-            return @rmdir($path);
+        if (PHP_OS_FAMILY === 'Windows' && @rmdir($path)) {
+            return true;
         }
 
         return @unlink($path);
