@@ -129,11 +129,11 @@ jobs:
           composer install --no-interaction --no-progress --prefer-dist
           mkdir -p src
           printf '%s\n' '<?php echo "consumer";' > src/index.php
-          php vendor/bin/phpmake --version
-          php vendor/bin/phpmake --init
-          php vendor/bin/phpmake --validate-build
-          php vendor/bin/phpmake
-          php vendor/bin/phpmake package
+          php vendor/bin/phpmake.php --version
+          php vendor/bin/phpmake.php --init
+          php vendor/bin/phpmake.php --validate-build
+          php vendor/bin/phpmake.php
+          php vendor/bin/phpmake.php package
 
       - name: Clear packages cache
         run: composer clear-cache
