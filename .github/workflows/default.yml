@@ -121,7 +121,9 @@ jobs:
           php-version: 8.3
           extensions: zip
           tools: composer:v2
-          ini-values: memory_limit=256M, zend.assertions=1, error_reporting=-1, display_errors=On
+          ini-values: >-
+            memory_limit=256M, zend.assertions=1,
+            error_reporting=-1, display_errors=On
 
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
