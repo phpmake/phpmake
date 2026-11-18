@@ -31,6 +31,11 @@ final class FilesystemTaskCoverageTest extends TestCase
         $this->root = sys_get_temp_dir() . DIRECTORY_SEPARATOR . '.phpmake-fs-' . bin2hex(random_bytes(8));
         self::assertTrue(mkdir($this->root));
         self::assertTrue(chdir($this->root));
+        // Use the exact canonical path returned by PHP on Windows. The
+        // temporary-directory path may use an 8.3 alias instead.
+        $workingDirectory = getcwd();
+        self::assertNotFalse($workingDirectory);
+        $this->root = $workingDirectory;
     }
 
     /** Cleans up test fixtures. */
