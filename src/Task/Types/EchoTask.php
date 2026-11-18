@@ -55,12 +55,12 @@ final class EchoTask extends BaseTask
      *
      * Ensures presence of a 'message' parameter before execution.
      *
-     * @throws \Exception If required 'message' parameter is missing.
+     * @throws \InvalidArgumentException If required 'message' parameter is missing.
      */
-    protected function validateParams()
+    protected function validateParams(): void
     {
         if (!isset($this->params['message'])) {
-            throw new \Exception("Missing 'message' parameter for echo task.");
+            throw new \InvalidArgumentException("Missing 'message' parameter for echo task.");
         }
     }
 }
