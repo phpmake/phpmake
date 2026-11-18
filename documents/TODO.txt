@@ -1,2 +1,4 @@
-* Add more tests.
-* Add support for more internal tasks.
+* Add process-tree termination for commands that spawn child processes, with platform-specific tests.
+* Add CLI regression coverage for conflicting flags, empty arguments, and dangling destination symlinks.
+* Keep Linux, Windows, and macOS filesystem tests in CI.
+* Add a schema/runtime parity test whenever a built-in task or parameter changes.
