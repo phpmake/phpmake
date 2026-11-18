@@ -87,7 +87,7 @@ try {
 
         $source = @fopen($sampleFile, 'rb');
         if ($source === false) {
-            fwrite(STDERR, "Error: Failed to read sample build configuration.\\n");
+            fwrite(STDERR, "Error: Failed to read sample build configuration.\n");
             exit(1);
         }
 
@@ -95,7 +95,7 @@ try {
         $destination = @fopen($destFile, 'xb');
         if ($destination === false) {
             fclose($source);
-            fwrite(STDERR, "Error: Failed to create build.json.\\n");
+            fwrite(STDERR, "Error: Failed to create build.json.\n");
             exit(1);
         }
 
@@ -106,12 +106,12 @@ try {
         fclose($destination);
 
         if ($copied !== false && $expectedSize !== false && $copied === $expectedSize && $flushed) {
-            echo "Sample build.json created successfully.\\n";
+            echo "Sample build.json created successfully.\n";
             exit(0);
         }
 
         @unlink($destFile);
-        fwrite(STDERR, "Error: Failed to create build.json.\\n");
+        fwrite(STDERR, "Error: Failed to create build.json.\n");
         exit(1);
     }
 
