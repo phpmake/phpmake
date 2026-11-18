@@ -39,15 +39,19 @@ abstract class BaseTask implements TaskInterface
     protected function isSymbolicLinkOrJunction(string $path): bool
     {
         clearstatcache(true, $path);
+        if (PHP_OS_FAMILY !== 'Windows') {
+            return is_link($path);
+        }
+
+        // Check is_dir() before is_link() to preserve Windows reparse-point
+        // metadata for lstat(), matching PHP's junction detection semantics.
+        if (!is_dir($path)) {
+            return is_link($path);
+        }
         if (is_link($path)) {
             return true;
         }
-        if (PHP_OS_FAMILY !== 'Windows' || !is_dir($path)) {
-            return false;
-        }
 
-        // Windows junctions are directories to PHP, but lstat() exposes
-        // their reparse-point mode rather than the mode of a normal directory.
         $stat = @lstat($path);
         return is_array($stat) && (($stat['mode'] & 0xF000) !== 0x4000);
     }
