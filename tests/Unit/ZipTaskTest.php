@@ -95,7 +95,7 @@ final class ZipTaskTest extends TestCase
     public function testArchiveExcludesOutputWithDifferentPathCasing(): void
     {
         // Arrange
-        if (!class_exists(\\ZipArchive::class)) {
+        if (!class_exists(\ZipArchive::class)) {
             self::markTestSkipped('ext-zip is not available.');
         }
         if (!in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true)) {
@@ -116,7 +116,7 @@ final class ZipTaskTest extends TestCase
             self::assertTrue($task->execute(false, true));
 
             // Assert
-            $zip = new \\ZipArchive();
+            $zip = new \ZipArchive();
             self::assertTrue($zip->open($configuredOutput));
             self::assertSame(1, $zip->numFiles);
             self::assertSame('input.txt', $zip->getNameIndex(0));
