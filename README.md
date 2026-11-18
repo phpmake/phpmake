@@ -2,8 +2,9 @@
 
 A PHP build automation tool using JSON configuration file.
 
-[![current version](https://img.shields.io/packagist/v/phpmake/phpmake.svg)](https://packagist.org/packages/phpmake/phpmake) [![Build and Test](https://github.com/phpmake/phpmake/actions/workflows/default.yml/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/default.yml) [![CodeQL](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql) [![Dependabot Updates](https://github.com/phpmake/phpmake/actions/workflows/dependabot/dependabot-updates/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/dependabot/dependabot-updates)
-[![PHP](https://img.shields.io/badge/PHP-8.3-617CBE)](https://php.net/) [![issues](https://img.shields.io/github/issues/phpmake/phpmake)](https://github.com/phpmake/phpmake/issues) ![repo size](https://img.shields.io/github/repo-size/phpmake/phpmake) [![GitHub license](https://img.shields.io/github/license/phpmake/phpmake)](LICENSE) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.txt)
+[![current version](https://img.shields.io/packagist/v/phpmake/phpmake.svg)](https://packagist.org/packages/phpmake/phpmake) [![Build and Test](https://github.com/phpmake/phpmake/actions/workflows/default.yml/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/default.yml) [![CodeQL](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql) [![Dependabot Updates](https://github.com/phpmake/phpmake/actions/workflows/dependabot/dependabot-updates)
+](https://github.com/phpmake/phpmake/actions/workflows/dependabot/dependabot-updates)
+[![PHP](https://img.shields.io/badge/PHP-8.3-617CBE)](https://php.net/) [![issues](https://img.shields.io/github/issues/phpmake/phpmake)](https://github.com/phpmake/phpmake/issues) ![repo size](https://img.shields.io/github/repo-size/phpmake/phpmake) [![GitHub license](https://img.shields.io/github/license/phpmake/phpmake)](LICENSE) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](documents/CONTRIBUTING.txt)
 
 ![Logo](resources/images/logo.png)
 
@@ -67,7 +68,7 @@ PHPMake is a well-architected, modern PHP build tool that follows best practices
 |-----------------|---------------|-------------|----------------|
 | dev-main        | `main`        | 8.3         | Active         |
 | 2.*             | `main`        | 8.3         | Active         |
-| 1.*             | `main-php7.4` | 7.4         | Maintenance         |
+| 1.*             | `main-php7.4` | 7.4         | Maintenance    |
 
 * **Active**: Full support
 * **Maintenance**: Bug/Security fixes only
@@ -204,7 +205,7 @@ See [build.json.example](build.json.example) file.
 
 ## FAQ
 
-See [FAQ.txt](FAQ.txt) file.
+See [FAQ.txt](documents/FAQ.txt) file.
 
 ## Support
 
@@ -212,11 +213,11 @@ For any question, issues and feature requests, [open an issue.](https://github.c
 
 ## Changelog
 
-See [CHANGELOG.txt](CHANGELOG.txt) file.
+See [CHANGELOG.txt](documents/CHANGELOG.txt) file.
 
 ## ToDo
 
-See [TODO.txt](TODO.txt) file.
+See [TODO.txt](documents/TODO.txt) file.
 
 ## Contributing
 
@@ -226,23 +227,23 @@ Contributions are welcome! Please follow these steps:
 2. Create a new branch for your feature or bugfix.
 3. Submit a pull request with a detailed description of your changes.
 
-For more details see [CONTRIBUTING.txt](CONTRIBUTING.txt).
+For more details see [CONTRIBUTING.txt](documents/CONTRIBUTING.txt).
 
 ## Code of Conduct
 
-See [CODE_OF_CONDUCT.txt](CODE_OF_CONDUCT.txt) file.
+See [CODE_OF_CONDUCT.txt](documents/CODE_OF_CONDUCT.txt) file.
 
 ## DCO
 
-See [DCO.txt](DCO.txt) file.
+See [DCO.txt](documents/DCO.txt) file.
 
 ## Contributors
 
-See [CONTRIBUTORS.txt](CONTRIBUTORS.txt) file.
+See [CONTRIBUTORS.txt](documents/CONTRIBUTORS.txt) file.
 
 ## Notice
 
-See [NOTICE.txt](NOTICE.txt) file.
+See [NOTICE.txt](documents/NOTICE.txt) file.
 
 ## License
 
