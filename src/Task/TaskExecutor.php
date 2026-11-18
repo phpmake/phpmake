@@ -19,13 +19,11 @@ final class TaskExecutor
         foreach ($executionOrder as $targetName) {
             if (!is_string($targetName) || !array_key_exists($targetName, $targets) || !is_array($targets[$targetName])) {
                 fwrite(STDERR, sprintf("Error: Execution order references missing target '%s'.%s", (string) $targetName, PHP_EOL));
-                }
                 return 1;
             }
             $currentTarget = $targets[$targetName];
             if (!isset($currentTarget['tasks']) || !is_array($currentTarget['tasks'])) {
                 fwrite(STDERR, sprintf("Error: Target '%s' has no valid tasks array.%s", $targetName, PHP_EOL));
-                }
                 return 1;
             }
             if (!$silent) {
