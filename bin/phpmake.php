@@ -85,12 +85,33 @@ try {
             exit(1);
         }
 
-        if (copy($sampleFile, $destFile)) {
-            echo "Sample build.json created successfully.\n";
+        $source = @fopen($sampleFile, 'rb');
+        if ($source === false) {
+            fwrite(STDERR, "Error: Failed to read sample build configuration.\\n");
+            exit(1);
+        }
+
+        // Exclusive creation never follows an existing file or symbolic link.
+        $destination = @fopen($destFile, 'xb');
+        if ($destination === false) {
+            fclose($source);
+            fwrite(STDERR, "Error: Failed to create build.json.\\n");
+            exit(1);
+        }
+
+        $expectedSize = filesize($sampleFile);
+        $copied = stream_copy_to_stream($source, $destination);
+        $flushed = fflush($destination);
+        fclose($source);
+        fclose($destination);
+
+        if ($copied !== false && $expectedSize !== false && $copied === $expectedSize && $flushed) {
+            echo "Sample build.json created successfully.\\n";
             exit(0);
         }
 
-        fwrite(STDERR, "Error: Failed to create build.json.\n");
+        @unlink($destFile);
+        fwrite(STDERR, "Error: Failed to create build.json.\\n");
         exit(1);
     }
 
