@@ -121,61 +121,82 @@ final class PathSafetyTest extends TestCase
     public function testRejectsSymlinkedAncestorEscapingProject(): void
     {
         // Arrange
+        $originalCwd = getcwd();
+        $project = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-project-' . uniqid('', true);
         $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-outside-' . uniqid('', true);
-        $link = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-link-' . uniqid('', true);
+        $link = $project . DIRECTORY_SEPARATOR . 'link';
+        mkdir($project);
         mkdir($outside);
-        $this->createDirectoryLink($outside, $link);
+
         try {
-            $this->expectException(\InvalidArgumentException::class);
+            self::assertTrue(chdir($project));
+            $this->createDirectoryLink($outside, $link);
+
+            $this->expectException(\\InvalidArgumentException::class);
             $this->expectExceptionMessage('Safety Violation');
-        // Act
+            // Act
             new DeleteTask(['path' => $link . DIRECTORY_SEPARATOR . 'victim.txt'], $this->logger);
         } finally {
-            $this->removeDirectoryLink($link);
+            if (is_dir($link) || is_link($link)) {
+                $this->removeDirectoryLink($link);
+            }
+            chdir($originalCwd);
             rmdir($outside);
+            rmdir($project);
         }
     }
 
-    /** Reports failure when a recursive copy encounters a symlink. */
     public function testCopyPropagatesNestedSymlinkFailure(): void
     {
         // Arrange
-        $source = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-copy-src-' . uniqid('', true);
-        $dest = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-copy-dest-' . uniqid('', true);
+        $originalCwd = getcwd();
+        $project = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-copy-project-' . uniqid('', true);
+        $source = $project . DIRECTORY_SEPARATOR . 'source';
+        $dest = $project . DIRECTORY_SEPARATOR . 'destination';
         $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-copy-outside-' . uniqid('', true);
+        mkdir($project);
         mkdir($source);
         mkdir($outside);
         file_put_contents($outside . DIRECTORY_SEPARATOR . 'secret.txt', 'secret');
-        $this->createDirectoryLink($outside, $source . DIRECTORY_SEPARATOR . 'linked');
+
         try {
+            self::assertTrue(chdir($project));
+            $this->createDirectoryLink($outside, $source . DIRECTORY_SEPARATOR . 'linked');
             $task = new CopyTask(['source' => $source, 'dest' => $dest], $this->logger);
-        // Act
+            // Act
             $this->assertFalse($task->execute(false, true));
             $this->assertFileDoesNotExist($dest . DIRECTORY_SEPARATOR . 'linked' . DIRECTORY_SEPARATOR . 'secret.txt');
         } finally {
-            $this->removeDirectoryLink($source . DIRECTORY_SEPARATOR . 'linked');
-            rmdir($source);
+            if (is_dir($source . DIRECTORY_SEPARATOR . 'linked') || is_link($source . DIRECTORY_SEPARATOR . 'linked')) {
+                $this->removeDirectoryLink($source . DIRECTORY_SEPARATOR . 'linked');
+            }
             if (is_dir($dest)) {
                 rmdir($dest);
             }
             unlink($outside . DIRECTORY_SEPARATOR . 'secret.txt');
+            chdir($originalCwd);
+            rmdir($source);
             rmdir($outside);
+            rmdir($project);
         }
     }
 
-    /** Removes an in-project symlink while preserving its external target. */
     public function testDeleteRemovesSymlinkWithoutDeletingItsTarget(): void
     {
         // Arrange
+        $originalCwd = getcwd();
+        $project = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-delete-project-' . uniqid('', true);
         $target = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-delete-target-' . uniqid('', true);
-        $link = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-delete-link-' . uniqid('', true);
+        $link = $project . DIRECTORY_SEPARATOR . 'link';
+        mkdir($project);
         mkdir($target);
         file_put_contents($target . DIRECTORY_SEPARATOR . 'keep.txt', 'keep me');
-        $this->createDirectoryLink($target, $link);
 
         try {
+            self::assertTrue(chdir($project));
+            $this->createDirectoryLink($target, $link);
             $task = new DeleteTask(['path' => $link], $this->logger);
-        // Act
+            // Act
             $this->assertTrue($task->execute(false, true));
             $this->assertDirectoryDoesNotExist($link);
             $this->assertFileExists($target . DIRECTORY_SEPARATOR . 'keep.txt');
@@ -187,9 +208,9 @@ final class PathSafetyTest extends TestCase
             if (is_file($target . DIRECTORY_SEPARATOR . 'keep.txt')) {
                 unlink($target . DIRECTORY_SEPARATOR . 'keep.txt');
             }
-            if (is_dir($target)) {
-                rmdir($target);
-            }
+            chdir($originalCwd);
+            rmdir($target);
+            rmdir($project);
         }
     }
 }
