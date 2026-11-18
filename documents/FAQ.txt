@@ -9,7 +9,7 @@ A: PHP 8.3+, Composer 2+, and the `ctype`, `json`, `random`, and `zip` PHP exten
 
 Q: How do I create a sample build.json?
 A:
-php vendor/bin/phpmake --init
+php vendor/bin/phpmake.php --init
 
 Q: Is the `version` in `build.json` the PHPMake package version?
 A: No. It identifies the build configuration/project version and is independent of the installed PHPMake release.
