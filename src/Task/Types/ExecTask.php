@@ -199,6 +199,8 @@ PHP;
      */
     private function terminateProcessTree($process, ?int $processPid, bool $processGroupCreated): void
     {
+        $processWasRunning = proc_get_status($process)['running'] ?? false;
+
         if (PHP_OS_FAMILY === 'Windows' && $processPid !== null) {
             $systemRoot = getenv('SystemRoot') ?: 'C:\\Windows';
             $taskkill = $systemRoot . DIRECTORY_SEPARATOR . 'System32'
@@ -256,13 +258,15 @@ PHP;
                 if (proc_close($fallback) === 0) {
                     return;
                 }
-                $this->logger->error(sprintf(
-                    'Windows process-tree termination failed for PID %s: taskkill=%s PowerShell=%s',
-                    (string) $processPid,
-                    trim($taskkillError),
-                    trim($fallbackError)
-                ));
-            } else {
+                if ($processWasRunning) {
+                    $this->logger->error(sprintf(
+                        'Windows process-tree termination failed for PID %s: taskkill=%s PowerShell=%s',
+                        (string) $processPid,
+                        trim($taskkillError),
+                        trim($fallbackError)
+                    ));
+                }
+            } elseif ($processWasRunning) {
                 $this->logger->error(sprintf(
                     'Unable to start Windows process-tree termination fallback for PID %s: %s',
                     (string) $processPid,
