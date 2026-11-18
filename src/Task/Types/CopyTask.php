@@ -28,6 +28,10 @@ final class CopyTask extends BaseTask
     /** Copies one file after ensuring its destination directory exists. */
     private function copyFile(string $source, string $dest): bool
     {
+        if ($this->isSymbolicLinkOrJunction($dest)) {
+            $this->logger->error(sprintf("Refusing to write through destination link '%s'.", $dest));
+            return false;
+        }
         if ($this->isSymbolicLinkOrJunction($source)) {
             $this->logger->error(sprintf("Refusing to copy symlink '%s'.", $source));
             return false;
@@ -52,6 +56,10 @@ final class CopyTask extends BaseTask
     {
         if ($this->isSymbolicLinkOrJunction($source)) {
             $this->logger->error(sprintf("Refusing to traverse symlink directory '%s'.", $source));
+            return false;
+        }
+        if ($this->isSymbolicLinkOrJunction($dest)) {
+            $this->logger->error(sprintf("Refusing to copy through destination link '%s'.", $dest));
             return false;
         }
         if ($this->destinationIsWithinSource($source, $dest)) {
