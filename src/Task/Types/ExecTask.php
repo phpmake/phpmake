@@ -18,6 +18,10 @@ final class ExecTask extends BaseTask
             throw new \InvalidArgumentException('Exec timeout must be greater than 0 and at most 86400 seconds.');
         }
 
+        if (!self::hasBalancedQuotes($command)) {
+            throw new \\InvalidArgumentException('Exec command contains an unbalanced quote.');
+        }
+
         $argv = self::tokenizeCommand($command);
         if ($argv === []) {
             throw new \InvalidArgumentException('Exec command is empty.');
@@ -144,6 +148,31 @@ final class ExecTask extends BaseTask
         )) {
             throw new \InvalidArgumentException("Exec task 'timeout' must be greater than 0 and at most 86400 seconds.");
         }
+    }
+
+    /** Checks that single and double quoted command segments are closed. */
+    private static function hasBalancedQuotes(string $command): bool
+    {
+        $quote = null;
+        $length = strlen($command);
+        for ($i = 0; $i < $length; ++$i) {
+            $character = $command[$i];
+            if ($quote !== null) {
+                if ($character === '\\\\' && $i + 1 < $length
+                    && ($command[$i + 1] === $quote || $command[$i + 1] === '\\\\')) {
+                    ++$i;
+                    continue;
+                }
+                if ($character === $quote) {
+                    $quote = null;
+                }
+                continue;
+            }
+            if ($character === '"' || $character === "'") {
+                $quote = $character;
+            }
+        }
+        return $quote === null;
     }
 
     /**
