@@ -65,7 +65,14 @@ final class CopyTask extends BaseTask
             $this->logger->error(sprintf("Unable to resolve destination directory '%s'.", $destDir));
             return false;
         }
+        $this->assertSafePath($resolvedDestDir, 'copy destination directory');
+        $this->assertSafePath($dest, 'copy dest', false);
+        if ($this->isSymbolicLinkOrJunction($dest)) {
+            $this->logger->error(sprintf("Refusing to write through destination link '%s'.", $dest));
+            return false;
+        }
         $destPath = realpath($dest) ?: $resolvedDestDir . DIRECTORY_SEPARATOR . basename($dest);
+        $this->assertSafePath($destPath, 'copy dest', false);
 
         // Staging in the destination directory keeps publication on one volume.
         $temporary = @tempnam($resolvedDestDir, '.phpmake-copy-');
