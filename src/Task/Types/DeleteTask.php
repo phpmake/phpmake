@@ -14,6 +14,7 @@ final class DeleteTask extends BaseTask
         if ($path === '') {
             throw new \InvalidArgumentException("Missing 'path' parameter.");
         }
+        $this->assertSafeDeletePath($path);
         if (!file_exists($path) && !$this->isSymbolicLinkOrJunction($path)) {
             $this->logger->debug(sprintf("Path '%s' does not exist.", $path));
             return true;
@@ -78,8 +79,12 @@ final class DeleteTask extends BaseTask
         if (!isset($this->params['path']) || !is_string($this->params['path'])) {
             throw new \InvalidArgumentException("Delete task requires a string 'path' parameter.");
         }
-        $path = $this->params['path'];
+        $this->assertSafeDeletePath($this->params['path']);
+    }
 
+    /** Revalidates the path immediately before deleting it. */
+    private function assertSafeDeletePath(string $path): void
+    {
         // Deleting a symlink removes the link, not its target. Validate its
         // parent directory instead of resolving the final symlink target.
         if ($this->isSymbolicLinkOrJunction($path)) {
