@@ -51,7 +51,7 @@ final class ExecTask extends BaseTask
         $processPidPath = null;
         if (
             PHP_OS_FAMILY === 'Windows'
-            || (!$hasPosixExtension && $setsidExecutable !== null)
+            || (!$hasPosixExtension && $hasPosixProcessGroups)
         ) {
             $pidPath = tempnam(sys_get_temp_dir(), 'phpmake-pid-');
             $processPidPath = $pidPath === false ? null : $pidPath;
