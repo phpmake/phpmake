@@ -41,7 +41,10 @@ final class BuildValidator
         }
 
         foreach ($targets as $targetName => $target) {
-            if (!is_string($targetName) || trim($targetName) === '') {
+            // json_decode(..., true) converts numeric object keys to integers.
+            // The JSON schema permits these names, so validate their string form.
+            $targetName = (string) $targetName;
+            if (trim($targetName) === '') {
                 $errors[] = 'Target names must be non-empty strings.';
             }
             if (!is_array($target)) {

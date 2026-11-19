@@ -91,8 +91,8 @@ final class ZipTaskTest extends TestCase
         }
     }
 
-    /** Uses case-insensitive output matching on Windows and default macOS volumes. */
-    public function testArchiveExcludesOutputWithDifferentPathCasing(): void
+    /** Excludes the output archive only when the configured path aliases the same filesystem entry. */
+    public function testArchiveExcludesOutputWhenPathCaseAliasesIt(): void
     {
         // Arrange
         if (!class_exists(\ZipArchive::class)) {
@@ -109,6 +109,12 @@ final class ZipTaskTest extends TestCase
         $actualOutput = $root . DIRECTORY_SEPARATOR . 'archive.zip';
         $configuredOutput = $root . DIRECTORY_SEPARATOR . 'ARCHIVE.ZIP';
         file_put_contents($actualOutput, '');
+        $actualStat = @stat($actualOutput);
+        $configuredStat = @stat($configuredOutput);
+        $pathsAlias = is_array($actualStat)
+            && is_array($configuredStat)
+            && $actualStat['dev'] === $configuredStat['dev']
+            && $actualStat['ino'] === $configuredStat['ino'];
 
         try {
             $task = new ZipTask(['source' => $root, 'output' => $configuredOutput], new Logger(false, true, true));
@@ -119,10 +125,15 @@ final class ZipTaskTest extends TestCase
             // Assert
             $zip = new \ZipArchive();
             self::assertTrue($zip->open($configuredOutput));
-            self::assertSame(1, $zip->numFiles);
-            self::assertSame('input.txt', $zip->getNameIndex(0));
+            self::assertSame($pathsAlias ? 1 : 2, $zip->numFiles);
+            self::assertNotFalse($zip->locateName('input.txt'));
+            self::assertFalse($zip->locateName('ARCHIVE.ZIP'));
+            self::assertSame($pathsAlias, $zip->locateName('archive.zip') === false);
             $zip->close();
         } finally {
+            if (file_exists($configuredOutput)) {
+                unlink($configuredOutput);
+            }
             if (file_exists($actualOutput)) {
                 unlink($actualOutput);
             }
