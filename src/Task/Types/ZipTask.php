@@ -138,7 +138,7 @@ final class ZipTask extends BaseTask
     private function addFilesToZip(ZipArchive $zip, string $source, array $excludedPaths): void
     {
         if ($this->isSymbolicLinkOrJunction($source)) {
-            throw new \\RuntimeException('Archive source cannot be a symlink.');
+            throw new \RuntimeException('Archive source cannot be a symlink.');
         }
         $this->assertSafePath($source, 'archive input');
         if (is_file($source)) {
