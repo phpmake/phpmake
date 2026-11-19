@@ -45,20 +45,17 @@ final class ExecTask extends BaseTask
                 && self::findExecutable('kill') !== null;
         }
 
-        if (PHP_OS_FAMILY === 'Windows') {
-            $processOptions['create_process_group'] = true;
-        }
-
         $processPidPath = null;
-        if (
-            PHP_OS_FAMILY === 'Windows'
-            || (!$hasPosixExtension && $hasPosixProcessGroups)
-        ) {
+        if (!$hasPosixExtension && $hasPosixProcessGroups) {
             $pidPath = tempnam(sys_get_temp_dir(), 'phpmake-pid-');
             $processPidPath = $pidPath === false ? null : $pidPath;
         }
 
-        if (PHP_OS_FAMILY === 'Windows' || $hasPosixProcessGroups) {
+        if (PHP_OS_FAMILY === 'Windows') {
+            // The PowerShell launcher creates the target suspended, assigns it
+            // to a kill-on-close Job Object, and only then resumes execution.
+            $launchArgv = self::buildWindowsJobLauncher($argv);
+        } elseif ($hasPosixProcessGroups) {
             // Keep a stable launcher alive while the configured command runs.
             // On POSIX, establish its session before spawning the target process.
             $launcher = <<<'PHP_WRAP'
@@ -277,6 +274,294 @@ final class ExecTask extends BaseTask
         return $exitCode === 0;
     }
 
+    /**
+     * Builds a PowerShell launcher that places the target in a Windows Job
+     * Object before it can execute. Closing the launcher closes the Job handle
+     * and terminates every process still assigned to the job.
+     *
+     * @param list<string> $argv
+     * @return list<string>
+     */
+    private static function buildWindowsJobLauncher(array $argv): array
+    {
+        $payload = base64_encode(json_encode($argv, JSON_THROW_ON_ERROR));
+        $source = <<<'CSHARP'
+using System;
+using System.ComponentModel;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+
+public static class PhpMakeJobRunner
+{
+    private const uint CreateSuspended = 0x00000004;
+    private const uint CreateNoWindow = 0x08000000;
+    private const uint StartfUseStdHandles = 0x00000100;
+    private const uint JobObjectLimitKillOnJobClose = 0x00002000;
+    private const uint WaitObject0 = 0;
+    private const uint Infinite = 0xFFFFFFFF;
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct StartupInfo
+    {
+        public int cb;
+        public string lpReserved;
+        public string lpDesktop;
+        public string lpTitle;
+        public int dwX;
+        public int dwY;
+        public int dwXSize;
+        public int dwYSize;
+        public int dwXCountChars;
+        public int dwYCountChars;
+        public int dwFillAttribute;
+        public uint dwFlags;
+        public short wShowWindow;
+        public short cbReserved2;
+        public IntPtr lpReserved2;
+        public IntPtr hStdInput;
+        public IntPtr hStdOutput;
+        public IntPtr hStdError;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct ProcessInformation
+    {
+        public IntPtr hProcess;
+        public IntPtr hThread;
+        public uint dwProcessId;
+        public uint dwThreadId;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct BasicLimitInformation
+    {
+        public long PerProcessUserTimeLimit;
+        public long PerJobUserTimeLimit;
+        public uint LimitFlags;
+        public UIntPtr MinimumWorkingSetSize;
+        public UIntPtr MaximumWorkingSetSize;
+        public uint ActiveProcessLimit;
+        public UIntPtr Affinity;
+        public uint PriorityClass;
+        public uint SchedulingClass;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct IoCounters
+    {
+        public ulong ReadOperationCount;
+        public ulong WriteOperationCount;
+        public ulong OtherOperationCount;
+        public ulong ReadTransferCount;
+        public ulong WriteTransferCount;
+        public ulong OtherTransferCount;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct ExtendedLimitInformation
+    {
+        public BasicLimitInformation BasicLimitInformation;
+        public IoCounters IoInfo;
+        public UIntPtr ProcessMemoryLimit;
+        public UIntPtr JobMemoryLimit;
+        public UIntPtr PeakProcessMemoryUsed;
+        public UIntPtr PeakJobMemoryUsed;
+    }
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern IntPtr CreateJobObject(IntPtr attributes, string name);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool SetInformationJobObject(
+        IntPtr job, int informationClass, IntPtr information, uint informationLength);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern bool CreateProcess(
+        string applicationName, StringBuilder commandLine, IntPtr processAttributes,
+        IntPtr threadAttributes, bool inheritHandles, uint creationFlags,
+        IntPtr environment, string currentDirectory, ref StartupInfo startupInfo,
+        out ProcessInformation processInformation);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool AssignProcessToJobObject(IntPtr job, IntPtr process);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern uint ResumeThread(IntPtr thread);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern uint WaitForSingleObject(IntPtr handle, uint milliseconds);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool GetExitCodeProcess(IntPtr process, out uint exitCode);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool TerminateProcess(IntPtr process, uint exitCode);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool CloseHandle(IntPtr handle);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr GetStdHandle(int standardHandle);
+
+    private static Exception LastError(string operation)
+    {
+        return new Win32Exception(Marshal.GetLastWin32Error(), operation);
+    }
+
+    private static string Quote(string value)
+    {
+        var result = new StringBuilder("\"");
+        var backslashes = 0;
+        foreach (var character in value)
+        {
+            if (character == '\\')
+            {
+                backslashes++;
+                continue;
+            }
+
+            if (character == '"')
+            {
+                result.Append('\\', (backslashes * 2) + 1);
+                result.Append('"');
+                backslashes = 0;
+                continue;
+            }
+
+            result.Append('\\', backslashes);
+            result.Append(character);
+            backslashes = 0;
+        }
+
+        result.Append('\\', backslashes * 2);
+        result.Append('"');
+        return result.ToString();
+    }
+
+    public static int Run(string[] arguments)
+    {
+        if (arguments == null || arguments.Length == 0 || String.IsNullOrWhiteSpace(arguments[0]))
+        {
+            throw new ArgumentException("The configured process argument vector is empty.");
+        }
+
+        var job = CreateJobObject(IntPtr.Zero, null);
+        if (job == IntPtr.Zero)
+        {
+            throw LastError("CreateJobObject failed.");
+        }
+
+        ProcessInformation process = new ProcessInformation();
+        var processCreated = false;
+        var processResumed = false;
+        try
+        {
+            var limits = new ExtendedLimitInformation();
+            limits.BasicLimitInformation.LimitFlags = JobObjectLimitKillOnJobClose;
+            var size = Marshal.SizeOf(typeof(ExtendedLimitInformation));
+            var memory = Marshal.AllocHGlobal(size);
+            try
+            {
+                Marshal.StructureToPtr(limits, memory, false);
+                if (!SetInformationJobObject(job, 9, memory, (uint)size))
+                {
+                    throw LastError("SetInformationJobObject failed.");
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(memory);
+            }
+
+            var commandLine = new StringBuilder(String.Join(" ", arguments.Select(Quote)));
+            var startup = new StartupInfo();
+            startup.cb = Marshal.SizeOf(typeof(StartupInfo));
+            startup.dwFlags = StartfUseStdHandles;
+            startup.hStdInput = GetStdHandle(-10);
+            startup.hStdOutput = GetStdHandle(-11);
+            startup.hStdError = GetStdHandle(-12);
+
+            if (!CreateProcess(
+                arguments[0], commandLine, IntPtr.Zero, IntPtr.Zero, true,
+                CreateSuspended | CreateNoWindow, IntPtr.Zero, Environment.CurrentDirectory,
+                ref startup, out process))
+            {
+                throw LastError("CreateProcess failed.");
+            }
+
+            processCreated = true;
+            if (!AssignProcessToJobObject(job, process.hProcess))
+            {
+                throw LastError("AssignProcessToJobObject failed; the suspended process was not started.");
+            }
+
+            if (ResumeThread(process.hThread) == 0xFFFFFFFF)
+            {
+                throw LastError("ResumeThread failed.");
+            }
+
+            processResumed = true;
+            if (WaitForSingleObject(process.hProcess, Infinite) != WaitObject0)
+            {
+                throw LastError("Waiting for the configured process failed.");
+            }
+
+            uint exitCode;
+            if (!GetExitCodeProcess(process.hProcess, out exitCode))
+            {
+                throw LastError("GetExitCodeProcess failed.");
+            }
+
+            return unchecked((int)exitCode);
+        }
+        finally
+        {
+            if (processCreated && !processResumed && process.hProcess != IntPtr.Zero)
+            {
+                TerminateProcess(process.hProcess, 125);
+            }
+
+            if (process.hThread != IntPtr.Zero)
+            {
+                CloseHandle(process.hThread);
+            }
+
+            if (process.hProcess != IntPtr.Zero)
+            {
+                CloseHandle(process.hProcess);
+            }
+
+            // KILL_ON_JOB_CLOSE also cleans up background descendants after
+            // the configured parent process exits normally.
+            CloseHandle(job);
+        }
+    }
+}
+CSHARP;
+        $script = '$ErrorActionPreference = "Stop"; '
+            . 'try { Add-Type -TypeDefinition @\''
+            . "\n" . $source . "\n"
+            . "'@ -Language CSharp; "
+            . '$payload = "' . $payload . '"; '
+            . '$arguments = [string[]](ConvertFrom-Json ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($payload)))); '
+            . 'exit [PhpMakeJobRunner]::Run($arguments) '
+            . '} catch { [Console]::Error.WriteLine($_.Exception.ToString()); exit 125 }';
+
+        $systemRoot = getenv('SystemRoot') ?: 'C:\\Windows';
+        $powerShell = $systemRoot . DIRECTORY_SEPARATOR . 'System32'
+            . DIRECTORY_SEPARATOR . 'WindowsPowerShell' . DIRECTORY_SEPARATOR
+            . 'v1.0' . DIRECTORY_SEPARATOR . 'powershell.exe';
+
+        return [
+            $powerShell,
+            '-NoProfile',
+            '-NonInteractive',
+            '-Command',
+            $script,
+        ];
+    }
+
     /** Finds an executable in PATH without invoking a command shell. */
     private static function findExecutable(string $name): ?string
     {
@@ -461,95 +746,17 @@ final class ExecTask extends BaseTask
     ): void {
         $processWasRunning = proc_get_status($process)['running'] ?? false;
 
-        if (PHP_OS_FAMILY === 'Windows' && $processPid !== null) {
-            $systemRoot = getenv('SystemRoot') ?: 'C:\\Windows';
-            $taskkill = $systemRoot . DIRECTORY_SEPARATOR . 'System32'
-                . DIRECTORY_SEPARATOR . 'taskkill.exe';
-            $taskkillError = '';
-            $taskkillSucceeded = false;
-            foreach (array_unique(array_filter([$launcherPid, $processPid], static fn($pid): bool => is_int($pid) && $pid > 0)) as $targetPid) {
-                $terminator = @proc_open(
-                    [$taskkill, '/PID', (string) $targetPid, '/T', '/F'],
-                    [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
-                    $pipes,
-                    null,
-                    null,
-                    ['bypass_shell' => true]
-                );
-                if (!is_resource($terminator)) {
-                    $taskkillError .= sprintf('Unable to start taskkill for PID %d. ', $targetPid);
-                    continue;
-                }
-
-                fclose($pipes[0]);
-                stream_get_contents($pipes[1]);
-                $taskkillError .= (string) stream_get_contents($pipes[2]);
-                fclose($pipes[1]);
-                fclose($pipes[2]);
-                if (proc_close($terminator) === 0) {
-                    $taskkillSucceeded = true;
-                }
+        if (PHP_OS_FAMILY === 'Windows') {
+            // The PowerShell launcher owns the Job Object. Terminating it
+            // closes the last Job handle, enforcing KILL_ON_JOB_CLOSE for the
+            // target and every descendant, including detached descendants.
+            proc_terminate($process, 15);
+            usleep(100000);
+            if (proc_get_status($process)['running'] ?? false) {
+                proc_terminate($process, 9);
             }
 
-            // taskkill /T normally handles live descendants, but a child may
-            // have outlived an intermediate parent. Sweep the captured parent
-            // PID chain as well, rooted at both the launcher and target process.
-            $powerShell = $systemRoot . DIRECTORY_SEPARATOR . 'System32'
-                . DIRECTORY_SEPARATOR . 'WindowsPowerShell' . DIRECTORY_SEPARATOR
-                . 'v1.0' . DIRECTORY_SEPARATOR . 'powershell.exe';
-            $rootPids = array_values(array_unique(array_filter(
-                [$launcherPid, $processPid],
-                static fn($pid): bool => is_int($pid) && $pid > 0
-            )));
-            $rootPidList = implode(',', $rootPids);
-            $script = '$rootPids = @(' . $rootPidList . '); '
-                . '$all = @(Get-CimInstance -ClassName Win32_Process); '
-                . '$queue = [System.Collections.Generic.Queue[int]]::new(); '
-                . '$descendants = [System.Collections.Generic.List[int]]::new(); '
-                . 'foreach ($rootPid in $rootPids) { $queue.Enqueue([int]$rootPid) }; '
-                . 'while ($queue.Count -gt 0) { $parent = $queue.Dequeue(); '
-                . 'foreach ($item in $all) { if ([int]$item.ParentProcessId -eq $parent) { '
-                . '$child = [int]$item.ProcessId; if (-not $descendants.Contains($child)) { '
-                . '$descendants.Add($child); $queue.Enqueue($child) } } } }; '
-                . 'foreach ($child in $descendants) { Stop-Process -Id $child -Force -ErrorAction SilentlyContinue }; '
-                . 'foreach ($rootPid in $rootPids) { Stop-Process -Id $rootPid -Force -ErrorAction SilentlyContinue }';
-            $fallback = @proc_open(
-                [$powerShell, '-NoProfile', '-NonInteractive', '-Command', $script],
-                [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
-                $fallbackPipes,
-                null,
-                null,
-                ['bypass_shell' => true]
-            );
-            if (is_resource($fallback)) {
-                fclose($fallbackPipes[0]);
-                stream_get_contents($fallbackPipes[1]);
-                $fallbackError = (string) stream_get_contents($fallbackPipes[2]);
-                fclose($fallbackPipes[1]);
-                fclose($fallbackPipes[2]);
-                if (proc_close($fallback) === 0) {
-                    return;
-                }
-
-                if ($processWasRunning && !$taskkillSucceeded) {
-                    $this->logger->error(sprintf(
-                        'Windows process-tree termination failed for PID %s: taskkill=%s PowerShell=%s',
-                        (string) $processPid,
-                        trim($taskkillError),
-                        trim($fallbackError)
-                    ));
-                }
-            } elseif ($processWasRunning && !$taskkillSucceeded) {
-                $this->logger->error(sprintf(
-                    'Unable to start Windows process-tree termination fallback for PID %s: %s',
-                    (string) $processPid,
-                    trim($taskkillError)
-                ));
-            }
-
-            if ($taskkillSucceeded) {
-                return;
-            }
+            return;
         }
 
         // The launcher creates the session, so the recorded launcher PID is
