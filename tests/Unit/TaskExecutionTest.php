@@ -533,8 +533,8 @@ final class TaskExecutionTest extends TestCase
         $autoload = getcwd() . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
         $workerCode = <<<'PHP'
 require $argv[1];
-$logger = new \PhpMake\\Utilities\\Logger(false, true, true);
-$task = new \PhpMake\\Task\\Types\\ExecTask([
+$logger = new \PhpMake\Utilities\Logger(false, true, true);
+$task = new \PhpMake\Task\Types\ExecTask([
     'command' => PHP_BINARY,
     'args' => [
         '-r',
