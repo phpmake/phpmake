@@ -200,7 +200,7 @@ final class ZipTaskTest extends TestCase
     public function testArchiveInputLimitPreservesExistingOutput(): void
     {
         // Arrange
-        if (!class_exists(\\ZipArchive::class)) {
+        if (!class_exists(\ZipArchive::class)) {
             self::markTestSkipped('ext-zip is not available.');
         }
 
@@ -212,8 +212,8 @@ final class ZipTaskTest extends TestCase
         self::assertTrue(ftruncate($handle, 536870913));
         fclose($handle);
 
-        $original = new \\ZipArchive();
-        self::assertTrue($original->open($output, \\ZipArchive::CREATE | \\ZipArchive::OVERWRITE));
+        $original = new \ZipArchive();
+        self::assertTrue($original->open($output, \ZipArchive::CREATE | \ZipArchive::OVERWRITE));
         self::assertTrue($original->addFromString('preserve.txt', 'original archive'));
         self::assertTrue($original->close());
 
@@ -223,7 +223,7 @@ final class ZipTaskTest extends TestCase
             self::assertFalse($task->execute(false, true));
 
             // Assert
-            $preserved = new \\ZipArchive();
+            $preserved = new \ZipArchive();
             self::assertTrue($preserved->open($output));
             self::assertSame('original archive', $preserved->getFromName('preserve.txt'));
             self::assertTrue($preserved->close());
