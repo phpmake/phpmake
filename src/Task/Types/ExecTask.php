@@ -324,7 +324,7 @@ PHP;
      * Terminates the process and descendants without invoking a shell.
      *
      * Windows uses taskkill's process-tree switch. POSIX platforms use a
-     * dedicated process group when the POSIX extension is available.
+     * dedicated process group when ext-posix or the setsid/kill utilities are available.
      */
     private function terminateProcessTree($process, ?int $processPid, bool $processGroupCreated, ?int $launcherPid = null): void
     {
