@@ -103,6 +103,61 @@ final class FilesystemPathResolutionTest extends TestCase
         }
     }
 
+    /** Revalidates filesystem paths after an ancestor is replaced by an external link. */
+    public function testFilesystemTasksRevalidatePathsImmediatelyBeforeExecution(): void
+    {
+        // Arrange
+        $safeDirectory = $this->root . DIRECTORY_SEPARATOR . 'replaceable';
+        $savedDirectory = $this->root . DIRECTORY_SEPARATOR . 'replaceable-original';
+        $outsideVictim = $this->outside . DIRECTORY_SEPARATOR . 'subdir' . DIRECTORY_SEPARATOR . 'victim.txt';
+        self::assertTrue(mkdir($safeDirectory));
+        self::assertSame(6, file_put_contents($safeDirectory . DIRECTORY_SEPARATOR . 'victim.txt', 'inside'));
+        self::assertSame(7, file_put_contents($outsideVictim, 'outside'));
+        self::assertSame(6, file_put_contents($this->root . DIRECTORY_SEPARATOR . 'source.txt', 'source'));
+
+        $tasks = [
+            new DeleteTask(['path' => 'replaceable' . DIRECTORY_SEPARATOR . 'victim.txt'], $this->logger),
+            new CreateDirectoryTask(['name' => 'replaceable' . DIRECTORY_SEPARATOR . 'created'], $this->logger),
+            new CopyTask([
+                'source' => 'source.txt',
+                'dest' => 'replaceable' . DIRECTORY_SEPARATOR . 'copied.txt',
+            ], $this->logger),
+            new ZipTask([
+                'source' => 'source.txt',
+                'output' => 'replaceable' . DIRECTORY_SEPARATOR . 'archive.zip',
+            ], $this->logger),
+        ];
+
+        self::assertTrue(rename($safeDirectory, $savedDirectory));
+        $this->createDirectoryLink($this->outside . DIRECTORY_SEPARATOR . 'subdir', $safeDirectory);
+
+        try {
+            // Act
+            $results = array_map(static fn($task): bool => $task->execute(false, true), $tasks);
+
+            // Assert
+            self::assertSame([false, false, false, false], $results);
+            self::assertSame('outside', file_get_contents($outsideVictim));
+            self::assertDirectoryDoesNotExist($this->outside . DIRECTORY_SEPARATOR . 'subdir' . DIRECTORY_SEPARATOR . 'created');
+            self::assertFileDoesNotExist($this->outside . DIRECTORY_SEPARATOR . 'subdir' . DIRECTORY_SEPARATOR . 'copied.txt');
+            self::assertFileDoesNotExist($this->outside . DIRECTORY_SEPARATOR . 'subdir' . DIRECTORY_SEPARATOR . 'archive.zip');
+            self::assertSame('inside', file_get_contents($savedDirectory . DIRECTORY_SEPARATOR . 'victim.txt'));
+        } finally {
+            if (is_link($safeDirectory) || $this->isDirectoryJunction($safeDirectory)) {
+                $this->removeDirectoryLink($safeDirectory);
+            }
+            if (is_dir($savedDirectory)) {
+                rename($savedDirectory, $safeDirectory);
+            }
+            if (is_file($outsideVictim)) {
+                unlink($outsideVictim);
+            }
+            if (is_file($this->root . DIRECTORY_SEPARATOR . 'source.txt')) {
+                unlink($this->root . DIRECTORY_SEPARATOR . 'source.txt');
+            }
+        }
+    }
+
     /** Asserts that construction rejects a path outside the project root. */
     private function assertRejected(callable $factory): void
     {

@@ -24,7 +24,7 @@ final readonly class BuildExecutor
      * Initializes the BuildExecutor with required components.
      *
      * @param TaskFactory        $taskFactory        Factory for creating tasks.
-     * @param DependencyResolver $dependencyResolver Resolves dependencies between tasks.
+     * @param DependencyResolver $dependencyResolver Resolves dependencies between targets.
      * @param TaskExecutor       $taskExecutor       Executes tasks in the correct order.
      */
     public function __construct(private TaskFactory $taskFactory, private DependencyResolver $dependencyResolver, private TaskExecutor $taskExecutor) {}
@@ -45,7 +45,7 @@ final readonly class BuildExecutor
     public function execute(BuildConfiguration $config, ?string $target, Logger $logger): int
     {
         $defaultTarget = $config->getDefaultTarget();
-        $target = $target ?: $defaultTarget;
+        $target = $target ?? $defaultTarget;
 
         if (!array_key_exists($target, $config->getTargets())) {
             throw new \Exception(sprintf("Target '%s' not found.", $target));

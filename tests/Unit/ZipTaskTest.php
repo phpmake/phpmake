@@ -5,11 +5,14 @@ namespace PhpMake\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use PhpMake\Task\Types\ZipTask;
 use PhpMake\Task\BaseTask;
+use PhpMake\Tests\Support\DirectoryLinkTestHelper;
 use PhpMake\Utilities\Logger;
 
-    /** Tests ZIP task structure, archive contents, and symlink handling. */
+/** Tests ZIP task structure, archive contents, and symlink handling. */
 final class ZipTaskTest extends TestCase
 {
+    use DirectoryLinkTestHelper;
+
     /**
      * This method is called before the first test method in the test class is executed.
      *
@@ -62,7 +65,7 @@ final class ZipTaskTest extends TestCase
     {
         // Arrange
         if (!class_exists(\ZipArchive::class)) {
-        // Assert
+            // Assert
             $this->markTestSkipped('ext-zip is not available.');
         }
         $root = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-self-' . uniqid('', true);
@@ -71,7 +74,7 @@ final class ZipTaskTest extends TestCase
         $output = $root . DIRECTORY_SEPARATOR . 'archive.zip';
         try {
             $task = new ZipTask(['source' => $root, 'output' => $output], new Logger(false, true, true));
-        // Act
+            // Act
             $this->assertTrue($task->execute(false, true));
             $zip = new \ZipArchive();
             $this->assertTrue($zip->open($output));
@@ -146,4 +149,50 @@ final class ZipTaskTest extends TestCase
         }
     }
 
+    /** Preserves a previously valid archive when source traversal fails. */
+    public function testArchiveFailurePreservesExistingOutput(): void
+    {
+        // Arrange
+        if (!class_exists(\ZipArchive::class)) {
+            self::markTestSkipped('ext-zip is not available.');
+        }
+
+        $root = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-transaction-' . bin2hex(random_bytes(6));
+        $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-zip-outside-' . bin2hex(random_bytes(6));
+        self::assertTrue(mkdir($root));
+        self::assertTrue(mkdir($outside));
+        $output = $root . DIRECTORY_SEPARATOR . 'archive.zip';
+        $link = $root . DIRECTORY_SEPARATOR . 'linked-directory';
+        $original = new \ZipArchive();
+        self::assertTrue($original->open($output, \ZipArchive::CREATE | \ZipArchive::OVERWRITE));
+        self::assertTrue($original->addFromString('preserve.txt', 'original archive'));
+        self::assertTrue($original->close());
+        $this->createDirectoryLink($outside, $link);
+
+        try {
+            // Act
+            $task = new ZipTask(['source' => $root, 'output' => $output], new Logger(false, true, true));
+            self::assertFalse($task->execute(false, true));
+
+            // Assert
+            $preserved = new \ZipArchive();
+            self::assertTrue($preserved->open($output));
+            self::assertSame('original archive', $preserved->getFromName('preserve.txt'));
+            self::assertTrue($preserved->close());
+            self::assertSame([], glob($root . DIRECTORY_SEPARATOR . '.phpmake-archive-*') ?: []);
+        } finally {
+            if (is_link($link) || $this->isDirectoryJunction($link)) {
+                $this->removeDirectoryLink($link);
+            }
+            if (is_file($output)) {
+                unlink($output);
+            }
+            if (is_dir($root)) {
+                rmdir($root);
+            }
+            if (is_dir($outside)) {
+                rmdir($outside);
+            }
+        }
+    }
 }
