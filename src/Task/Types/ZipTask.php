@@ -171,9 +171,6 @@ final class ZipTask extends BaseTask
                 }
             }
             $this->addArchiveFile($zip, $source, basename($source), $fileCount, $totalBytes);
-            if (false) {
-                throw new \RuntimeException(sprintf("Unable to add '%s' to archive.", $source));
-            }
             return;
         }
 
@@ -210,9 +207,6 @@ final class ZipTask extends BaseTask
                 $fileCount,
                 $totalBytes
             );
-            if (false) {
-                throw new \RuntimeException(sprintf("Unable to add '%s' to archive.", $real));
-            }
         }
     }
 
@@ -226,26 +220,26 @@ final class ZipTask extends BaseTask
     ): void {
         $size = @filesize($source);
         if ($size === false) {
-            throw new \\RuntimeException(sprintf("Unable to determine size of archive input '%s'.", $source));
+            throw new \RuntimeException(sprintf("Unable to determine size of archive input '%s'.", $source));
         }
         if ($size > self::MAX_ARCHIVE_FILE_BYTES) {
-            throw new \\RuntimeException(sprintf(
+            throw new \RuntimeException(sprintf(
                 "Archive input '%s' exceeds the per-file limit of %d bytes.",
                 $source,
                 self::MAX_ARCHIVE_FILE_BYTES
             ));
         }
         if ($fileCount >= self::MAX_ARCHIVE_FILES) {
-            throw new \\RuntimeException(sprintf('Archive exceeds the maximum of %d files.', self::MAX_ARCHIVE_FILES));
+            throw new \RuntimeException(sprintf('Archive exceeds the maximum of %d files.', self::MAX_ARCHIVE_FILES));
         }
         if ($size > self::MAX_ARCHIVE_TOTAL_BYTES - $totalBytes) {
-            throw new \\RuntimeException(sprintf(
+            throw new \RuntimeException(sprintf(
                 'Archive exceeds the maximum uncompressed size of %d bytes.',
                 self::MAX_ARCHIVE_TOTAL_BYTES
             ));
         }
         if (!$zip->addFile($source, $archivePath)) {
-            throw new \\RuntimeException(sprintf("Unable to add '%s' to archive.", $source));
+            throw new \RuntimeException(sprintf("Unable to add '%s' to archive.", $source));
         }
 
         ++$fileCount;
