@@ -177,7 +177,7 @@ final class BuildLoaderTest extends TestCase
             try {
                 (new BuildLoader())->load($this->buildFile);
                 self::fail('Malformed nested JSON shape should be rejected.');
-            } catch (\\InvalidArgumentException $exception) {
+            } catch (\InvalidArgumentException $exception) {
                 // Assert
                 self::assertStringContainsString($expectedMessage, $exception->getMessage());
             }
@@ -191,7 +191,7 @@ final class BuildLoaderTest extends TestCase
         file_put_contents($this->buildFile, str_repeat(' ', 2097153));
 
         // Assert
-        $this->expectException(\\RuntimeException::class);
+        $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('exceeds the maximum size');
         // Act
         (new BuildLoader())->load($this->buildFile);
