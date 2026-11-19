@@ -438,6 +438,48 @@ final class TaskExecutionTest extends TestCase
     }
 
 
+    /** Ensures a Windows Job Object kills background descendants after the command exits. */
+    public function testExecTaskJobObjectKillsBackgroundDescendantsAfterParentExits(): void
+    {
+        // Arrange
+        if (PHP_OS_FAMILY !== 'Windows') {
+            self::assertTrue(true, 'Windows Job Object behavior is only available on Windows.');
+            return;
+        }
+
+        $marker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-job-object-child-' . bin2hex(random_bytes(8));
+        $childCode = 'usleep(1200000); file_put_contents($argv[1], "survived");';
+        $parentCode = '$pipes = []; $child = proc_open([PHP_BINARY, "-r", '
+            . var_export($childCode, true)
+            . ', $argv[1]], [0 => ["file", "NUL", "r"], 1 => ["file", "NUL", "w"], 2 => ["file", "NUL", "w"]], $pipes);'
+            . ' if (!is_resource($child)) { exit(9); }'
+            . ' foreach ($pipes as $pipe) { if (is_resource($pipe)) { fclose($pipe); } }'
+            . ' exit(0);';
+
+        $task = new ExecTask([
+            'command' => PHP_BINARY,
+            'args' => ['-r', $parentCode, $marker],
+            'timeout' => 10,
+        ], $this->logger);
+
+        try {
+            // Act
+            self::assertTrue($task->execute(false, true));
+            usleep(1500000);
+
+            // Assert
+            self::assertFileDoesNotExist(
+                $marker,
+                'A background descendant must not outlive the completed exec task Job Object.'
+            );
+        } finally {
+            if (is_file($marker)) {
+                unlink($marker);
+            }
+        }
+    }
+
+
     /** Terminates descendants when a process exceeds the bounded output capture limit. */
     public function testExecTaskTerminatesProcessTreeWhenOutputLimitIsExceeded(): void
     {

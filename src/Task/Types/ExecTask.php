@@ -45,20 +45,17 @@ final class ExecTask extends BaseTask
                 && self::findExecutable('kill') !== null;
         }
 
-        if (PHP_OS_FAMILY === 'Windows') {
-            $processOptions['create_process_group'] = true;
-        }
-
         $processPidPath = null;
-        if (
-            PHP_OS_FAMILY === 'Windows'
-            || (!$hasPosixExtension && $hasPosixProcessGroups)
-        ) {
+        if (!$hasPosixExtension && $hasPosixProcessGroups) {
             $pidPath = tempnam(sys_get_temp_dir(), 'phpmake-pid-');
             $processPidPath = $pidPath === false ? null : $pidPath;
         }
 
-        if (PHP_OS_FAMILY === 'Windows' || $hasPosixProcessGroups) {
+        if (PHP_OS_FAMILY === 'Windows') {
+            // The PowerShell launcher creates the target suspended, assigns it
+            // to a kill-on-close Job Object, and only then resumes execution.
+            $launchArgv = self::buildWindowsJobLauncher($argv);
+        } elseif ($hasPosixProcessGroups) {
             // Keep a stable launcher alive while the configured command runs.
             // On POSIX, establish its session before spawning the target process.
             $launcher = <<<'PHP_WRAP'
@@ -277,6 +274,35 @@ final class ExecTask extends BaseTask
         return $exitCode === 0;
     }
 
+    /**
+     * Builds a PowerShell launcher that assigns the target to a Windows Job
+     * Object before it can execute. Closing the launcher closes the Job handle
+     * and terminates every process still assigned to the job.
+     *
+     * @param list<string> $argv
+     * @return list<string>
+     */
+    private static function buildWindowsJobLauncher(array $argv): array
+    {
+        $payload = base64_encode(json_encode($argv, JSON_THROW_ON_ERROR));
+        $systemRoot = getenv('SystemRoot') ?: 'C:\\Windows';
+        $powerShell = $systemRoot . DIRECTORY_SEPARATOR . 'System32'
+            . DIRECTORY_SEPARATOR . 'WindowsPowerShell' . DIRECTORY_SEPARATOR
+            . 'v1.0' . DIRECTORY_SEPARATOR . 'powershell.exe';
+        $runner = __DIR__ . DIRECTORY_SEPARATOR . 'WindowsJobRunner.ps1';
+
+        return [
+            $powerShell,
+            '-NoProfile',
+            '-NonInteractive',
+            '-ExecutionPolicy',
+            'Bypass',
+            '-File',
+            $runner,
+            $payload,
+        ];
+    }
+
     /** Finds an executable in PATH without invoking a command shell. */
     private static function findExecutable(string $name): ?string
     {
@@ -459,97 +485,17 @@ final class ExecTask extends BaseTask
         ?int $launcherPid = null,
         array $trackedDescendantPids = []
     ): void {
-        $processWasRunning = proc_get_status($process)['running'] ?? false;
-
-        if (PHP_OS_FAMILY === 'Windows' && $processPid !== null) {
-            $systemRoot = getenv('SystemRoot') ?: 'C:\\Windows';
-            $taskkill = $systemRoot . DIRECTORY_SEPARATOR . 'System32'
-                . DIRECTORY_SEPARATOR . 'taskkill.exe';
-            $taskkillError = '';
-            $taskkillSucceeded = false;
-            foreach (array_unique(array_filter([$launcherPid, $processPid], static fn($pid): bool => is_int($pid) && $pid > 0)) as $targetPid) {
-                $terminator = @proc_open(
-                    [$taskkill, '/PID', (string) $targetPid, '/T', '/F'],
-                    [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
-                    $pipes,
-                    null,
-                    null,
-                    ['bypass_shell' => true]
-                );
-                if (!is_resource($terminator)) {
-                    $taskkillError .= sprintf('Unable to start taskkill for PID %d. ', $targetPid);
-                    continue;
-                }
-
-                fclose($pipes[0]);
-                stream_get_contents($pipes[1]);
-                $taskkillError .= (string) stream_get_contents($pipes[2]);
-                fclose($pipes[1]);
-                fclose($pipes[2]);
-                if (proc_close($terminator) === 0) {
-                    $taskkillSucceeded = true;
-                }
+        if (PHP_OS_FAMILY === 'Windows') {
+            // The PowerShell launcher owns the Job Object. Terminating it
+            // closes the last Job handle, enforcing KILL_ON_JOB_CLOSE for the
+            // target and every descendant, including detached descendants.
+            proc_terminate($process, 15);
+            usleep(100000);
+            if (proc_get_status($process)['running'] ?? false) {
+                proc_terminate($process, 9);
             }
 
-            // taskkill /T normally handles live descendants, but a child may
-            // have outlived an intermediate parent. Sweep the captured parent
-            // PID chain as well, rooted at both the launcher and target process.
-            $powerShell = $systemRoot . DIRECTORY_SEPARATOR . 'System32'
-                . DIRECTORY_SEPARATOR . 'WindowsPowerShell' . DIRECTORY_SEPARATOR
-                . 'v1.0' . DIRECTORY_SEPARATOR . 'powershell.exe';
-            $rootPids = array_values(array_unique(array_filter(
-                [$launcherPid, $processPid],
-                static fn($pid): bool => is_int($pid) && $pid > 0
-            )));
-            $rootPidList = implode(',', $rootPids);
-            $script = '$rootPids = @(' . $rootPidList . '); '
-                . '$all = @(Get-CimInstance -ClassName Win32_Process); '
-                . '$queue = [System.Collections.Generic.Queue[int]]::new(); '
-                . '$descendants = [System.Collections.Generic.List[int]]::new(); '
-                . 'foreach ($rootPid in $rootPids) { $queue.Enqueue([int]$rootPid) }; '
-                . 'while ($queue.Count -gt 0) { $parent = $queue.Dequeue(); '
-                . 'foreach ($item in $all) { if ([int]$item.ParentProcessId -eq $parent) { '
-                . '$child = [int]$item.ProcessId; if (-not $descendants.Contains($child)) { '
-                . '$descendants.Add($child); $queue.Enqueue($child) } } } }; '
-                . 'foreach ($child in $descendants) { Stop-Process -Id $child -Force -ErrorAction SilentlyContinue }; '
-                . 'foreach ($rootPid in $rootPids) { Stop-Process -Id $rootPid -Force -ErrorAction SilentlyContinue }';
-            $fallback = @proc_open(
-                [$powerShell, '-NoProfile', '-NonInteractive', '-Command', $script],
-                [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
-                $fallbackPipes,
-                null,
-                null,
-                ['bypass_shell' => true]
-            );
-            if (is_resource($fallback)) {
-                fclose($fallbackPipes[0]);
-                stream_get_contents($fallbackPipes[1]);
-                $fallbackError = (string) stream_get_contents($fallbackPipes[2]);
-                fclose($fallbackPipes[1]);
-                fclose($fallbackPipes[2]);
-                if (proc_close($fallback) === 0) {
-                    return;
-                }
-
-                if ($processWasRunning && !$taskkillSucceeded) {
-                    $this->logger->error(sprintf(
-                        'Windows process-tree termination failed for PID %s: taskkill=%s PowerShell=%s',
-                        (string) $processPid,
-                        trim($taskkillError),
-                        trim($fallbackError)
-                    ));
-                }
-            } elseif ($processWasRunning && !$taskkillSucceeded) {
-                $this->logger->error(sprintf(
-                    'Unable to start Windows process-tree termination fallback for PID %s: %s',
-                    (string) $processPid,
-                    trim($taskkillError)
-                ));
-            }
-
-            if ($taskkillSucceeded) {
-                return;
-            }
+            return;
         }
 
         // The launcher creates the session, so the recorded launcher PID is

@@ -1,5 +1,3 @@
-* Add a dedicated case-sensitive APFS test volume to macOS CI; current tests only exercise case-only siblings when the runner filesystem supports them.
-* Implement Windows Job Object containment for reliable descendant cleanup; `taskkill /T` plus the WMI parent-chain sweep remain best-effort when process ancestry changes or descendants detach.
 * POSIX timeout cleanup now samples the process tree and kills tracked descendants even after they create a new session; the 50 ms sampling interval still leaves a narrow fork-and-exit race.
 * Define Windows host-cancellation behavior; cooperative SIGINT/SIGTERM cancellation is currently supported only on POSIX CLI runtimes with `pcntl`.
 * Resolve the remaining PHP-CS-Fixer and Rector baseline debt, then make both CI checks blocking; they currently continue on error.
