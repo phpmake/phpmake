@@ -33,7 +33,7 @@ A:
 
 Q: How do I run a specific target?
 A: Use the target name as an argument:
-phpmake <target_name>
+php vendor/bin/phpmake.php <target_name>
 
 Q: What tasks are supported?
 A:
