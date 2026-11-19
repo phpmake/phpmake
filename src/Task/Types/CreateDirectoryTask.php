@@ -14,6 +14,7 @@ final class CreateDirectoryTask extends BaseTask
         if ($dirName === '') {
             throw new \InvalidArgumentException("Missing 'name' parameter.");
         }
+        $this->assertSafePath($dirName, 'create_directory name');
 
         if (is_dir($dirName)) {
             $this->logger->debug(sprintf("Directory '%s' already exists.", $dirName));
