@@ -32,7 +32,9 @@ final class FilesystemPathResolutionTest extends TestCase
         parent::setUp();
         $this->logger = new Logger(false, true, true);
         $this->originalCwd = getcwd();
-        $this->base = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-path-resolution-' . bin2hex(random_bytes(8));
+        $testRoot = getenv('PHPMAKE_TEST_ROOT');
+        $testRoot = is_string($testRoot) && $testRoot !== '' ? $testRoot : sys_get_temp_dir();
+        $this->base = $testRoot . DIRECTORY_SEPARATOR . 'phpmake-path-resolution-' . bin2hex(random_bytes(8));
         $this->root = $this->base . DIRECTORY_SEPARATOR . 'project';
         $this->outside = $this->base . DIRECTORY_SEPARATOR . 'outside';
         self::assertTrue(mkdir($this->root, 0o777, true));
