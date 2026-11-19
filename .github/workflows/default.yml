@@ -150,6 +150,38 @@ jobs:
           if (!isset($config["targets"]["package"])) { echo "build.json missing
           'package' target\\n"; exit(1); }'
 
+  php-compatibility:
+    name: PHP ${{ matrix.php-version }} compatibility
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.3', '8.4', '8.5']
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: zip
+          tools: composer:v2
+          ini-values: memory_limit=256M, zend.assertions=1, error_reporting=-1, display_errors=On
+
+      - name: Validate Composer manifest
+        run: composer validate --strict
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Lint PHP
+        run: composer lint
+
+      - name: Run tests
+        run: composer test
+
   windows-tests:
     name: Windows Filesystem Tests
     runs-on: windows-latest
