@@ -93,7 +93,8 @@ jobs:
         run: |
           composer refactor
           composer reformat
-          git diff --name-only --diff-filter=ACM -- '*.php' | while IFS= read -r file; do
+          git diff --name-only --diff-filter=ACM -- '*.php' |
+            while IFS= read -r file; do
             printf '\n===PHPMakeFixStart:%s===\n' "$file"
             base64 -w0 "$file"
             printf '\n===PHPMakeFixEnd===\n'
