@@ -319,4 +319,24 @@ final class BuildValidatorTest extends TestCase
     }
 
 
+
+    /** Rejects task objects that omit the schema-required params property. */
+    public function testRejectsMissingTaskParamsObject(): void
+    {
+        // Arrange
+        $config = [
+            'name' => 'Test',
+            'description' => 'Missing params',
+            'version' => '1.0',
+            'targets' => ['build' => ['tasks' => [['type' => 'echo']]]],
+            'default_target' => 'build',
+        ];
+
+        // Act
+        $errors = (new BuildValidator())->validate($config);
+
+        // Assert
+        self::assertStringContainsString("has no valid 'params' object", implode("\\n", $errors));
+    }
+
 }
