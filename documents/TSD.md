@@ -83,7 +83,8 @@ Unknown properties are rejected. The runtime validator and `schema/build-schema.
 - The command is launched without shell expansion, pipelines, or shell operators.
 - `timeout` is an optional numeric duration in seconds. The default is 300 seconds; values must be greater than 0 and no greater than 86400.
 - Captured stdout and stderr are each written to temporary files and monitored independently against a 1 MiB limit. Exceeding either limit fails the task; only bounded output is read into memory, and temporary files are removed after execution.
-- On timeout or output overflow, Windows uses `taskkill /T` to terminate the process tree. POSIX systems use a dedicated process group when the POSIX extension is available. Without process-group support, termination falls back to the direct process.
+- On Windows, a PowerShell/.NET launcher creates the target process suspended, assigns it to a Windows Job Object configured with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`, and resumes it only after assignment succeeds. The Job handle is closed after the target exits, terminating any remaining descendants; terminating the launcher on timeout or output overflow closes the Job handle and applies the same cleanup. Assignment failure terminates the still-suspended target rather than running it without containment.
+- POSIX systems use a dedicated process group when the POSIX extension or `setsid`/`kill` utilities are available. Descendants are periodically sampled and tracked to catch processes that detach from the original session; the sampling interval leaves a narrow fork-and-exit race. Without process-group support, termination falls back to the direct process.
 
 ## 5. Platform Compatibility
 
