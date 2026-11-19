@@ -31,7 +31,7 @@ final class CopyTask extends BaseTask
         return $this->copyDirectoryTransactionally($source, $dest);
     }
 
-    /** Copies one file after ensuring its destination directory exists. */
+    /** Copies one file through a same-directory staging file before publication. */
     private function copyFile(string $source, string $dest): bool
     {
         if ($this->isSymbolicLinkOrJunction($dest)) {
@@ -42,19 +42,111 @@ final class CopyTask extends BaseTask
             $this->logger->error(sprintf("Refusing to copy symlink '%s'.", $source));
             return false;
         }
+        if ($this->pathsReferToSameFile($source, $dest)) {
+            $this->logger->error(sprintf("Refusing to copy '%s' onto the same filesystem entry '%s'.", $source, $dest));
+            return false;
+        }
+        if (is_dir($dest)) {
+            $this->logger->error(sprintf("File copy destination '%s' is a directory.", $dest));
+            return false;
+        }
 
         $destDir = dirname($dest);
         if (!is_dir($destDir) && !@mkdir($destDir, 0o777, true) && !is_dir($destDir)) {
             $this->logger->error(sprintf("Unable to create destination directory '%s'.", $destDir));
             return false;
         }
-        if (!@copy($source, $dest)) {
-            $this->logger->error(sprintf("Failed to copy '%s' to '%s'.", $source, $dest));
+        $resolvedDestDir = realpath($destDir);
+        if ($resolvedDestDir === false) {
+            $this->logger->error(sprintf("Unable to resolve destination directory '%s'.", $destDir));
+            return false;
+        }
+        $destPath = realpath($dest) ?: $resolvedDestDir . DIRECTORY_SEPARATOR . basename($dest);
+
+        // Staging in the destination directory keeps publication on one volume.
+        $temporary = @tempnam($resolvedDestDir, '.phpmake-copy-');
+        if ($temporary === false || dirname($temporary) !== $resolvedDestDir) {
+            if (is_string($temporary)) {
+                @unlink($temporary);
+            }
+            $this->logger->error(sprintf("Unable to create temporary copy beside '%s'.", $destPath));
+            return false;
+        }
+        if (!@copy($source, $temporary)) {
+            @unlink($temporary);
+            $this->logger->error(sprintf("Failed to stage copy from '%s' to '%s'.", $source, $destPath));
             return false;
         }
 
-        $this->logger->debug(sprintf("Copied file '%s' → '%s'.", $source, $dest));
+        $sourcePermissions = @fileperms($source);
+        if ($sourcePermissions !== false) {
+            @chmod($temporary, $sourcePermissions & 0777);
+        }
+
+        if (!file_exists($destPath)) {
+            if (!@rename($temporary, $destPath)) {
+                @unlink($temporary);
+                $this->logger->error(sprintf("Unable to publish copied file '%s'.", $destPath));
+                return false;
+            }
+        } else {
+            $backup = @tempnam($resolvedDestDir, '.phpmake-copy-backup-');
+            if ($backup === false || dirname($backup) !== $resolvedDestDir) {
+                if (is_string($backup)) {
+                    @unlink($backup);
+                }
+                @unlink($temporary);
+                $this->logger->error(sprintf("Unable to create recovery path beside '%s'.", $destPath));
+                return false;
+            }
+            if (!@unlink($backup)) {
+                @unlink($temporary);
+                $this->logger->error(sprintf("Unable to prepare recovery path '%s'.", $backup));
+                return false;
+            }
+            if (!@rename($destPath, $backup)) {
+                @unlink($temporary);
+                $this->logger->error(sprintf("Unable to preserve existing destination '%s'.", $destPath));
+                return false;
+            }
+            if (!@rename($temporary, $destPath)) {
+                if (!@rename($backup, $destPath)) {
+                    $this->logger->error(sprintf(
+                        "CRITICAL: File copy publication and rollback failed. The original file is preserved at '%s'; restore it manually to '%s'.",
+                        $backup,
+                        $destPath
+                    ));
+                    return false;
+                }
+                @unlink($temporary);
+                $this->logger->error(sprintf("Unable to publish copied file '%s'; the original was restored.", $destPath));
+                return false;
+            }
+            if (!@unlink($backup)) {
+                $this->logger->error(sprintf(
+                    "File copied to '%s', but the previous destination could not be removed. Recovery backup retained at '%s'.",
+                    $destPath,
+                    $backup
+                ));
+                return false;
+            }
+        }
+
+        $this->logger->debug(sprintf("Copied file '%s' → '%s'.", $source, $destPath));
         return true;
+    }
+
+    /** Compares existing filesystem entries by device and inode. */
+    private function pathsReferToSameFile(string $left, string $right): bool
+    {
+        clearstatcache(true, $left);
+        clearstatcache(true, $right);
+        $leftStat = @stat($left);
+        $rightStat = @stat($right);
+        return is_array($leftStat)
+            && is_array($rightStat)
+            && $leftStat['dev'] === $rightStat['dev']
+            && $leftStat['ino'] === $rightStat['ino'];
     }
 
     /** Recursively copies a directory and stops on the first failure. */
