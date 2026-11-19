@@ -194,9 +194,13 @@ jobs:
         run: composer test
 
   windows-tests:
-    name: Windows Filesystem Tests
+    name: Windows Filesystem Tests (PHP ${{ matrix.php-version }})
     runs-on: windows-latest
     continue-on-error: false
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.3', '8.5']
 
     steps:
       - name: Checkout project
@@ -205,7 +209,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.3
+          php-version: ${{ matrix.php-version }}
           extensions: zip
           tools: composer:v2
           ini-values: >-
