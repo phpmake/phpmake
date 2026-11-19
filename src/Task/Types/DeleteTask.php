@@ -26,6 +26,7 @@ final class DeleteTask extends BaseTask
     /** Unlinks a file or symbolic link and reports failures. */
     private function deleteFile(string $path): bool
     {
+        $this->assertSafePath($path, 'delete path', false);
         if (!@unlink($path)) {
             $this->logger->error(sprintf("Failed to delete '%s'.", $path));
             return false;
@@ -37,6 +38,8 @@ final class DeleteTask extends BaseTask
     /** Removes a symbolic link or junction without touching its target. */
     private function removeLink(string $path): bool
     {
+        $parent = dirname($path);
+        $this->assertSafePath($parent === '.' ? getcwd() : $parent, 'delete path parent');
         if (!$this->removeSymbolicLinkOrJunction($path)) {
             $this->logger->error(sprintf("Failed to delete link '%s'.", $path));
             return false;
@@ -50,6 +53,7 @@ final class DeleteTask extends BaseTask
         if ($this->isSymbolicLinkOrJunction($dir)) {
             return $this->removeLink($dir);
         }
+        $this->assertSafePath($dir, 'delete directory', false);
         $items = @scandir($dir);
         if ($items === false) {
             $this->logger->error(sprintf("Unable to read directory '%s'.", $dir));
@@ -60,6 +64,7 @@ final class DeleteTask extends BaseTask
                 continue;
             }
             $path = $dir . DIRECTORY_SEPARATOR . $item;
+            $this->assertSafePath($dir, 'delete directory', false);
             $ok = $this->isSymbolicLinkOrJunction($path) ? $this->removeLink($path) : (!is_dir($path) ? $this->deleteFile($path) : $this->deleteDirectory($path));
             if (!$ok) {
                 return false;
