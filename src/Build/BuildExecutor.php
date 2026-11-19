@@ -1,11 +1,11 @@
 <?php
 
-namespace PhpMake\\Build;
+namespace PhpMake\Build;
 
-use PhpMake\\Task\\TaskFactory;
-use PhpMake\\Utilities\\Logger;
-use PhpMake\\Target\\DependencyResolver;
-use PhpMake\\Task\\TaskExecutor;
+use PhpMake\Task\TaskFactory;
+use PhpMake\Utilities\Logger;
+use PhpMake\Target\DependencyResolver;
+use PhpMake\Task\TaskExecutor;
 
 /**
  * BuildExecutor Class
@@ -40,7 +40,7 @@ final readonly class BuildExecutor
      *
      * @return int Exit code (0 for success, non-zero for failure).
      *
-     * @throws \\Exception If the specified target is not found.
+     * @throws \Exception If the specified target is not found.
      */
     public function execute(BuildConfiguration $config, ?string $target, Logger $logger): int
     {
@@ -48,7 +48,7 @@ final readonly class BuildExecutor
         $target = $target ?? $defaultTarget;
 
         if (!array_key_exists($target, $config->getTargets())) {
-            throw new \\Exception(sprintf("Target '%s' not found.", $target));
+            throw new \Exception(sprintf("Target '%s' not found.", $target));
         }
 
         $executionOrder = $this->dependencyResolver->resolve($config, $target);
