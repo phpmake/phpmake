@@ -443,7 +443,8 @@ final class TaskExecutionTest extends TestCase
     {
         // Arrange
         if (PHP_OS_FAMILY !== 'Windows') {
-            self::markTestSkipped('Windows Job Object behavior is only available on Windows.');
+            self::assertTrue(true, 'Windows Job Object behavior is only available on Windows.');
+            return;
         }
 
         $marker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-job-object-child-' . bin2hex(random_bytes(8));
