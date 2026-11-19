@@ -146,4 +146,55 @@ final class BuildLoaderTest extends TestCase
         (new BuildLoader())->load($this->buildFile);
     }
 
+
+    /** Rejects malformed nested JSON object/array shapes before runtime validation. */
+    public function testRejectsMalformedNestedJsonShapes(): void
+    {
+        // Arrange
+        $cases = [
+            [
+                '{"name":"Test","description":"Test","version":"1","targets":{"build":[]},"default_target":"build"}',
+                "Target 'build' must be a JSON object.",
+            ],
+            [
+                '{"name":"Test","description":"Test","version":"1","targets":{"build":{"depends":{},"tasks":[]}},"default_target":"build"}',
+                "Dependencies for target 'build' must be a JSON array.",
+            ],
+            [
+                '{"name":"Test","description":"Test","version":"1","targets":{"build":{"tasks":[{"type":"echo","params":[]} ]}},"default_target":"build"}',
+                "Parameters for task 0 in target 'build' must be a JSON object.",
+            ],
+            [
+                '{"name":"Test","description":"Test","version":"1","targets":{"build":{"tasks":["not-an-object"]}},"default_target":"build"}',
+                "Task 0 in target 'build' must be a JSON object.",
+            ],
+        ];
+
+        foreach ($cases as [$json, $expectedMessage]) {
+            file_put_contents($this->buildFile, $json);
+
+            // Act
+            try {
+                (new BuildLoader())->load($this->buildFile);
+                self::fail('Malformed nested JSON shape should be rejected.');
+            } catch (\\InvalidArgumentException $exception) {
+                // Assert
+                self::assertStringContainsString($expectedMessage, $exception->getMessage());
+            }
+        }
+    }
+
+    /** Rejects oversized build files without reading them fully into memory. */
+    public function testRejectsBuildFileAboveSizeLimit(): void
+    {
+        // Arrange
+        file_put_contents($this->buildFile, str_repeat(' ', 2097153));
+
+        // Assert
+        $this->expectException(\\RuntimeException::class);
+        $this->expectExceptionMessage('exceeds the maximum size');
+        // Act
+        (new BuildLoader())->load($this->buildFile);
+    }
+
 }
