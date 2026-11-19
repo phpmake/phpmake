@@ -1,11 +1,11 @@
 <?php
 
-namespace PhpMake\Build;
+namespace PhpMake\\Build;
 
-use PhpMake\Task\TaskFactory;
-use PhpMake\Utilities\Logger;
-use PhpMake\Target\DependencyResolver;
-use PhpMake\Task\TaskExecutor;
+use PhpMake\\Task\\TaskFactory;
+use PhpMake\\Utilities\\Logger;
+use PhpMake\\Target\\DependencyResolver;
+use PhpMake\\Task\\TaskExecutor;
 
 /**
  * BuildExecutor Class
@@ -24,7 +24,7 @@ final readonly class BuildExecutor
      * Initializes the BuildExecutor with required components.
      *
      * @param TaskFactory        $taskFactory        Factory for creating tasks.
-     * @param DependencyResolver $dependencyResolver Resolves dependencies between tasks.
+     * @param DependencyResolver $dependencyResolver Resolves dependencies between targets.
      * @param TaskExecutor       $taskExecutor       Executes tasks in the correct order.
      */
     public function __construct(private TaskFactory $taskFactory, private DependencyResolver $dependencyResolver, private TaskExecutor $taskExecutor) {}
@@ -40,15 +40,15 @@ final readonly class BuildExecutor
      *
      * @return int Exit code (0 for success, non-zero for failure).
      *
-     * @throws \Exception If the specified target is not found.
+     * @throws \\Exception If the specified target is not found.
      */
     public function execute(BuildConfiguration $config, ?string $target, Logger $logger): int
     {
         $defaultTarget = $config->getDefaultTarget();
-        $target = $target ?: $defaultTarget;
+        $target = $target ?? $defaultTarget;
 
         if (!array_key_exists($target, $config->getTargets())) {
-            throw new \Exception(sprintf("Target '%s' not found.", $target));
+            throw new \\Exception(sprintf("Target '%s' not found.", $target));
         }
 
         $executionOrder = $this->dependencyResolver->resolve($config, $target);
