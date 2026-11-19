@@ -16,7 +16,13 @@
         "void",
         "object",
         "posix_kill",
-        "posix_setsid"
+        "posix_setsid",
+        "pcntl_async_signals",
+        "pcntl_signal",
+        "pcntl_signal_get_handler",
+        "SIGINT",
+        "SIGTERM",
+        "SIG_DFL"
     ],
     "php-core-extensions": [
         "Core",

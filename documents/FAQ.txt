@@ -48,7 +48,7 @@ Q: Are paths outside the project allowed?
 A: No. Filesystem task paths are normalized and must resolve inside the current working directory. Absolute paths are accepted only when they remain inside that directory. `..` components are resolved and are allowed only if the final normalized path remains inside the project. Symlinked directories and Windows junction ancestors that escape the project are rejected. UNC paths outside the project, extended-length UNC paths, and Windows drive-relative paths are rejected. Destructive tasks cannot target the project root.
 
 Q: How do I pass arguments and set a process timeout?
-A: Use an `args` JSON array of scalar values and an optional numeric `timeout` in seconds (greater than 0 and at most 86400). The default timeout is 300 seconds. Arguments are passed directly; shell operators, variable expansion, and pipelines are not interpreted. Standard output and standard error are each captured in temporary files and limited to 1 MiB. Only bounded output is read into memory, and temporary files are removed after execution.
+A: Use an `args` JSON array of scalar values and an optional numeric `timeout` in seconds (greater than 0 and at most 86400). The default timeout is 300 seconds. Arguments are passed directly; shell operators, variable expansion, and pipelines are not interpreted. Standard output and standard error are captured in memory and independently limited to 1 MiB. Exceeding either limit fails the task and triggers process-tree termination.
 
 Q: How do I enable debug/verbose logging?
 A: Add the `--debug` flag:
@@ -79,7 +79,7 @@ Q: What does silent mode hide?
 A: `--silent` suppresses normal console output. Errors remain visible on standard error (STDERR).
 
 Q: What happens when an external process times out?
-A: PHPMake attempts to terminate the process tree. Windows uses `taskkill /T`; POSIX systems use a dedicated process group when the POSIX extension is available. If process-group support is unavailable, only the direct process can be terminated.
+A: PHPMake attempts to terminate the process tree. Windows uses `taskkill /T`; POSIX uses a dedicated process group through ext-posix or the `setsid` and `kill` utilities. If neither POSIX mechanism is available, only the direct process can be terminated. Descendants that deliberately create a new session can escape the original POSIX process group. Windows cleanup also cannot guarantee termination of detached descendants.
 
 Q: Where are logs stored?
 A: By default, logs are in the project's root in `build.log`, unless `--no-log` is used. Writes and rotation are protected by a persistent `build.log.lock` file. Logs rotate at 10 MiB and keep up to 5 rotated files (`build.log.1` through `build.log.5`).
@@ -89,3 +89,12 @@ A: The tool stops on the first failed task by default. Use `--debug` for detaile
 
 Q: Can I use PHPMake in CI/CD pipelines?
 A: Yes, it's designed to work with any environment supporting PHP.
+
+Q: Is the `exec` task sandboxed?
+A: No. It launches arbitrary programs with the permissions and environment of the PHPMake process. Only run trusted build configurations. In CI/CD, use least-privilege credentials and isolated runners or containers, and do not expose secrets to untrusted pull-request builds.
+
+Q: Does PHPMake enforce DNS/hostname restrictions or network rate limits?
+A: No. PHPMake is a local build tool, not a network scanner or HTTP client. An `exec` task can launch network-capable programs; apply DNS, egress, and rate-limit controls in those programs or at the runner/infrastructure boundary. PHPMake has no Forgejo API integration.
+
+Q: Are there resource limits for ZIP archives and build files?
+A: Yes. ZIP creation is limited to 10,000 files, 20,000 filesystem entries, directory depth 256, 512 MiB per input file, and 2 GiB total uncompressed input. Build configuration files are limited to 2 MiB.

@@ -5,6 +5,8 @@ namespace PhpMake\Build;
 /** Loads, validates, and creates typed build configuration objects. */
 final class BuildLoader
 {
+    private const int MAX_BUILD_FILE_BYTES = 2097152;
+
     /** Reads a build file, validates it, and creates its typed configuration object. */
     public function load(string $buildFile = 'build.json'): BuildConfiguration
     {
@@ -12,9 +14,21 @@ final class BuildLoader
             throw new \RuntimeException(sprintf("Build file '%s' not found or unreadable.", $buildFile));
         }
 
-        $rawContents = @file_get_contents($buildFile);
+        $handle = @fopen($buildFile, 'rb');
+        if ($handle === false) {
+            throw new \RuntimeException(sprintf("Cannot read build file '%s'.", $buildFile));
+        }
+        $rawContents = stream_get_contents($handle, self::MAX_BUILD_FILE_BYTES + 1);
+        fclose($handle);
         if ($rawContents === false) {
             throw new \RuntimeException(sprintf("Cannot read build file '%s'.", $buildFile));
+        }
+        if (strlen($rawContents) > self::MAX_BUILD_FILE_BYTES) {
+            throw new \RuntimeException(sprintf(
+                "Build file '%s' exceeds the maximum size of %d bytes.",
+                $buildFile,
+                self::MAX_BUILD_FILE_BYTES
+            ));
         }
 
         // Decode as an object first: associative decoding cannot distinguish {} from [].

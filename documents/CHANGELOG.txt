@@ -1,5 +1,13 @@
 PHPMake - Unreleased
 --------------------
+* Correct POSIX process-group termination to signal the launcher session rather than the child PID.
+* Handle POSIX SIGINT/SIGTERM as cooperative cancellation and clean up the active child process group.
+* Use `setsid` and `kill` as a POSIX process-tree fallback when the POSIX extension is unavailable.
+* Bound ZIP creation to 10,000 files, 20,000 filesystem entries, depth 256, 512 MiB per file, and 2 GiB total uncompressed input; preserve existing output when limits are exceeded.
+* Limit build configuration input to 2 MiB and require task parameter objects to match the JSON schema.
+* Add PHP 8.3, 8.4, and 8.5 CI compatibility coverage and PHPStan static analysis.
+* Add a repeatable benchmark for file writes, ZIP throughput, process startup latency, concurrent workers, and peak memory.
+* Document the executable trust boundary, deployment isolation assumptions, process cleanup limitations, and non-applicability of Forgejo/DNS/rate-limit controls.
 * Revalidate filesystem paths immediately before operations and during recursive traversal to reject symlink/junction swaps.
 * Make single-file copies transactional, preserve existing destinations on failure, and reject source/destination hardlink aliases.
 * Create ZIP archives in a staging file and publish only after successful finalization, preserving existing archives on failure.

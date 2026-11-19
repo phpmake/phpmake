@@ -35,18 +35,26 @@ final class ExecTask extends BaseTask
         $processOptions = ['bypass_shell' => true];
         $launchArgv = $argv;
         $processGroupCreated = false;
-        $hasPosixProcessGroups = PHP_OS_FAMILY !== 'Windows'
-            && function_exists('posix_setsid')
-            && function_exists('posix_kill');
+        $hasPosixExtension = function_exists('posix_setsid') && function_exists('posix_kill');
+        $setsidExecutable = null;
+        $hasPosixProcessGroups = PHP_OS_FAMILY !== 'Windows' && $hasPosixExtension;
+        if (PHP_OS_FAMILY !== 'Windows' && !$hasPosixProcessGroups) {
+            $setsidExecutable = self::findExecutable('setsid');
+            $hasPosixProcessGroups = $setsidExecutable !== null
+                && self::findExecutable('kill') !== null;
+        }
 
         if (PHP_OS_FAMILY === 'Windows') {
             $processOptions['create_process_group'] = true;
         }
 
-        $windowsPidPath = null;
-        if (PHP_OS_FAMILY === 'Windows') {
+        $processPidPath = null;
+        if (
+            PHP_OS_FAMILY === 'Windows'
+            || (!$hasPosixExtension && $hasPosixProcessGroups)
+        ) {
             $pidPath = tempnam(sys_get_temp_dir(), 'phpmake-pid-');
-            $windowsPidPath = $pidPath === false ? null : $pidPath;
+            $processPidPath = $pidPath === false ? null : $pidPath;
         }
 
         if (PHP_OS_FAMILY === 'Windows' || $hasPosixProcessGroups) {
@@ -73,8 +81,9 @@ if (!is_resource($child)) {
 }
 $childPid = proc_get_status($child)['pid'] ?? null;
 $pidFile = $argv[2] ?? null;
-if (is_int($childPid) && is_string($pidFile) && $pidFile !== '') {
-    @file_put_contents($pidFile, (string) $childPid, LOCK_EX);
+$recordedPid = PHP_OS_FAMILY === 'Windows' ? $childPid : getmypid();
+if (is_int($recordedPid) && is_string($pidFile) && $pidFile !== '') {
+    @file_put_contents($pidFile, (string) $recordedPid, LOCK_EX);
 }
 $exitCode = proc_close($child);
 exit($exitCode >= 0 ? $exitCode : 1);
@@ -85,8 +94,11 @@ PHP;
                 $launcher,
                 base64_encode(json_encode($argv, JSON_THROW_ON_ERROR)),
             ];
-            if ($windowsPidPath !== null) {
-                $launchArgv[] = $windowsPidPath;
+            if (!$hasPosixExtension && $setsidExecutable !== null) {
+                array_unshift($launchArgv, $setsidExecutable);
+            }
+            if ($processPidPath !== null) {
+                $launchArgv[] = $processPidPath;
             }
             $processGroupCreated = $hasPosixProcessGroups;
         }
@@ -105,8 +117,8 @@ PHP;
             $processOptions
         );
         if (!is_resource($process)) {
-            if ($windowsPidPath !== null) {
-                @unlink($windowsPidPath);
+            if ($processPidPath !== null) {
+                @unlink($processPidPath);
             }
             $this->logger->error('Unable to start command process.');
             return false;
@@ -116,10 +128,10 @@ PHP;
         stream_set_blocking($pipes[2], false);
         $processPid = proc_get_status($process)['pid'] ?? null;
         $launcherPid = $processPid;
-        if ($windowsPidPath !== null) {
-            for ($attempt = 0; $attempt < 20; ++$attempt) {
-                $childPid = trim((string) @file_get_contents($windowsPidPath));
-                if (ctype_digit($childPid) && (int) $childPid > 0) {
+        if ($processPidPath !== null) {
+            for ($attempt = 0; $attempt < 100; ++$attempt) {
+                $childPid = trim((string) @file_get_contents($processPidPath));
+                if (preg_match('/^[0-9]+$/D', $childPid) === 1 && (int) $childPid > 0) {
                     $processPid = (int) $childPid;
                     break;
                 }
@@ -132,12 +144,39 @@ PHP;
         $outputLimitExceeded = false;
         $stdout = '';
         $stderr = '';
+        $cancelledSignal = null;
+        $previousAsyncSignals = null;
+        $previousSignalHandlers = [];
+
+        // On POSIX CLI runtimes, turn SIGINT/SIGTERM into cooperative
+        // cancellation so the child process tree can be stopped before exit.
+        if (
+            PHP_OS_FAMILY !== 'Windows'
+            && PHP_SAPI === 'cli'
+            && function_exists('pcntl_signal')
+            && function_exists('pcntl_async_signals')
+        ) {
+            $previousAsyncSignals = pcntl_async_signals(true);
+            foreach ([SIGINT, SIGTERM] as $signal) {
+                $previousSignalHandlers[$signal] = function_exists('pcntl_signal_get_handler')
+                    ? pcntl_signal_get_handler($signal)
+                    : SIG_DFL;
+                pcntl_signal($signal, static function (int $receivedSignal) use (&$cancelledSignal): void {
+                    $cancelledSignal = $receivedSignal;
+                });
+            }
+        }
 
         try {
             while (true) {
                 $outputLimitExceeded = self::captureAvailableOutput($pipes[1], $stdout)
                     || self::captureAvailableOutput($pipes[2], $stderr);
                 if ($outputLimitExceeded) {
+                    $this->terminateProcessTree($process, $processPid, $processGroupCreated, $launcherPid);
+                    break;
+                }
+
+                if ($cancelledSignal !== null) {
                     $this->terminateProcessTree($process, $processPid, $processGroupCreated, $launcherPid);
                     break;
                 }
@@ -162,8 +201,14 @@ PHP;
                     fclose($pipe);
                 }
             }
-            if ($windowsPidPath !== null) {
-                @unlink($windowsPidPath);
+            if ($processPidPath !== null) {
+                @unlink($processPidPath);
+            }
+            if ($previousAsyncSignals !== null) {
+                foreach ($previousSignalHandlers as $signal => $handler) {
+                    pcntl_signal((int) $signal, $handler);
+                }
+                pcntl_async_signals($previousAsyncSignals);
             }
         }
 
@@ -184,6 +229,11 @@ PHP;
             $this->logger->error(sprintf('Command output exceeded the %d-byte per-stream limit.', self::MAX_CAPTURE_BYTES));
             return false;
         }
+        if ($cancelledSignal !== null) {
+            $signalName = $cancelledSignal === SIGINT ? 'SIGINT' : 'SIGTERM';
+            $this->logger->error(sprintf('Command cancelled after receiving %s.', $signalName));
+            return false;
+        }
         if ($timedOut) {
             $this->logger->error(sprintf(
                 'Command timed out after %.1f seconds (PID %s).',
@@ -194,6 +244,47 @@ PHP;
         }
 
         return $exitCode === 0;
+    }
+
+    /** Finds an executable in PATH without invoking a command shell. */
+    private static function findExecutable(string $name): ?string
+    {
+        $path = getenv('PATH');
+        if (!is_string($path) || $path === '') {
+            return null;
+        }
+
+        foreach (explode(PATH_SEPARATOR, $path) as $directory) {
+            if ($directory === '') {
+                continue;
+            }
+            $candidate = rtrim($directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $name;
+            if (is_file($candidate) && is_executable($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    /** Sends a signal to a POSIX process group using the kill executable. */
+    private static function signalProcessGroup(string $signal, int $processGroupId): bool
+    {
+        $kill = self::findExecutable('kill');
+        if ($kill === null) {
+            return false;
+        }
+
+        $terminator = @proc_open(
+            [$kill, '-' . $signal, '-' . $processGroupId],
+            [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']],
+            $pipes,
+            null,
+            null,
+            ['bypass_shell' => true]
+        );
+
+        return is_resource($terminator) && proc_close($terminator) === 0;
     }
 
     /**
@@ -233,7 +324,7 @@ PHP;
      * Terminates the process and descendants without invoking a shell.
      *
      * Windows uses taskkill's process-tree switch. POSIX platforms use a
-     * dedicated process group when the POSIX extension is available.
+     * dedicated process group when ext-posix or the setsid/kill utilities are available.
      */
     private function terminateProcessTree($process, ?int $processPid, bool $processGroupCreated, ?int $launcherPid = null): void
     {
@@ -325,16 +416,23 @@ PHP;
             }
         }
 
-        if (
-            $processGroupCreated
-            && $processPid !== null
-            && function_exists('posix_kill')
-        ) {
-            if (@posix_kill(-$processPid, 15)) {
-                usleep(200000);
-                if (@posix_kill(-$processPid, 0)) {
-                    @posix_kill(-$processPid, 9);
+        // The launcher creates the session, so the recorded launcher PID is
+        // the process-group ID. The configured command PID is only a member.
+        $processGroupId = $processPid ?? $launcherPid;
+        if ($processGroupCreated && $processGroupId !== null) {
+            if (function_exists('posix_kill')) {
+                if (@posix_kill(-$processGroupId, 15)) {
+                    usleep(200000);
+                    if (@posix_kill(-$processGroupId, 0)) {
+                        @posix_kill(-$processGroupId, 9);
+                    }
+                    return;
                 }
+            } elseif (
+                self::signalProcessGroup('TERM', $processGroupId)
+            ) {
+                usleep(200000);
+                self::signalProcessGroup('KILL', $processGroupId);
                 return;
             }
         }

@@ -195,4 +195,46 @@ final class ZipTaskTest extends TestCase
             }
         }
     }
+
+    /** Rejects oversized archive inputs without replacing an existing output archive. */
+    public function testArchiveInputLimitPreservesExistingOutput(): void
+    {
+        // Arrange
+        if (!class_exists(\ZipArchive::class)) {
+            self::markTestSkipped('ext-zip is not available.');
+        }
+
+        $suffix = bin2hex(random_bytes(8));
+        $source = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-oversized-' . $suffix;
+        $output = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-preserve-' . $suffix . '.zip';
+        $handle = fopen($source, 'wb');
+        self::assertIsResource($handle);
+        self::assertTrue(ftruncate($handle, 536870913));
+        fclose($handle);
+
+        $original = new \ZipArchive();
+        self::assertTrue($original->open($output, \ZipArchive::CREATE | \ZipArchive::OVERWRITE));
+        self::assertTrue($original->addFromString('preserve.txt', 'original archive'));
+        self::assertTrue($original->close());
+
+        try {
+            // Act
+            $task = new ZipTask(['source' => $source, 'output' => $output], new Logger(false, true, true));
+            self::assertFalse($task->execute(false, true));
+
+            // Assert
+            $preserved = new \ZipArchive();
+            self::assertTrue($preserved->open($output));
+            self::assertSame('original archive', $preserved->getFromName('preserve.txt'));
+            self::assertTrue($preserved->close());
+        } finally {
+            if (is_file($source)) {
+                unlink($source);
+            }
+            if (is_file($output)) {
+                unlink($output);
+            }
+        }
+    }
+
 }

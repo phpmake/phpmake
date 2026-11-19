@@ -65,8 +65,8 @@ PHPMake provides a modular task architecture, dependency-aware targets, filesyst
 
 | Package version | Branch        | PHP version | Status         |
 |-----------------|---------------|-------------|----------------|
-| dev-main        | `main`        | 8.3         | Active         |
-| 2.*             | `main`        | 8.3         | Active         |
+| dev-main        | `main`        | 8.3+ (CI: 8.3–8.5) | Active         |
+| 2.*             | `main`        | 8.3+ (CI: 8.3–8.5) | Active         |
 
 * **Active**: Full support
 * **Maintenance**: Bug/Security fixes only
@@ -163,6 +163,14 @@ Run tests to ensure everything works as expected:
 composer test
 ```
 
+Run the repeatable performance benchmark (file writes, ZIP creation, process startup, concurrent workers, and peak memory):
+
+```shell
+composer benchmark
+```
+
+The concurrency measurement runs four independent PHPMake worker processes; tasks within a single build remain sequential. The memory metric is the benchmark process's peak allocation, not aggregate worker RSS. Results are runner-specific and should be compared only across similar environments.
+
 Or
 
 ```shell
@@ -195,7 +203,15 @@ vendor/bin/phpunit tests/
 | `echo`             | `message` (string)                           | Output message         |
 | `archive`          | `source` (string), `output` (string)         | Archive a file/directory to ZIP |
 
-`exec` passes an argument vector directly to the process (no shell expansion or pipelines). Its default timeout is 300 seconds (maximum 86400); each output stream is capped at 1 MiB. On timeout or output overflow, PHPMake terminates the process tree using Windows `taskkill /T` or a POSIX process group when the POSIX extension is available; otherwise it falls back to terminating the direct process. Filesystem task paths are normalized and must resolve inside the project working directory. Symlink/junction ancestors that escape the project are rejected. UNC and drive-relative Windows paths are rejected. Destructive tasks reject the project root; `..` is permitted only when the normalized result remains inside CWD.
+`exec` passes an argument vector directly to the process (no shell expansion or pipelines). Its default timeout is 300 seconds (maximum 86400); each output stream is capped at 1 MiB. On timeout or output overflow, PHPMake terminates the process tree using Windows `taskkill /T` or a POSIX process group (using the POSIX extension, or the `setsid` and `kill` utilities when available). If neither POSIX mechanism is available, only the direct process can be terminated. On POSIX CLI runtimes with `pcntl`, `SIGINT` and `SIGTERM` request cooperative cancellation and trigger child-process cleanup. Host-process termination on Windows or runtimes without `pcntl` cannot guarantee descendant cleanup. ZIP creation is limited to 10,000 files, 20,000 filesystem entries, a directory depth of 256, 512 MiB per input file, and 2 GiB total uncompressed input. Build configuration files are limited to 2 MiB. Filesystem task paths are normalized and must resolve inside the project working directory. Symlink/junction ancestors that escape the project are rejected. UNC and drive-relative Windows paths are rejected. Destructive tasks reject the project root; `..` is permitted only when the normalized result remains inside CWD.
+
+## Security considerations
+
+A `build.json` file is executable input, not a passive data file. The `exec` task can launch arbitrary programs with the permissions and environment of the PHPMake process. It does not provide a sandbox, network policy, DNS/hostname allowlist, or API rate limiting.
+
+Only run build configurations from trusted sources. In CI/CD, isolate jobs that execute untrusted pull-request content, run with least-privilege credentials, avoid exposing deployment secrets to untrusted builds, and use container or runner isolation when builds need a stronger boundary. PHPMake does not integrate with Forgejo APIs; Forgejo server-version compatibility is therefore not applicable to this project.
+
+The process cleanup mechanisms are best-effort rather than an OS security boundary. POSIX process groups cannot terminate descendants that deliberately create a new session. Windows process-tree termination cannot guarantee cleanup of descendants that detach or outlive an intermediate parent before cleanup begins. Do not rely on PHPMake to contain hostile processes.
 
 ### Example build file
 
