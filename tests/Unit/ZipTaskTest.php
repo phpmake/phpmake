@@ -165,7 +165,7 @@ final class ZipTaskTest extends TestCase
         }
 
         $root = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-transaction-' . bin2hex(random_bytes(6));
-        $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-zip-outside-' . bin2hex(random_bytes(6));
+        $outside = dirname($root) . DIRECTORY_SEPARATOR . '.phpmake-zip-outside-' . bin2hex(random_bytes(6));
         self::assertTrue(mkdir($root));
         self::assertTrue(mkdir($outside));
         $output = $root . DIRECTORY_SEPARATOR . 'archive.zip';
