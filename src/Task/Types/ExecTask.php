@@ -288,7 +288,6 @@ final class ExecTask extends BaseTask
         $source = <<<'CSHARP'
 using System;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -474,7 +473,13 @@ public static class PhpMakeJobRunner
                 Marshal.FreeHGlobal(memory);
             }
 
-            var commandLine = new StringBuilder(String.Join(" ", arguments.Select(Quote)));
+            var quotedArguments = new string[arguments.Length];
+            for (var index = 0; index < arguments.Length; index++)
+            {
+                quotedArguments[index] = Quote(arguments[index]);
+            }
+
+            var commandLine = new StringBuilder(String.Join(" ", quotedArguments));
             var startup = new StartupInfo();
             startup.cb = Marshal.SizeOf(typeof(StartupInfo));
             startup.dwFlags = StartfUseStdHandles;
