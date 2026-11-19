@@ -96,4 +96,5 @@
         "refactor-check": "Check code refactoring rules.",
         "reformat": "Fix coding style issues.",
         "test": "Run all tests."
-    }}
+    }
+}
