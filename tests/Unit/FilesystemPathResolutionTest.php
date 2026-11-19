@@ -112,7 +112,7 @@ final class FilesystemPathResolutionTest extends TestCase
         $outsideVictim = $this->outside . DIRECTORY_SEPARATOR . 'subdir' . DIRECTORY_SEPARATOR . 'victim.txt';
         self::assertTrue(mkdir($safeDirectory));
         self::assertSame(6, file_put_contents($safeDirectory . DIRECTORY_SEPARATOR . 'victim.txt', 'inside'));
-        self::assertSame(6, file_put_contents($outsideVictim, 'outside'));
+        self::assertSame(7, file_put_contents($outsideVictim, 'outside'));
         self::assertSame(6, file_put_contents($this->root . DIRECTORY_SEPARATOR . 'source.txt', 'source'));
 
         $tasks = [
@@ -138,7 +138,7 @@ final class FilesystemPathResolutionTest extends TestCase
             // Assert
             self::assertSame([false, false, false, false], $results);
             self::assertSame('outside', file_get_contents($outsideVictim));
-            self::assertFileDoesNotExist($this->outside . DIRECTORY_SEPARATOR . 'subdir' . DIRECTORY_SEPARATOR . 'created');
+            self::assertDirectoryDoesNotExist($this->outside . DIRECTORY_SEPARATOR . 'subdir' . DIRECTORY_SEPARATOR . 'created');
             self::assertFileDoesNotExist($this->outside . DIRECTORY_SEPARATOR . 'subdir' . DIRECTORY_SEPARATOR . 'copied.txt');
             self::assertFileDoesNotExist($this->outside . DIRECTORY_SEPARATOR . 'subdir' . DIRECTORY_SEPARATOR . 'archive.zip');
             self::assertSame('inside', file_get_contents($savedDirectory . DIRECTORY_SEPARATOR . 'victim.txt'));
