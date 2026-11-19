@@ -93,12 +93,10 @@ jobs:
       - name: Verify POSIX process-group fallback without ext-posix
         run: php -n tests/Support/PosixProcessGroupFallbackSmoke.php
 
-      - name: Check code formatting (existing baseline debt)
-        continue-on-error: true
+      - name: Check code formatting
         run: composer format-check
 
-      - name: Check Rector rules (existing baseline debt)
-        continue-on-error: true
+      - name: Check Rector rules
         run: composer refactor-check
 
       - name: Check unused Composer dependencies
@@ -194,9 +192,13 @@ jobs:
         run: composer test
 
   windows-tests:
-    name: Windows Filesystem Tests
+    name: Windows Filesystem Tests (PHP ${{ matrix.php-version }})
     runs-on: windows-latest
     continue-on-error: false
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.3', '8.5']
 
     steps:
       - name: Checkout project
@@ -205,7 +207,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.3
+          php-version: ${{ matrix.php-version }}
           extensions: zip
           tools: composer:v2
           ini-values: >-

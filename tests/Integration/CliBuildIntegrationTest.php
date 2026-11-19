@@ -24,7 +24,7 @@ final class CliBuildIntegrationTest extends TestCase
             . 'phpmake-integration-'
             . bin2hex(random_bytes(8));
 
-        self::assertTrue(mkdir($this->projectDirectory, 0777, true));
+        self::assertTrue(mkdir($this->projectDirectory, 0o777, true));
         $this->cliPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'phpmake.php';
         self::assertFileExists($this->cliPath);
     }
@@ -208,6 +208,7 @@ final class CliBuildIntegrationTest extends TestCase
             if (file_exists($directory) || is_link($directory)) {
                 unlink($directory);
             }
+
             return;
         }
 

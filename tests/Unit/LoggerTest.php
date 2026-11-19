@@ -9,7 +9,7 @@ use PhpMake\Task\Types\ZipTask;
 use PhpMake\Utilities\Logger;
 use PHPUnit\Framework\TestCase;
 
-    /** Tests console output, file logging, and task logging behavior. */
+/** Tests console output, file logging, and task logging behavior. */
 final class LoggerTest extends TestCase
 {
     private Logger $logger;
@@ -17,19 +17,19 @@ final class LoggerTest extends TestCase
     /**
      * This method is called before the first test method in the test class is executed.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public static function setUpBeforeClass(): void {}
 
     /**
      * This method is called after the last test method in the test class has been executed.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public static function tearDownAfterClass(): void
     {
         gc_collect_cycles();
@@ -38,10 +38,10 @@ final class LoggerTest extends TestCase
     /**
      * This method is called BEFORE each test method.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     protected function setUp(): void
     {
         parent::setUp();
@@ -51,10 +51,10 @@ final class LoggerTest extends TestCase
     /**
      * This method is called AFTER each test method.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     protected function tearDown(): void
     {
         // Methods finalization codes.
@@ -73,12 +73,11 @@ final class LoggerTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testBasicLogging(): void
     {
         // Arrange
@@ -92,12 +91,11 @@ final class LoggerTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testLoggerInfoOutput(): void
     {
         // Arrange
@@ -112,12 +110,11 @@ final class LoggerTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testDeleteTask(): void
     {
         // Arrange — paths must stay inside the project directory.
@@ -147,12 +144,11 @@ final class LoggerTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testEchoTask(): void
     {
         // Arrange
@@ -169,12 +165,11 @@ final class LoggerTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testExecTask(): void
     {
         // Arrange
@@ -187,12 +182,11 @@ final class LoggerTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testZipTask(): void
     {
         // Arrange — paths must stay inside the project directory.
@@ -217,12 +211,11 @@ final class LoggerTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testDebugEnabled(): void
     {
         // Arrange
@@ -247,9 +240,9 @@ final class LoggerTest extends TestCase
 
         $logger = new Logger(false, true, false, $logFile);
         try {
-        // Act
+            // Act
             $logger->info('Build continues after log rotation failure');
-        // Assert
+            // Assert
             self::assertDirectoryExists($logFile . '.5');
         } finally {
             unlink($logFile);
@@ -290,7 +283,7 @@ final class LoggerTest extends TestCase
         $logger = new Logger(false, true, false, $logFile);
 
         try {
-        // Act
+            // Act
             $logger->error('Expected logger error');
 
             self::assertFileExists($logFile);
@@ -299,9 +292,11 @@ final class LoggerTest extends TestCase
             if (is_file($logFile)) {
                 unlink($logFile);
             }
+
             if (is_file($logFile . '.lock')) {
                 unlink($logFile . '.lock');
             }
+
             rmdir($directory);
         }
     }

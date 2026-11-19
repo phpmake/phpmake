@@ -16,19 +16,19 @@ final class ZipTaskTest extends TestCase
     /**
      * This method is called before the first test method in the test class is executed.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public static function setUpBeforeClass(): void {}
 
     /**
      * This method is called after the last test method in the test class has been executed.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public static function tearDownAfterClass(): void
     {
         gc_collect_cycles();
@@ -37,10 +37,10 @@ final class ZipTaskTest extends TestCase
     /**
      * This method is called BEFORE each test method.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     protected function setUp(): void
     {
         parent::setUp();
@@ -50,10 +50,10 @@ final class ZipTaskTest extends TestCase
     /**
      * This method is called AFTER each test method.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     protected function tearDown(): void
     {
         // Methods finalization codes.
@@ -68,6 +68,7 @@ final class ZipTaskTest extends TestCase
             // Assert
             $this->markTestSkipped('ext-zip is not available.');
         }
+
         $root = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-self-' . uniqid('', true);
         mkdir($root);
         file_put_contents($root . DIRECTORY_SEPARATOR . 'input.txt', 'content');
@@ -85,9 +86,11 @@ final class ZipTaskTest extends TestCase
             if (file_exists($output)) {
                 unlink($output);
             }
+
             if (file_exists($root . DIRECTORY_SEPARATOR . 'input.txt')) {
                 unlink($root . DIRECTORY_SEPARATOR . 'input.txt');
             }
+
             if (is_dir($root)) {
                 rmdir($root);
             }
@@ -101,6 +104,7 @@ final class ZipTaskTest extends TestCase
         if (!class_exists(\ZipArchive::class)) {
             self::markTestSkipped('ext-zip is not available.');
         }
+
         if (!in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true)) {
             self::assertTrue(true, 'Case-variant filesystem test is not applicable on this platform.');
             return;
@@ -137,12 +141,15 @@ final class ZipTaskTest extends TestCase
             if (file_exists($configuredOutput)) {
                 unlink($configuredOutput);
             }
+
             if (file_exists($actualOutput)) {
                 unlink($actualOutput);
             }
+
             if (file_exists($root . DIRECTORY_SEPARATOR . 'input.txt')) {
                 unlink($root . DIRECTORY_SEPARATOR . 'input.txt');
             }
+
             if (is_dir($root)) {
                 rmdir($root);
             }
@@ -184,12 +191,15 @@ final class ZipTaskTest extends TestCase
             if (is_link($link) || $this->isDirectoryJunction($link)) {
                 $this->removeDirectoryLink($link);
             }
+
             if (is_file($output)) {
                 unlink($output);
             }
+
             if (is_dir($root)) {
                 rmdir($root);
             }
+
             if (is_dir($outside)) {
                 rmdir($outside);
             }
@@ -231,6 +241,7 @@ final class ZipTaskTest extends TestCase
             if (is_file($source)) {
                 unlink($source);
             }
+
             if (is_file($output)) {
                 unlink($output);
             }

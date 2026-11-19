@@ -17,7 +17,9 @@ final class FilesystemTaskTest extends TestCase
     use DirectoryLinkTestHelper;
 
     private Logger $logger;
+
     private string $root;
+
     private string $originalCwd;
 
     /** Initializes test fixtures. */
@@ -69,7 +71,7 @@ final class FilesystemTaskTest extends TestCase
     {
         // Arrange
         $source = $this->root . DIRECTORY_SEPARATOR . 'source';
-        mkdir($source . DIRECTORY_SEPARATOR . 'nested', 0777, true);
+        mkdir($source . DIRECTORY_SEPARATOR . 'nested', 0o777, true);
         file_put_contents($source . DIRECTORY_SEPARATOR . 'root.txt', 'root');
         file_put_contents($source . DIRECTORY_SEPARATOR . 'nested' . DIRECTORY_SEPARATOR . 'child.txt', 'child');
         $destination = $this->root . DIRECTORY_SEPARATOR . 'destination';
@@ -218,7 +220,7 @@ final class FilesystemTaskTest extends TestCase
     {
         // Arrange
         $directory = $this->root . DIRECTORY_SEPARATOR . 'tree';
-        mkdir($directory . DIRECTORY_SEPARATOR . 'nested', 0777, true);
+        mkdir($directory . DIRECTORY_SEPARATOR . 'nested', 0o777, true);
         file_put_contents($directory . DIRECTORY_SEPARATOR . 'root.txt', 'root');
         file_put_contents($directory . DIRECTORY_SEPARATOR . 'nested' . DIRECTORY_SEPARATOR . 'child.txt', 'child');
 
@@ -277,7 +279,7 @@ final class FilesystemTaskTest extends TestCase
     {
         // Arrange
         $source = $this->root . DIRECTORY_SEPARATOR . 'source';
-        mkdir($source . DIRECTORY_SEPARATOR . 'nested', 0777, true);
+        mkdir($source . DIRECTORY_SEPARATOR . 'nested', 0o777, true);
         file_put_contents($source . DIRECTORY_SEPARATOR . 'nested' . DIRECTORY_SEPARATOR . 'item.txt', 'nested payload');
         $archive = $this->root . DIRECTORY_SEPARATOR . 'tree.zip';
 
@@ -439,17 +441,21 @@ final class FilesystemTaskTest extends TestCase
             @rmdir($path);
             return;
         }
+
         if (is_link($path) || $this->isDirectoryJunction($path) || is_file($path)) {
             if ($this->isDirectoryJunction($path)) {
                 @rmdir($path);
             } else {
                 @unlink($path);
             }
+
             return;
         }
+
         if (!is_dir($path)) {
             return;
         }
+
         $items = scandir($path);
         if ($items !== false) {
             foreach ($items as $item) {
@@ -458,6 +464,7 @@ final class FilesystemTaskTest extends TestCase
                 }
             }
         }
+
         @rmdir($path);
     }
 }

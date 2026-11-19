@@ -13,7 +13,7 @@ use PhpMake\Task\TaskExecutor;
 use PhpMake\Task\TaskFactory;
 use PhpMake\Utilities\Logger;
 
-    /** Runs smoke tests across build configuration, validation, dependency, and execution components. */
+/** Runs smoke tests across build configuration, validation, dependency, and execution components. */
 final class BuildSmokeTest extends TestCase
 {
     private Logger $logger;
@@ -21,19 +21,19 @@ final class BuildSmokeTest extends TestCase
     /**
      * This method is called before the first test method in the test class is executed.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public static function setUpBeforeClass(): void {}
 
     /**
      * This method is called after the last test method in the test class has been executed.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public static function tearDownAfterClass(): void
     {
         gc_collect_cycles();
@@ -42,10 +42,10 @@ final class BuildSmokeTest extends TestCase
     /**
      * This method is called BEFORE each test method.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     protected function setUp(): void
     {
         parent::setUp();
@@ -55,10 +55,10 @@ final class BuildSmokeTest extends TestCase
     /**
      * This method is called AFTER each test method.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     protected function tearDown(): void
     {
         // Methods finalization codes.
@@ -66,12 +66,11 @@ final class BuildSmokeTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testBuildConfigurationGetters(): void
     {
         // Arrange
@@ -98,12 +97,11 @@ final class BuildSmokeTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testBuildValidatorValidConfig(): void
     {
         // Arrange
@@ -124,12 +122,11 @@ final class BuildSmokeTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testBuildValidatorInvalidConfig(): void
     {
         // Arrange
@@ -150,12 +147,11 @@ final class BuildSmokeTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testDependencyResolverNoDependencies(): void
     {
         // Arrange
@@ -178,12 +174,11 @@ final class BuildSmokeTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testDependencyResolverWithDependencies(): void
     {
         // Arrange
@@ -211,12 +206,11 @@ final class BuildSmokeTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testDependencyResolverCircularDependency(): void
     {
         // Assert
@@ -241,12 +235,11 @@ final class BuildSmokeTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testBuildExecutor(): void
     {
         // Arrange

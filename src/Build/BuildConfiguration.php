@@ -14,31 +14,6 @@ namespace PhpMake\Build;
 final readonly class BuildConfiguration
 {
     /**
-     * @var string Name of build project.
-     */
-    private string $name;
-
-    /**
-     * @var string Description of build project.
-     */
-    private string $description;
-
-    /**
-     * @var string string Version of project.
-     */
-    private string $version;
-
-    /**
-     * @var array List of available build targets.
-     */
-    private array $targets;
-
-    /**
-     * @var string Default target to be executed.
-     */
-    private string $defaultTarget;
-
-    /**
      * Constructor
      *
      * Initializes the build configuration with provided values.
@@ -49,14 +24,7 @@ final readonly class BuildConfiguration
      * @param array  $targets        List of available build targets.
      * @param string $defaultTarget  Default target for execution.
      */
-    public function __construct(string $name, string $description, string $version, array $targets, string $defaultTarget)
-    {
-        $this->name = $name;
-        $this->description = $description;
-        $this->version = $version;
-        $this->targets = $targets;
-        $this->defaultTarget = $defaultTarget;
-    }
+    public function __construct(private string $name, private string $description, private string $version, private array $targets, private string $defaultTarget) {}
 
     /**
      * Get project name.

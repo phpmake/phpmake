@@ -5,25 +5,25 @@ namespace PhpMake\Tests\Unit;
 use PhpMake\Cli\CliParser;
 use PHPUnit\Framework\TestCase;
 
-    /** Tests parsing of command-line flags and target arguments. */
+/** Tests parsing of command-line flags and target arguments. */
 final class CliParserTest extends TestCase
 {
     /**
      * This method is called before the first test method in the test class is executed.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public static function setUpBeforeClass(): void {}
 
     /**
      * This method is called after the last test method in the test class has been executed.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public static function tearDownAfterClass(): void
     {
         gc_collect_cycles();
@@ -32,10 +32,10 @@ final class CliParserTest extends TestCase
     /**
      * This method is called BEFORE each test method.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     protected function setUp(): void
     {
         parent::setUp();
@@ -45,10 +45,10 @@ final class CliParserTest extends TestCase
     /**
      * This method is called AFTER each test method.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     protected function tearDown(): void
     {
         // Methods finalization codes.
@@ -56,12 +56,11 @@ final class CliParserTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testParseVersionFlag(): void
     {
         // Arrange
@@ -74,12 +73,11 @@ final class CliParserTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testParseHelpFlag(): void
     {
         // Arrange
@@ -92,12 +90,11 @@ final class CliParserTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testParseValidateBuild(): void
     {
         // Arrange
@@ -110,12 +107,11 @@ final class CliParserTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testParseInitFlag(): void
     {
         // Arrange
@@ -128,12 +124,11 @@ final class CliParserTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testParseTarget(): void
     {
         // Arrange

@@ -12,6 +12,7 @@ use PHPUnit\Framework\TestCase;
 final class CopyTaskSafetyTest extends TestCase
 {
     private string $root;
+
     private Logger $logger;
 
     protected function setUp(): void
@@ -28,6 +29,7 @@ final class CopyTaskSafetyTest extends TestCase
                 @unlink($path);
             }
         }
+
         if (is_dir($this->root)) {
             @rmdir($this->root);
         }
@@ -40,12 +42,14 @@ final class CopyTaskSafetyTest extends TestCase
         if (!function_exists('link')) {
             self::markTestSkipped('Hardlink creation is unavailable.');
         }
+
         $source = $this->root . DIRECTORY_SEPARATOR . 'source.txt';
         $destination = $this->root . DIRECTORY_SEPARATOR . 'destination.txt';
         self::assertSame(10, file_put_contents($source, 'preserved!'));
         if (!@link($source, $destination)) {
             self::markTestSkipped('The current filesystem does not support hardlinks.');
         }
+
         $task = new CopyTask(['source' => $source, 'dest' => $destination], $this->logger);
 
         // Act

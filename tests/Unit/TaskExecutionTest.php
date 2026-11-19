@@ -8,7 +8,7 @@ use PhpMake\Task\Types\CreateDirectoryTask;
 use PhpMake\Utilities\Logger;
 use PHPUnit\Framework\TestCase;
 
-    /** Tests execution results for built-in task types. */
+/** Tests execution results for built-in task types. */
 final class TaskExecutionTest extends TestCase
 {
     private Logger $logger;
@@ -16,19 +16,19 @@ final class TaskExecutionTest extends TestCase
     /**
      * This method is called before the first test method in the test class is executed.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public static function setUpBeforeClass(): void {}
 
     /**
      * This method is called after the last test method in the test class has been executed.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public static function tearDownAfterClass(): void
     {
         gc_collect_cycles();
@@ -37,10 +37,10 @@ final class TaskExecutionTest extends TestCase
     /**
      * This method is called BEFORE each test method.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     protected function setUp(): void
     {
         parent::setUp();
@@ -50,10 +50,10 @@ final class TaskExecutionTest extends TestCase
     /**
      * This method is called AFTER each test method.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     protected function tearDown(): void
     {
         // Methods finalization codes.
@@ -61,12 +61,11 @@ final class TaskExecutionTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testCreateDirectoryTask(): void
     {
         // Arrange — path must stay inside the project directory.
@@ -83,12 +82,11 @@ final class TaskExecutionTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testExecTask(): void
     {
         // Arrange
@@ -101,12 +99,11 @@ final class TaskExecutionTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testEchoTask(): void
     {
         // Arrange
@@ -126,8 +123,8 @@ final class TaskExecutionTest extends TestCase
         file_put_contents($parentFile, 'not a directory');
         $task = new CreateDirectoryTask(['name' => $parentFile . DIRECTORY_SEPARATOR . 'child'], $this->logger);
         try {
-        // Assert
-        // Act
+            // Assert
+            // Act
             self::assertFalse($task->execute(false, true));
         } finally {
             unlink($parentFile);
@@ -532,21 +529,21 @@ final class TaskExecutionTest extends TestCase
         $marker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-cancel-' . bin2hex(random_bytes(8));
         $workerPidFile = $marker . '.worker';
         $autoload = getcwd() . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
-        $workerCode = <<<'PHP'
-require $argv[1];
-$logger = new \PhpMake\Utilities\Logger(false, true, true);
-$task = new \PhpMake\Task\Types\ExecTask([
-    'command' => PHP_BINARY,
-    'args' => [
-        '-r',
-        'file_put_contents($argv[1] . ".started", "started"); usleep(1500000); file_put_contents($argv[1] . ".survived", "survived");',
-        $argv[2],
-    ],
-    'timeout' => 10,
-], $logger);
-file_put_contents($argv[2] . ".worker", (string) getmypid());
-exit($task->execute(false, true) ? 0 : 1);
-PHP;
+        $workerCode = <<<'PHP_WRAP'
+            require $argv[1];
+            $logger = new \PhpMake\Utilities\Logger(false, true, true);
+            $task = new \PhpMake\Task\Types\ExecTask([
+                'command' => PHP_BINARY,
+                'args' => [
+                    '-r',
+                    'file_put_contents($argv[1] . ".started", "started"); usleep(1500000); file_put_contents($argv[1] . ".survived", "survived");',
+                    $argv[2],
+                ],
+                'timeout' => 10,
+            ], $logger);
+            file_put_contents($argv[2] . ".worker", (string) getmypid());
+            exit($task->execute(false, true) ? 0 : 1);
+            PHP_WRAP;
         $process = proc_open(
             [PHP_BINARY, '-r', $workerCode, $autoload, $marker],
             [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
@@ -565,6 +562,7 @@ PHP;
             while (!is_file($marker . '.started') && hrtime(true) < $deadline) {
                 usleep(10000);
             }
+
             self::assertFileExists($marker . '.started');
             $workerPid = (int) file_get_contents($workerPidFile);
 
@@ -576,6 +574,7 @@ PHP;
                 if (!$status['running']) {
                     break;
                 }
+
                 usleep(10000);
             } while (hrtime(true) < $deadline);
 
@@ -587,6 +586,7 @@ PHP;
             if ($status['running']) {
                 proc_terminate($process, 9);
             }
+
             proc_close($process);
             foreach (['.started', '.survived', '.worker'] as $suffix) {
                 if (is_file($marker . $suffix)) {
@@ -597,8 +597,8 @@ PHP;
     }
 
 
-    /** Documents that descendants which create a new POSIX session escape the original process group. */
-    public function testExecTaskCannotTerminateDescendantThatCreatesNewSession(): void
+    /** Terminates descendants that create a new POSIX session before the command times out. */
+    public function testExecTaskTerminatesDescendantThatCreatesNewSession(): void
     {
         // Arrange
         if (
@@ -630,22 +630,23 @@ PHP;
                 'timeout' => 0.4,
             ], $this->logger);
             self::assertFalse($task->execute(false, true));
-
-            $deadline = hrtime(true) + 2_000_000_000;
-            while (!is_file($marker) && hrtime(true) < $deadline) {
-                usleep(10000);
-            }
+            usleep(1500000);
 
             // Assert
-            self::assertFileExists($marker, 'The detached descendant should outlive termination of the original process group.');
+            self::assertFileDoesNotExist(
+                $marker,
+                'The detached descendant must be terminated even after leaving the original process group.'
+            );
         } finally {
             if (is_file($pidFile)) {
                 $detachedPid = (int) file_get_contents($pidFile);
                 if ($detachedPid > 0) {
                     posix_kill($detachedPid, 9);
                 }
+
                 unlink($pidFile);
             }
+
             if (is_file($marker)) {
                 unlink($marker);
             }

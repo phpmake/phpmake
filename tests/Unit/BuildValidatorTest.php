@@ -5,25 +5,25 @@ namespace PhpMake\Tests\Unit;
 use PhpMake\Build\BuildValidator;
 use PHPUnit\Framework\TestCase;
 
-    /** Tests valid, invalid, and malformed build configurations. */
+/** Tests valid, invalid, and malformed build configurations. */
 final class BuildValidatorTest extends TestCase
 {
     /**
      * This method is called before the first test method in the test class is executed.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public static function setUpBeforeClass(): void {}
 
     /**
      * This method is called after the last test method in the test class has been executed.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public static function tearDownAfterClass(): void
     {
         gc_collect_cycles();
@@ -32,10 +32,10 @@ final class BuildValidatorTest extends TestCase
     /**
      * This method is called BEFORE each test method.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     protected function setUp(): void
     {
         parent::setUp();
@@ -45,10 +45,10 @@ final class BuildValidatorTest extends TestCase
     /**
      * This method is called AFTER each test method.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     protected function tearDown(): void
     {
         // Methods finalization codes.
@@ -56,12 +56,11 @@ final class BuildValidatorTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testValidConfig(): void
     {
         // Arrange
@@ -84,12 +83,11 @@ final class BuildValidatorTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testMissingField(): void
     {
         // Arrange
@@ -106,12 +104,11 @@ final class BuildValidatorTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testInvalidTask(): void
     {
         // Arrange
@@ -235,8 +232,8 @@ final class BuildValidatorTest extends TestCase
                 ]]]],
                 'default_target' => 'build',
             ];
-        // Assert
-        // Act
+            // Assert
+            // Act
             self::assertStringContainsString("invalid 'timeout'", implode("\n", (new BuildValidator())->validate($config)));
         }
     }

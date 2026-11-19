@@ -14,7 +14,7 @@ use PhpMake\Task\Types\ExecTask;
 use PhpMake\Task\Types\EchoTask;
 use PhpMake\Task\Types\ZipTask;
 
-    /** Tests creation of supported task types and rejection of unknown types. */
+/** Tests creation of supported task types and rejection of unknown types. */
 final class TaskFactoryTest extends TestCase
 {
     private TaskFactory $factory;
@@ -24,19 +24,19 @@ final class TaskFactoryTest extends TestCase
     /**
      * This method is called before the first test method in the test class is executed.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public static function setUpBeforeClass(): void {}
 
     /**
      * This method is called after the last test method in the test class has been executed.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public static function tearDownAfterClass(): void
     {
         gc_collect_cycles();
@@ -45,10 +45,10 @@ final class TaskFactoryTest extends TestCase
     /**
      * This method is called BEFORE each test method.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     protected function setUp(): void
     {
         parent::setUp();
@@ -59,10 +59,10 @@ final class TaskFactoryTest extends TestCase
     /**
      * This method is called AFTER each test method.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     protected function tearDown(): void
     {
         // Methods finalization codes.
@@ -70,12 +70,11 @@ final class TaskFactoryTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testDeleteTask(): void
     {
         // Arrange
@@ -90,12 +89,11 @@ final class TaskFactoryTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testCreateDirectoryTask(): void
     {
         // Arrange
@@ -110,12 +108,11 @@ final class TaskFactoryTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testCopyTask(): void
     {
         // Arrange
@@ -130,12 +127,11 @@ final class TaskFactoryTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testExecTask(): void
     {
         // Arrange
@@ -150,12 +146,11 @@ final class TaskFactoryTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testEchoTask(): void
     {
         // Arrange
@@ -170,12 +165,11 @@ final class TaskFactoryTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testZipTask(): void
     {
         // Arrange
@@ -190,12 +184,11 @@ final class TaskFactoryTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testUnknownTaskTypeThrowsException(): void
     {
         // Assert

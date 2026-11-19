@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 final class CliValidationTest extends TestCase
 {
     private string $workingDirectory;
+
     private string $cliScript;
 
     /** Initializes test fixtures. */
@@ -31,6 +32,7 @@ final class CliValidationTest extends TestCase
         if (is_file($buildFile)) {
             unlink($buildFile);
         }
+
         if (is_dir($this->workingDirectory)) {
             rmdir($this->workingDirectory);
         }
