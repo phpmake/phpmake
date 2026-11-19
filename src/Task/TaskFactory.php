@@ -49,6 +49,7 @@ final readonly class TaskFactory
         if (!is_string($type) || $type === '') {
             throw new \InvalidArgumentException("Task configuration requires a non-empty string 'type'.");
         }
+
         if (!is_array($params)) {
             throw new \InvalidArgumentException(sprintf("Parameters for task '%s' must be an array.", $type));
         }

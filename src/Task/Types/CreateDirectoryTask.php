@@ -14,6 +14,7 @@ final class CreateDirectoryTask extends BaseTask
         if ($dirName === '') {
             throw new \InvalidArgumentException("Missing 'name' parameter.");
         }
+
         $this->assertSafePath($dirName, 'create_directory name');
 
         if (is_dir($dirName)) {
@@ -39,6 +40,7 @@ final class CreateDirectoryTask extends BaseTask
         if (!isset($this->params['name']) || !is_string($this->params['name']) || trim($this->params['name']) === '') {
             throw new \InvalidArgumentException("Missing or invalid 'name' parameter for create_directory task.");
         }
+
         $this->assertSafePath($this->params['name'], 'create_directory name');
     }
 

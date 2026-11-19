@@ -68,6 +68,7 @@ final class CliParser
             if (!is_string($arg)) {
                 throw new \InvalidArgumentException('Command-line arguments must be strings.');
             }
+
             if ($index === 0) {
                 continue;
             }
@@ -78,6 +79,7 @@ final class CliParser
                     if ($selectedAction !== null && $selectedAction !== $action) {
                         throw new \InvalidArgumentException('Conflicting command actions were specified.');
                     }
+
                     $selectedAction = $action;
                 }
 
@@ -113,16 +115,19 @@ final class CliParser
                         $result['init'] = true;
                         break;
                 }
+
                 continue;
             }
 
             if ($arg === '') {
                 throw new \InvalidArgumentException('Empty command-line argument is not valid.');
             }
+
             if ($arg[0] !== '-') {
                 if ($result['target'] !== null) {
                     throw new \InvalidArgumentException(sprintf("Error: Extra argument detected: '%s'.", $arg));
                 }
+
                 $result['target'] = $arg;
                 continue;
             }

@@ -45,7 +45,7 @@ final readonly class BuildExecutor
     public function execute(BuildConfiguration $config, ?string $target, Logger $logger): int
     {
         $defaultTarget = $config->getDefaultTarget();
-        $target = $target ?? $defaultTarget;
+        $target ??= $defaultTarget;
 
         if (!array_key_exists($target, $config->getTargets())) {
             throw new \Exception(sprintf("Target '%s' not found.", $target));

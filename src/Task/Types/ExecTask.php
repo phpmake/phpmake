@@ -8,6 +8,7 @@ use PhpMake\Task\BaseTask;
 final class ExecTask extends BaseTask
 {
     private const int MAX_CAPTURE_BYTES = 1048576;
+
     /** Starts the configured process, captures output, and enforces its timeout. */
     protected function runTask(bool $debug, bool $silent): bool
     {
@@ -29,7 +30,7 @@ final class ExecTask extends BaseTask
 
         $argv = array_merge($argv, array_map(static fn($arg): string => (string) $arg, $args));
         if ($this->logger->isDebugEnabled()) {
-            $this->logger->debug('Executing process: ' . implode(' ', array_map('escapeshellarg', $argv)));
+            $this->logger->debug('Executing process: ' . implode(' ', array_map(escapeshellarg(...), $argv)));
         }
 
         $processOptions = ['bypass_shell' => true];
@@ -60,34 +61,34 @@ final class ExecTask extends BaseTask
         if (PHP_OS_FAMILY === 'Windows' || $hasPosixProcessGroups) {
             // Keep a stable launcher alive while the configured command runs.
             // On POSIX, establish its session before spawning the target process.
-            $launcher = <<<'PHP'
-$command = json_decode(base64_decode($argv[1], true), true, 512, JSON_THROW_ON_ERROR);
-if (!is_array($command)) {
-    exit(126);
-}
-if (function_exists('posix_setsid') && !posix_setsid()) {
-    exit(126);
-}
-$child = proc_open(
-    $command,
-    [0 => STDIN, 1 => STDOUT, 2 => STDERR],
-    $pipes,
-    getcwd(),
-    null,
-    ['bypass_shell' => true]
-);
-if (!is_resource($child)) {
-    exit(127);
-}
-$childPid = proc_get_status($child)['pid'] ?? null;
-$pidFile = $argv[2] ?? null;
-$recordedPid = PHP_OS_FAMILY === 'Windows' ? $childPid : getmypid();
-if (is_int($recordedPid) && is_string($pidFile) && $pidFile !== '') {
-    @file_put_contents($pidFile, (string) $recordedPid, LOCK_EX);
-}
-$exitCode = proc_close($child);
-exit($exitCode >= 0 ? $exitCode : 1);
-PHP;
+            $launcher = <<<'PHP_WRAP'
+                $command = json_decode(base64_decode($argv[1], true), true, 512, JSON_THROW_ON_ERROR);
+                if (!is_array($command)) {
+                    exit(126);
+                }
+                if (function_exists('posix_setsid') && !posix_setsid()) {
+                    exit(126);
+                }
+                $child = proc_open(
+                    $command,
+                    [0 => STDIN, 1 => STDOUT, 2 => STDERR],
+                    $pipes,
+                    getcwd(),
+                    null,
+                    ['bypass_shell' => true]
+                );
+                if (!is_resource($child)) {
+                    exit(127);
+                }
+                $childPid = proc_get_status($child)['pid'] ?? null;
+                $pidFile = $argv[2] ?? null;
+                $recordedPid = PHP_OS_FAMILY === 'Windows' ? $childPid : getmypid();
+                if (is_int($recordedPid) && is_string($pidFile) && $pidFile !== '') {
+                    @file_put_contents($pidFile, (string) $recordedPid, LOCK_EX);
+                }
+                $exitCode = proc_close($child);
+                exit($exitCode >= 0 ? $exitCode : 1);
+                PHP_WRAP;
             $launchArgv = [
                 PHP_BINARY,
                 '-r',
@@ -97,9 +98,11 @@ PHP;
             if (!$hasPosixExtension && $setsidExecutable !== null) {
                 array_unshift($launchArgv, $setsidExecutable);
             }
+
             if ($processPidPath !== null) {
                 $launchArgv[] = $processPidPath;
             }
+
             $processGroupCreated = $hasPosixProcessGroups;
         }
 
@@ -120,6 +123,7 @@ PHP;
             if ($processPidPath !== null) {
                 @unlink($processPidPath);
             }
+
             $this->logger->error('Unable to start command process.');
             return false;
         }
@@ -135,9 +139,11 @@ PHP;
                     $processPid = (int) $childPid;
                     break;
                 }
+
                 usleep(1000);
             }
         }
+
         $start = hrtime(true);
         $trackedDescendantPids = [];
         $lastProcessScan = 0;
@@ -203,12 +209,14 @@ PHP;
                     $this->terminateProcessTree($process, $processPid, $processGroupCreated, $launcherPid, $trackedDescendantPids);
                     break;
                 }
+
                 if (!$status['running']) {
                     $observedExitCode = $status['exitcode'];
                     $outputLimitExceeded = self::captureAvailableOutput($pipes[1], $stdout)
                         || self::captureAvailableOutput($pipes[2], $stderr);
                     break;
                 }
+
                 usleep(10000);
             }
         } finally {
@@ -217,13 +225,16 @@ PHP;
                     fclose($pipe);
                 }
             }
+
             if ($processPidPath !== null) {
                 @unlink($processPidPath);
             }
+
             if ($previousAsyncSignals !== null) {
                 foreach ($previousSignalHandlers as $signal => $handler) {
                     pcntl_signal((int) $signal, $handler);
                 }
+
                 pcntl_async_signals($previousAsyncSignals);
             }
         }
@@ -238,18 +249,22 @@ PHP;
                 $this->logger->info($line);
             }
         }
+
         if (trim($stderr) !== '') {
             $this->logger->error(trim($stderr));
         }
+
         if ($outputLimitExceeded) {
             $this->logger->error(sprintf('Command output exceeded the %d-byte per-stream limit.', self::MAX_CAPTURE_BYTES));
             return false;
         }
+
         if ($cancelledSignal !== null) {
             $signalName = $cancelledSignal === SIGINT ? 'SIGINT' : 'SIGTERM';
             $this->logger->error(sprintf('Command cancelled after receiving %s.', $signalName));
             return false;
         }
+
         if ($timedOut) {
             $this->logger->error(sprintf(
                 'Command timed out after %.1f seconds (PID %s).',
@@ -274,6 +289,7 @@ PHP;
             if ($directory === '') {
                 continue;
             }
+
             $candidate = rtrim($directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $name;
             if (is_file($candidate) && is_executable($candidate)) {
                 return $candidate;
@@ -325,6 +341,7 @@ PHP;
             if (preg_match('/^\\s*(\\d+)\\s+(\\d+)\\s*$/D', $line, $matches) !== 1) {
                 continue;
             }
+
             $pid = (int) $matches[1];
             $parentPid = (int) $matches[2];
             if ($pid > 0 && $parentPid > 0) {
@@ -341,6 +358,7 @@ PHP;
                 if (isset($visited[$childPid])) {
                     continue;
                 }
+
                 $visited[$childPid] = true;
                 $descendants[] = $childPid;
                 $queue[] = $childPid;
@@ -411,6 +429,7 @@ PHP;
                 if ($remaining > 0) {
                     $buffer .= substr($chunk, 0, $remaining);
                 }
+
                 return true;
             }
 
@@ -439,8 +458,7 @@ PHP;
         bool $processGroupCreated,
         ?int $launcherPid = null,
         array $trackedDescendantPids = []
-    ): void
-    {
+    ): void {
         $processWasRunning = proc_get_status($process)['running'] ?? false;
 
         if (PHP_OS_FAMILY === 'Windows' && $processPid !== null) {
@@ -512,6 +530,7 @@ PHP;
                 if (proc_close($fallback) === 0) {
                     return;
                 }
+
                 if ($processWasRunning && !$taskkillSucceeded) {
                     $this->logger->error(sprintf(
                         'Windows process-tree termination failed for PID %s: taskkill=%s PowerShell=%s',
@@ -551,6 +570,7 @@ PHP;
             if (!is_int($descendantPid) || $descendantPid <= 0) {
                 continue;
             }
+
             if (function_exists('posix_kill')) {
                 @posix_kill($descendantPid, 15);
             } else {
@@ -569,10 +589,12 @@ PHP;
                     self::signalProcessGroup('KILL', $processGroupId);
                 }
             }
+
             foreach ($trackedDescendantPids as $descendantPid) {
                 if (!is_int($descendantPid) || $descendantPid <= 0) {
                     continue;
                 }
+
                 if (function_exists('posix_kill')) {
                     if (@posix_kill($descendantPid, 0)) {
                         @posix_kill($descendantPid, 9);
@@ -581,6 +603,7 @@ PHP;
                     self::signalProcess('KILL', $descendantPid);
                 }
             }
+
             return;
         }
 
@@ -599,12 +622,15 @@ PHP;
         if (!isset($this->params['command']) || !is_string($this->params['command']) || trim($this->params['command']) === '') {
             throw new \InvalidArgumentException("Exec task requires a non-empty string 'command'.");
         }
+
         if (!self::hasBalancedQuotes($this->params['command'])) {
             throw new \InvalidArgumentException('Exec command contains an unbalanced quote.');
         }
-        if (array_key_exists('args', $this->params) && (!is_array($this->params['args']) || array_filter($this->params['args'], static fn($value) => !is_scalar($value)))) {
+
+        if (array_key_exists('args', $this->params) && (!is_array($this->params['args']) || array_filter($this->params['args'], static fn($value): bool => !is_scalar($value)))) {
             throw new \InvalidArgumentException("Exec task 'args' must be an array of scalar values.");
         }
+
         if (array_key_exists('timeout', $this->params) && (
             (!is_int($this->params['timeout']) && !is_float($this->params['timeout']))
             || !is_finite((float) $this->params['timeout'])
@@ -628,15 +654,19 @@ PHP;
                     ++$i;
                     continue;
                 }
+
                 if ($character === $quote) {
                     $quote = null;
                 }
+
                 continue;
             }
+
             if ($character === '"' || $character === "'") {
                 $quote = $character;
             }
         }
+
         return $quote === null;
     }
 

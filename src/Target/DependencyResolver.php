@@ -33,6 +33,7 @@ final class DependencyResolver
         if (isset($this->resolved[$target])) {
             return;
         }
+
         if (isset($this->visiting[$target])) {
             throw new \RuntimeException(sprintf("Circular dependency detected in target '%s'.", $target));
         }
@@ -52,8 +53,10 @@ final class DependencyResolver
             if (!is_string($dependency) || $dependency === '') {
                 throw new \InvalidArgumentException(sprintf("Target '%s' has an invalid dependency.", $target));
             }
+
             $this->visit($config, $dependency);
         }
+
         unset($this->visiting[$target]);
 
         $this->resolved[$target] = true;

@@ -29,6 +29,7 @@ try {
             throw new RuntimeException('Unable to write benchmark fixture.');
         }
     }
+
     $writeSeconds = (hrtime(true) - $writeStart) / 1_000_000_000;
 
     $archiveStart = hrtime(true);
@@ -36,6 +37,7 @@ try {
     if (!$archiveTask->execute(false, true)) {
         throw new RuntimeException('ZIP benchmark task failed.');
     }
+
     $archiveSeconds = (hrtime(true) - $archiveStart) / 1_000_000_000;
     $archiveBytes = filesize('fixture.zip');
 
@@ -49,20 +51,22 @@ try {
         if (!$task->execute(false, true)) {
             throw new RuntimeException('Process-start benchmark task failed.');
         }
+
         $processSamples[] = (hrtime(true) - $processStart) / 1_000_000;
     }
+
     sort($processSamples);
     $medianProcessLatencyMs = ($processSamples[4] + $processSamples[5]) / 2;
 
     $autoload = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
-    $workerCode = <<<'PHP'
-require $argv[1];
-$task = new \PhpMake\Task\Types\ExecTask([
-    'command' => PHP_BINARY,
-    'args' => ['-r', 'usleep(50000);'],
-], new \PhpMake\Utilities\Logger(false, true, true));
-exit($task->execute(false, true) ? 0 : 1);
-PHP;
+    $workerCode = <<<'PHP_WRAP'
+        require $argv[1];
+        $task = new \PhpMake\Task\Types\ExecTask([
+            'command' => PHP_BINARY,
+            'args' => ['-r', 'usleep(50000);'],
+        ], new \PhpMake\Utilities\Logger(false, true, true));
+        exit($task->execute(false, true) ? 0 : 1);
+        PHP_WRAP;
     $nullDevice = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
     $workers = [];
     $concurrency = 4;
@@ -83,6 +87,7 @@ PHP;
         if (!is_resource($worker)) {
             throw new RuntimeException('Unable to start concurrent benchmark worker.');
         }
+
         $workers[] = $worker;
     }
 
@@ -91,6 +96,7 @@ PHP;
             throw new RuntimeException('A concurrent benchmark worker failed.');
         }
     }
+
     $concurrencySeconds = (hrtime(true) - $concurrencyStart) / 1_000_000_000;
 
     $result = [
@@ -112,6 +118,7 @@ PHP;
     if (is_string($originalDirectory)) {
         chdir($originalDirectory);
     }
+
     if (is_dir($root)) {
         $iterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),
@@ -124,6 +131,7 @@ PHP;
                 @unlink($entry->getPathname());
             }
         }
+
         @rmdir($root);
     }
 }

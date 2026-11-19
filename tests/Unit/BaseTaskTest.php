@@ -5,25 +5,25 @@ namespace PhpMake\Tests\Unit;
 use PhpMake\Task\BaseTask;
 use PHPUnit\Framework\TestCase;
 
-    /** Tests the shared task contract and base-class behavior. */
+/** Tests the shared task contract and base-class behavior. */
 final class BaseTaskTest extends TestCase
 {
     /**
      * This method is called before the first test method in the test class is executed.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public static function setUpBeforeClass(): void {}
 
     /**
      * This method is called after the last test method in the test class has been executed.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     public static function tearDownAfterClass(): void
     {
         gc_collect_cycles();
@@ -32,10 +32,10 @@ final class BaseTaskTest extends TestCase
     /**
      * This method is called BEFORE each test method.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     protected function setUp(): void
     {
         parent::setUp();
@@ -45,10 +45,10 @@ final class BaseTaskTest extends TestCase
     /**
      * This method is called AFTER each test method.
      *
-     * @doesNotPerformAssertions
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
     protected function tearDown(): void
     {
         // Methods finalization codes.
@@ -56,12 +56,11 @@ final class BaseTaskTest extends TestCase
     }
 
     /**
-     * @test
      *
-     * @small
      *
      * @return void
      */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testBaseTaskHasRequiredMethods(): void
     {
         // Arrange
@@ -76,7 +75,7 @@ final class BaseTaskTest extends TestCase
     public function testBaseTaskReturnsConcreteClassNameByDefault(): void
     {
         // Arrange
-        $task = new class([], new \PhpMake\Utilities\Logger(false, true, true)) extends BaseTask {
+        $task = new class ([], new \PhpMake\Utilities\Logger(false, true, true)) extends BaseTask {
             /** Performs run task for the tests. */
             protected function runTask(bool $debug, bool $silent): bool
             {
@@ -97,7 +96,7 @@ final class BaseTaskTest extends TestCase
     public function testBaseTaskConvertsExecutionExceptionToFailure(): void
     {
         // Arrange
-        $task = new class([], new \PhpMake\Utilities\Logger(false, true, true)) extends BaseTask {
+        $task = new class ([], new \PhpMake\Utilities\Logger(false, true, true)) extends BaseTask {
             /** Performs run task for the tests. */
             protected function runTask(bool $debug, bool $silent): bool
             {

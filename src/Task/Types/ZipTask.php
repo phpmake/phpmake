@@ -9,9 +9,13 @@ use ZipArchive;
 final class ZipTask extends BaseTask
 {
     private const int MAX_ARCHIVE_FILES = 10000;
+
     private const int MAX_ARCHIVE_ENTRIES = 20000;
+
     private const int MAX_ARCHIVE_DEPTH = 256;
+
     private const int MAX_ARCHIVE_FILE_BYTES = 536870912;
+
     private const int MAX_ARCHIVE_TOTAL_BYTES = 2147483648;
 
     /** Creates the configured archive and preserves an existing output on failure. */
@@ -24,6 +28,7 @@ final class ZipTask extends BaseTask
         if ($source === '' || $output === '' || (!file_exists($source) && !$this->isSymbolicLinkOrJunction($source))) {
             throw new \RuntimeException(sprintf("Archive source '%s' does not exist.", $source));
         }
+
         if ($this->isSymbolicLinkOrJunction($source)) {
             throw new \RuntimeException('Archive source cannot be a symlink.');
         }
@@ -42,9 +47,11 @@ final class ZipTask extends BaseTask
         if ($sourceReal === false || $outputParent === false) {
             throw new \RuntimeException('Unable to resolve archive source or output directory.');
         }
+
         if ($this->isSymbolicLinkOrJunction($source) || $this->isSymbolicLinkOrJunction($output)) {
             throw new \RuntimeException('Archive source and output cannot be symbolic links or junctions.');
         }
+
         $this->assertSafePath($source, 'archive source');
         $this->assertSafePath($output, 'archive output');
         $this->assertSafePath($sourceReal, 'archive source');
@@ -54,9 +61,11 @@ final class ZipTask extends BaseTask
         if ($this->isSymbolicLinkOrJunction($outputReal)) {
             throw new \RuntimeException('Archive output cannot be a symbolic link or junction.');
         }
+
         if (is_dir($outputReal)) {
             throw new \RuntimeException(sprintf("Archive output '%s' is a directory.", $outputReal));
         }
+
         if ($this->pathsReferToSameFile($sourceReal, $outputReal)) {
             throw new \RuntimeException('Archive output must not overwrite its source.');
         }
@@ -69,6 +78,7 @@ final class ZipTask extends BaseTask
             if (is_string($temporaryArchive)) {
                 @unlink($temporaryArchive);
             }
+
             throw new \RuntimeException(sprintf("Unable to create temporary archive in '%s'.", $outputParent));
         }
 
@@ -87,10 +97,10 @@ final class ZipTask extends BaseTask
             if (!$zip->close()) {
                 throw new \RuntimeException(sprintf("Failed to finalize ZIP file '%s'.", $temporaryArchive));
             }
-        } catch (\Throwable $e) {
+        } catch (\Throwable $throwable) {
             $zip->close();
             @unlink($temporaryArchive);
-            throw $e;
+            throw $throwable;
         }
 
         $this->publishArchive($temporaryArchive, $outputReal);
@@ -98,6 +108,7 @@ final class ZipTask extends BaseTask
         if ($debug) {
             $this->logger->debug(sprintf("Archived '%s' to '%s'.", $source, $output));
         }
+
         return true;
     }
 
@@ -109,6 +120,7 @@ final class ZipTask extends BaseTask
                 @unlink($temporaryArchive);
                 throw new \RuntimeException(sprintf("Unable to publish archive '%s'.", $output));
             }
+
             return;
         }
 
@@ -117,9 +129,11 @@ final class ZipTask extends BaseTask
             if (is_string($backup)) {
                 @unlink($backup);
             }
+
             @unlink($temporaryArchive);
             throw new \RuntimeException(sprintf("Unable to create archive recovery path beside '%s'.", $output));
         }
+
         if (!@unlink($backup)) {
             @unlink($temporaryArchive);
             throw new \RuntimeException(sprintf("Unable to prepare archive recovery path '%s'.", $backup));
@@ -135,12 +149,14 @@ final class ZipTask extends BaseTask
                 if (!@unlink($temporaryArchive)) {
                     $this->logger->error(sprintf("Unable to remove incomplete temporary archive '%s'.", $temporaryArchive));
                 }
+
                 throw new \RuntimeException(sprintf(
                     "CRITICAL: Archive publication and rollback failed. The previous archive is preserved at '%s'; restore it manually to '%s'.",
                     $backup,
                     $output
                 ));
             }
+
             @unlink($temporaryArchive);
             throw new \RuntimeException(sprintf("Unable to publish archive '%s'; the previous archive was restored.", $output));
         }
@@ -162,11 +178,11 @@ final class ZipTask extends BaseTask
         int &$fileCount,
         int &$entryCount,
         int &$totalBytes
-    ): void
-    {
+    ): void {
         if ($this->isSymbolicLinkOrJunction($source)) {
             throw new \RuntimeException('Archive source cannot be a symlink.');
         }
+
         $this->assertSafePath($source, 'archive input');
         if (is_file($source)) {
             foreach ($excludedPaths as $excludedPath) {
@@ -174,6 +190,7 @@ final class ZipTask extends BaseTask
                     throw new \RuntimeException('Archive output must not overwrite its source.');
                 }
             }
+
             ++$entryCount;
             $this->addArchiveFile($zip, $source, basename($source), $fileCount, $totalBytes);
             return;
@@ -188,18 +205,22 @@ final class ZipTask extends BaseTask
             if ($entryCount >= self::MAX_ARCHIVE_ENTRIES) {
                 throw new \RuntimeException(sprintf('Archive exceeds the maximum of %d entries.', self::MAX_ARCHIVE_ENTRIES));
             }
+
             ++$entryCount;
             if ($iterator->getDepth() > self::MAX_ARCHIVE_DEPTH) {
                 throw new \RuntimeException(sprintf('Archive exceeds the maximum directory depth of %d.', self::MAX_ARCHIVE_DEPTH));
             }
+
             $path = $file->getPathname();
             if ($file->isLink() || $this->isSymbolicLinkOrJunction($path)) {
                 throw new \RuntimeException(sprintf("Refusing to archive symlink '%s'.", $path));
             }
+
             $this->assertSafePath($path, 'archive input');
             if (!$file->isFile()) {
                 continue;
             }
+
             $real = $file->getRealPath();
             $excluded = false;
             foreach ($excludedPaths as $excludedPath) {
@@ -208,9 +229,11 @@ final class ZipTask extends BaseTask
                     break;
                 }
             }
+
             if ($real === false || $excluded) {
                 continue; // Exclude the old output and temporary archive from the source tree.
             }
+
             $relative = ltrim(substr($real, strlen($root)), DIRECTORY_SEPARATOR);
             $this->addArchiveFile(
                 $zip,
@@ -234,6 +257,7 @@ final class ZipTask extends BaseTask
         if ($size === false) {
             throw new \RuntimeException(sprintf("Unable to determine size of archive input '%s'.", $source));
         }
+
         if ($size > self::MAX_ARCHIVE_FILE_BYTES) {
             throw new \RuntimeException(sprintf(
                 "Archive input '%s' exceeds the per-file limit of %d bytes.",
@@ -241,15 +265,18 @@ final class ZipTask extends BaseTask
                 self::MAX_ARCHIVE_FILE_BYTES
             ));
         }
+
         if ($fileCount >= self::MAX_ARCHIVE_FILES) {
             throw new \RuntimeException(sprintf('Archive exceeds the maximum of %d files.', self::MAX_ARCHIVE_FILES));
         }
+
         if ($size > self::MAX_ARCHIVE_TOTAL_BYTES - $totalBytes) {
             throw new \RuntimeException(sprintf(
                 'Archive exceeds the maximum uncompressed size of %d bytes.',
                 self::MAX_ARCHIVE_TOTAL_BYTES
             ));
         }
+
         if (!$zip->addFile($source, $archivePath)) {
             throw new \RuntimeException(sprintf("Unable to add '%s' to archive.", $source));
         }
@@ -285,6 +312,7 @@ final class ZipTask extends BaseTask
         if (!isset($this->params['source'], $this->params['output']) || !is_string($this->params['source']) || !is_string($this->params['output'])) {
             throw new \InvalidArgumentException("Archive task requires string 'source' and 'output' parameters.");
         }
+
         $this->assertSafePath($this->params['source'], 'archive source');
         $this->assertSafePath($this->params['output'], 'archive output');
     }

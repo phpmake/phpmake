@@ -10,7 +10,7 @@ use PhpMake\Utilities\Logger;
 use PhpMake\Tests\Support\DirectoryLinkTestHelper;
 use PHPUnit\Framework\TestCase;
 
-    /** Tests filesystem boundary enforcement and symbolic-link safety. */
+/** Tests filesystem boundary enforcement and symbolic-link safety. */
 final class PathSafetyTest extends TestCase
 {
     use DirectoryLinkTestHelper;
@@ -24,11 +24,7 @@ final class PathSafetyTest extends TestCase
         $this->logger = new Logger(false, true, true);
     }
 
-    /**
-     * @test
-     *
-     * @small
-     */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testDeleteRejectsPathOutsideProject(): void
     {
         // Arrange
@@ -40,11 +36,7 @@ final class PathSafetyTest extends TestCase
         new DeleteTask(['path' => sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'outside.txt'], $this->logger);
     }
 
-    /**
-     * @test
-     *
-     * @small
-     */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testCopyRejectsSourceOutsideProject(): void
     {
         // Arrange
@@ -59,11 +51,7 @@ final class PathSafetyTest extends TestCase
         ], $this->logger);
     }
 
-    /**
-     * @test
-     *
-     * @small
-     */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testCreateDirectoryRejectsParentTraversal(): void
     {
         // Arrange
@@ -75,11 +63,7 @@ final class PathSafetyTest extends TestCase
         new CreateDirectoryTask(['name' => '..' . DIRECTORY_SEPARATOR . 'outside-dir'], $this->logger);
     }
 
-    /**
-     * @test
-     *
-     * @small
-     */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testArchiveRejectsOutputOutsideProject(): void
     {
         // Arrange
@@ -94,11 +78,7 @@ final class PathSafetyTest extends TestCase
         ], $this->logger);
     }
 
-    /**
-     * @test
-     *
-     * @small
-     */
+    #[\PHPUnit\Framework\Attributes\Test]
     public function testCreateDirectoryIsIdempotent(): void
     {
         // Arrange
@@ -147,6 +127,7 @@ final class PathSafetyTest extends TestCase
             if (is_dir($link) || is_link($link)) {
                 $this->removeDirectoryLink($link);
             }
+
             chdir($originalCwd);
             rmdir($outside);
             rmdir($project);
@@ -184,12 +165,15 @@ final class PathSafetyTest extends TestCase
             if (is_dir($source . DIRECTORY_SEPARATOR . 'linked') || is_link($source . DIRECTORY_SEPARATOR . 'linked')) {
                 $this->removeDirectoryLink($source . DIRECTORY_SEPARATOR . 'linked');
             }
+
             if (is_dir($dest)) {
                 rmdir($dest);
             }
+
             if (is_file($source . DIRECTORY_SEPARATOR . 'a-first.txt')) {
                 unlink($source . DIRECTORY_SEPARATOR . 'a-first.txt');
             }
+
             unlink($outside . DIRECTORY_SEPARATOR . 'secret.txt');
             chdir($originalCwd);
             rmdir($source);
@@ -227,9 +211,11 @@ final class PathSafetyTest extends TestCase
             if (is_dir($link) || is_link($link)) {
                 $this->removeDirectoryLink($link);
             }
+
             if (is_file($target . DIRECTORY_SEPARATOR . 'keep.txt')) {
                 unlink($target . DIRECTORY_SEPARATOR . 'keep.txt');
             }
+
             chdir($originalCwd);
             rmdir($target);
             rmdir($project);
@@ -245,9 +231,9 @@ final class PathSafetyTest extends TestCase
         try {
             new DeleteTask(['path' => $root . DIRECTORY_SEPARATOR . '.' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . basename($root)], $this->logger);
             self::fail('Deleting the project root must be rejected.');
-        } catch (\InvalidArgumentException $exception) {
+        } catch (\InvalidArgumentException $invalidArgumentException) {
             // Assert
-            self::assertStringContainsString('project root', $exception->getMessage());
+            self::assertStringContainsString('project root', $invalidArgumentException->getMessage());
         }
     }
 
@@ -288,12 +274,15 @@ final class PathSafetyTest extends TestCase
             if (is_dir($link) || is_link($link)) {
                 $this->removeDirectoryLink($link);
             }
+
             if (is_file($source . DIRECTORY_SEPARATOR . 'a-first.txt')) {
                 unlink($source . DIRECTORY_SEPARATOR . 'a-first.txt');
             }
+
             if (is_file($dest . DIRECTORY_SEPARATOR . 'keep.txt')) {
                 unlink($dest . DIRECTORY_SEPARATOR . 'keep.txt');
             }
+
             chdir($originalCwd);
             rmdir($source);
             rmdir($dest);
@@ -354,6 +343,7 @@ final class PathSafetyTest extends TestCase
             if (is_file($victim)) {
                 unlink($victim);
             }
+
             rmdir($sibling);
             rmdir($project);
             rmdir($base);

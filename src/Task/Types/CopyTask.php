@@ -15,6 +15,7 @@ final class CopyTask extends BaseTask
         if ($source === '' || $dest === '') {
             throw new \InvalidArgumentException("Missing 'source' or 'dest' parameter.");
         }
+
         $this->assertSafePath($source, 'copy source');
         $this->assertSafePath($dest, 'copy dest', false);
         if ($this->isSymbolicLinkOrJunction($source) || !file_exists($source)) {
@@ -27,6 +28,7 @@ final class CopyTask extends BaseTask
                 $this->logger->error(sprintf("Copy source '%s' is not a regular file or directory.", $source));
                 return false;
             }
+
             return $this->copyFile($source, $dest);
         }
 
@@ -42,14 +44,17 @@ final class CopyTask extends BaseTask
             $this->logger->error(sprintf("Refusing to write through destination link '%s'.", $dest));
             return false;
         }
+
         if ($this->isSymbolicLinkOrJunction($source)) {
             $this->logger->error(sprintf("Refusing to copy symlink '%s'.", $source));
             return false;
         }
+
         if ($this->pathsReferToSameFile($source, $dest)) {
             $this->logger->error(sprintf("Refusing to copy '%s' onto the same filesystem entry '%s'.", $source, $dest));
             return false;
         }
+
         if (is_dir($dest)) {
             $this->logger->error(sprintf("File copy destination '%s' is a directory.", $dest));
             return false;
@@ -60,17 +65,20 @@ final class CopyTask extends BaseTask
             $this->logger->error(sprintf("Unable to create destination directory '%s'.", $destDir));
             return false;
         }
+
         $resolvedDestDir = realpath($destDir);
         if ($resolvedDestDir === false) {
             $this->logger->error(sprintf("Unable to resolve destination directory '%s'.", $destDir));
             return false;
         }
+
         $this->assertSafePath($resolvedDestDir, 'copy destination directory');
         $this->assertSafePath($dest, 'copy dest', false);
         if ($this->isSymbolicLinkOrJunction($dest)) {
             $this->logger->error(sprintf("Refusing to write through destination link '%s'.", $dest));
             return false;
         }
+
         $destPath = realpath($dest) ?: $resolvedDestDir . DIRECTORY_SEPARATOR . basename($dest);
         $this->assertSafePath($destPath, 'copy dest', false);
 
@@ -80,9 +88,11 @@ final class CopyTask extends BaseTask
             if (is_string($temporary)) {
                 @unlink($temporary);
             }
+
             $this->logger->error(sprintf("Unable to create temporary copy beside '%s'.", $destPath));
             return false;
         }
+
         if (!@copy($source, $temporary)) {
             @unlink($temporary);
             $this->logger->error(sprintf("Failed to stage copy from '%s' to '%s'.", $source, $destPath));
@@ -91,7 +101,7 @@ final class CopyTask extends BaseTask
 
         $sourcePermissions = @fileperms($source);
         if ($sourcePermissions !== false) {
-            @chmod($temporary, $sourcePermissions & 0777);
+            @chmod($temporary, $sourcePermissions & 0o777);
         }
 
         if (!file_exists($destPath)) {
@@ -106,25 +116,30 @@ final class CopyTask extends BaseTask
                 if (is_string($backup)) {
                     @unlink($backup);
                 }
+
                 @unlink($temporary);
                 $this->logger->error(sprintf("Unable to create recovery path beside '%s'.", $destPath));
                 return false;
             }
+
             if (!@unlink($backup)) {
                 @unlink($temporary);
                 $this->logger->error(sprintf("Unable to prepare recovery path '%s'.", $backup));
                 return false;
             }
+
             if (!@rename($destPath, $backup)) {
                 @unlink($temporary);
                 $this->logger->error(sprintf("Unable to preserve existing destination '%s'.", $destPath));
                 return false;
             }
+
             if (!@rename($temporary, $destPath)) {
                 if (!@rename($backup, $destPath)) {
                     if (!@unlink($temporary)) {
                         $this->logger->error(sprintf("Unable to remove incomplete staged copy '%s'.", $temporary));
                     }
+
                     $this->logger->error(sprintf(
                         "CRITICAL: File copy publication and rollback failed. The original file is preserved at '%s'; restore it manually to '%s'.",
                         $backup,
@@ -132,10 +147,12 @@ final class CopyTask extends BaseTask
                     ));
                     return false;
                 }
+
                 @unlink($temporary);
                 $this->logger->error(sprintf("Unable to publish copied file '%s'; the original was restored.", $destPath));
                 return false;
             }
+
             if (!@unlink($backup)) {
                 $this->logger->error(sprintf(
                     "File copied to '%s', but the previous destination could not be removed. Recovery backup retained at '%s'.",
@@ -172,10 +189,12 @@ final class CopyTask extends BaseTask
             $this->logger->error(sprintf("Refusing to traverse symlink directory '%s'.", $source));
             return false;
         }
+
         if ($this->isSymbolicLinkOrJunction($dest)) {
             $this->logger->error(sprintf("Refusing to copy through destination link '%s'.", $dest));
             return false;
         }
+
         if ($this->destinationIsWithinSource($source, $dest)) {
             $this->logger->error(sprintf(
                 "Refusing to copy directory '%s' into itself or one of its descendants.",
@@ -183,6 +202,7 @@ final class CopyTask extends BaseTask
             ));
             return false;
         }
+
         if (!is_dir($dest) && !@mkdir($dest, 0o777, true) && !is_dir($dest)) {
             $this->logger->error(sprintf("Unable to create destination directory '%s'.", $dest));
             return false;
@@ -205,6 +225,7 @@ final class CopyTask extends BaseTask
                 $this->logger->error(sprintf("Refusing to copy symlink '%s'.", $src));
                 return false;
             }
+
             if (!is_dir($src) && !is_file($src)) {
                 $this->logger->error(sprintf("Refusing to copy unsupported filesystem entry '%s'.", $src));
                 return false;
@@ -232,10 +253,12 @@ final class CopyTask extends BaseTask
             ));
             return false;
         }
+
         if ($this->isSymbolicLinkOrJunction($destination)) {
             $this->logger->error(sprintf("Refusing to replace destination link '%s'.", $destination));
             return false;
         }
+
         if (file_exists($destination) && !is_dir($destination)) {
             $this->logger->error(sprintf("Directory copy destination '%s' is not a directory.", $destination));
             return false;
@@ -250,12 +273,15 @@ final class CopyTask extends BaseTask
             if (!$this->removeCreatedTree($staging)) {
                 $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
             }
+
             return false;
         }
+
         if (!$this->copyDirectory($source, $staging)) {
             if (!$this->removeCreatedTree($staging)) {
                 $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
             }
+
             return false;
         }
 
@@ -265,6 +291,7 @@ final class CopyTask extends BaseTask
             if (!$this->removeCreatedTree($staging)) {
                 $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
             }
+
             return false;
         }
 
@@ -277,9 +304,11 @@ final class CopyTask extends BaseTask
                     $destination
                 ));
             }
+
             if (!$this->removeCreatedTree($staging)) {
                 $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
             }
+
             return false;
         }
 
@@ -291,6 +320,7 @@ final class CopyTask extends BaseTask
             ));
             return false;
         }
+
         return true;
     }
 
@@ -300,6 +330,7 @@ final class CopyTask extends BaseTask
         if ($this->isSymbolicLinkOrJunction($path)) {
             return $this->removeSymbolicLinkOrJunction($path);
         }
+
         if (!is_dir($path)) {
             return !file_exists($path) || @unlink($path);
         }
@@ -314,6 +345,7 @@ final class CopyTask extends BaseTask
             if ($item === '.' || $item === '..') {
                 continue;
             }
+
             $child = $path . DIRECTORY_SEPARATOR . $item;
             if ($this->isSymbolicLinkOrJunction($child)) {
                 $removed = $this->removeSymbolicLinkOrJunction($child);
@@ -322,6 +354,7 @@ final class CopyTask extends BaseTask
             } else {
                 $removed = $this->removeCreatedTree($child);
             }
+
             if (!$removed) {
                 return false;
             }

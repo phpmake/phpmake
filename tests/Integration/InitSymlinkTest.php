@@ -46,9 +46,11 @@ final class InitSymlinkTest extends TestCase
             if (is_link($link)) {
                 unlink($link);
             }
+
             if (is_file($target)) {
                 unlink($target);
             }
+
             rmdir($project);
         }
     }

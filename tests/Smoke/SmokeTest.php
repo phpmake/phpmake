@@ -22,7 +22,7 @@ namespace PhpMake\Tests\Smoke {
             ];
 
             // Act
-            $loaded = array_map(static fn (string $class): bool => class_exists($class), $classes);
+            $loaded = array_map(class_exists(...), $classes);
 
             // Assert
             self::assertNotContains(false, $loaded);
@@ -70,9 +70,11 @@ namespace PhpMake\Tests\Smoke {
                 if (is_file($sourceFile)) {
                     unlink($sourceFile);
                 }
+
                 if (is_file($destFile)) {
                     unlink($destFile);
                 }
+
                 if (is_dir($baseDir)) {
                     rmdir($baseDir);
                 }

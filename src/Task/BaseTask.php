@@ -4,7 +4,7 @@ namespace PhpMake\Task;
 
 use PhpMake\Utilities\Logger;
 
-    /** Provides shared execution, logging, and filesystem-safety behavior for tasks. */
+/** Provides shared execution, logging, and filesystem-safety behavior for tasks. */
 abstract class BaseTask implements TaskInterface
 {
     /** Initializes the task and validates its parameters. */
@@ -18,8 +18,8 @@ abstract class BaseTask implements TaskInterface
     {
         try {
             return $this->runTask($debug, $silent);
-        } catch (\Throwable $exception) {
-            $this->logger->error($exception->getMessage());
+        } catch (\Throwable $throwable) {
+            $this->logger->error($throwable->getMessage());
             return false;
         }
     }
@@ -32,6 +32,7 @@ abstract class BaseTask implements TaskInterface
 
     /** Executes the task-specific operation. */
     abstract protected function runTask(bool $debug, bool $silent): bool;
+
     /** Validates task-specific parameters before execution. */
     abstract protected function validateParams(): void;
 
@@ -48,6 +49,7 @@ abstract class BaseTask implements TaskInterface
         if (!is_dir($path)) {
             return is_link($path);
         }
+
         if (is_link($path)) {
             return true;
         }
@@ -118,6 +120,7 @@ abstract class BaseTask implements TaskInterface
             if ($cwd === false) {
                 throw new \RuntimeException('Unable to resolve current working directory.');
             }
+
             $path = $cwd . DIRECTORY_SEPARATOR . $path;
         }
 
@@ -133,6 +136,7 @@ abstract class BaseTask implements TaskInterface
             if (count($parts) < 2) {
                 throw new \InvalidArgumentException(sprintf("Safety Violation: Invalid UNC path for %s.", $label));
             }
+
             $root = DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR . $parts[0] . DIRECTORY_SEPARATOR . $parts[1] . DIRECTORY_SEPARATOR;
             $remaining = $parts[2] ?? '';
         }
@@ -151,9 +155,11 @@ abstract class BaseTask implements TaskInterface
                 if (!file_exists($current) && !$this->isSymbolicLinkOrJunction($current)) {
                     throw new \InvalidArgumentException(sprintf("Safety Violation: Unresolved path component before '..' for %s.", $label));
                 }
+
                 if (!is_dir($current)) {
                     throw new \InvalidArgumentException(sprintf("Safety Violation: Non-directory path component for %s.", $label));
                 }
+
                 $rootBoundary = rtrim($root, DIRECTORY_SEPARATOR);
                 $currentBoundary = rtrim($current, DIRECTORY_SEPARATOR);
                 if ($currentBoundary !== $rootBoundary) {
@@ -162,6 +168,7 @@ abstract class BaseTask implements TaskInterface
                         $current = DIRECTORY_SEPARATOR;
                     }
                 }
+
                 continue;
             }
 
@@ -171,6 +178,7 @@ abstract class BaseTask implements TaskInterface
                 if ($resolved === false) {
                     throw new \InvalidArgumentException(sprintf("Safety Violation: Dangling or unresolvable link in path for %s.", $label));
                 }
+
                 $current = $resolved;
             } else {
                 $current = $candidate;
@@ -239,14 +247,18 @@ abstract class BaseTask implements TaskInterface
             if ($part === '' || $part === '.') {
                 continue;
             }
+
             if ($part === '..') {
                 if ($parts !== []) {
                     array_pop($parts);
                 }
+
                 continue;
             }
+
             $parts[] = $part;
         }
+
         return $prefix . implode(DIRECTORY_SEPARATOR, $parts);
     }
 }

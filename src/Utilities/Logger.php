@@ -3,17 +3,18 @@
 namespace PhpMake\Utilities;
 
 /** Writes console messages and optionally persists them to a rotating log. */
-final class Logger
+final readonly class Logger
 {
     private const int MAX_SIZE = 10 * 1024 * 1024;
+
     private const int MAX_FILES = 5;
 
     /** Configures debug output, console silence, file logging, and an optional log path. */
     public function __construct(
-        private readonly bool $debug,
-        private readonly bool $silent,
-        private readonly bool $noLog,
-        private readonly string $logFile = 'build.log'
+        private bool $debug,
+        private bool $silent,
+        private bool $noLog,
+        private string $logFile = 'build.log'
     ) {}
 
     /** Writes an informational message. */
@@ -22,6 +23,7 @@ final class Logger
         if (!$this->silent) {
             echo $message . PHP_EOL;
         }
+
         $this->writeLog('INFO: ' . $message);
     }
 
@@ -31,6 +33,7 @@ final class Logger
         if ($this->debug && !$this->silent) {
             echo 'DEBUG: ' . $message . PHP_EOL;
         }
+
         $this->writeLog('DEBUG: ' . $message);
     }
 
@@ -105,8 +108,10 @@ final class Logger
                     if ($written === false || $written === 0) {
                         throw new \RuntimeException('Unable to write complete build log entry.');
                     }
+
                     $offset += $written;
                 }
+
                 fflush($fp);
             } finally {
                 fclose($fp);

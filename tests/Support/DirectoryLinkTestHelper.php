@@ -14,6 +14,7 @@ trait DirectoryLinkTestHelper
         if (PHP_OS_FAMILY !== 'Windows' || !is_dir($path) || is_link($path)) {
             return false;
         }
+
         $stat = @lstat($path);
         return is_array($stat) && (($stat['mode'] & 0xF000) !== 0x4000);
     }
@@ -28,10 +29,12 @@ trait DirectoryLinkTestHelper
             if ($exitCode === 0) {
                 return;
             }
+
             if (@rmdir($path)) {
                 return;
             }
         }
+
         unlink($path);
     }
 

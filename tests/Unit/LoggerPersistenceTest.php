@@ -21,7 +21,7 @@ final class LoggerPersistenceTest extends TestCase
         $this->previousDirectory = getcwd();
         $this->temporaryDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR
             . 'phpmake-logger-' . bin2hex(random_bytes(8));
-        self::assertTrue(mkdir($this->temporaryDirectory, 0777, true));
+        self::assertTrue(mkdir($this->temporaryDirectory, 0o777, true));
         self::assertTrue(chdir($this->temporaryDirectory));
     }
 
@@ -41,7 +41,7 @@ final class LoggerPersistenceTest extends TestCase
         $visible = new Logger(true, false, false, 'visible.log');
         ob_start();
         try {
-        // Act
+            // Act
             $visible->info('info-line');
             $visible->debug('debug-line');
             $output = ob_get_contents();
@@ -67,6 +67,7 @@ final class LoggerPersistenceTest extends TestCase
         } finally {
             ob_end_clean();
         }
+
         self::assertSame('', $output);
         self::assertFalse($silent->isDebugEnabled());
         self::assertTrue($silent->isSilent());
@@ -81,9 +82,11 @@ final class LoggerPersistenceTest extends TestCase
         if (!in_array('phpmake-log-rename-fail', stream_get_wrappers(), true)) {
             self::assertTrue(stream_wrapper_register('phpmake-log-rename-fail', RenameFailureLogStreamWrapper::class));
         }
+
         if (!in_array('phpmake-log-write-fail', stream_get_wrappers(), true)) {
             self::assertTrue(stream_wrapper_register('phpmake-log-write-fail', WriteFailureLogStreamWrapper::class));
         }
+
         try {
             RenameFailureLogStreamWrapper::$backupFourExists = true;
             (new Logger(false, true, false, 'phpmake-log-rename-fail://logs/current.log'))->info('backup rotation failure');
@@ -99,6 +102,7 @@ final class LoggerPersistenceTest extends TestCase
         for ($index = 1; $index <= 5; ++$index) {
             file_put_contents('rotating.log.' . $index, 'old-' . $index);
         }
+
         (new Logger(false, true, false, 'rotating.log'))->info('new-entry');
 
         self::assertStringContainsString('new-entry', file_get_contents('rotating.log'));
@@ -114,6 +118,7 @@ final class LoggerPersistenceTest extends TestCase
         if (!in_array('phpmake-lock-fail', stream_get_wrappers(), true)) {
             self::assertTrue(stream_wrapper_register('phpmake-lock-fail', LockFailureStreamWrapper::class));
         }
+
         if (!in_array('phpmake-open-throws', stream_get_wrappers(), true)) {
             self::assertTrue(stream_wrapper_register('phpmake-open-throws', OpenFailureStreamWrapper::class));
         }
@@ -194,6 +199,7 @@ final class LoggerPersistenceTest extends TestCase
             preg_match('/INFO: worker-(\\d+)-(\\d+)$/', $line, $matches);
             $entries[$matches[1] . '-' . $matches[2]] = true;
         }
+
         self::assertCount($workerCount * $messagesPerWorker, $entries);
     }
 
@@ -211,6 +217,7 @@ final class LoggerPersistenceTest extends TestCase
                 rmdir($item->getPathname());
             }
         }
+
         rmdir($directory);
     }
 }
@@ -241,7 +248,7 @@ final class LockFailureStreamWrapper
     /** Returns wrapper stream metadata. */
     public function stream_stat(): array
     {
-        return ['mode' => 0100666, 'size' => 0];
+        return ['mode' => 0o100666, 'size' => 0];
     }
 }
 
@@ -307,9 +314,9 @@ final class RenameFailureLogStreamWrapper
     private function stat(int $size): array
     {
         return [
-            2 => 0100666,
+            2 => 0o100666,
             7 => $size,
-            'mode' => 0100666,
+            'mode' => 0o100666,
             'size' => $size,
         ];
     }
@@ -336,15 +343,15 @@ final class WriteFailureLogStreamWrapper
     public function url_stat(string $path, int $flags): array
     {
         return [
-            2 => 0100666,
+            2 => 0o100666,
             7 => 0,
-            'mode' => 0100666,
+            'mode' => 0o100666,
             'size' => 0,
         ];
     }
 
     /** Forces fwrite() to return false so Logger handles the persistence failure. */
-    public function stream_write(string $data)
+    public function stream_write(string $data): bool
     {
         return false;
     }
@@ -379,6 +386,7 @@ final class PartialWriteLogStreamWrapper
         if (str_ends_with($this->path, '.lock')) {
             return strlen($data);
         }
+
         $chunk = substr($data, 0, 3);
         self::$contents .= $chunk;
         return strlen($chunk);
@@ -393,7 +401,7 @@ final class PartialWriteLogStreamWrapper
     /** Returns metadata for an opened virtual stream. */
     public function stream_stat(): array
     {
-        return ['mode' => 0100666, 'size' => strlen(self::$contents)];
+        return ['mode' => 0o100666, 'size' => strlen(self::$contents)];
     }
 
     /** Confirms buffered writes are accepted. */

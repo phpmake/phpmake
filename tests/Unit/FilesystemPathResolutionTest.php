@@ -18,9 +18,13 @@ final class FilesystemPathResolutionTest extends TestCase
     use DirectoryLinkTestHelper;
 
     private Logger $logger;
+
     private string $base;
+
     private string $root;
+
     private string $outside;
+
     private string $originalCwd;
 
     protected function setUp(): void
@@ -31,8 +35,8 @@ final class FilesystemPathResolutionTest extends TestCase
         $this->base = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-path-resolution-' . bin2hex(random_bytes(8));
         $this->root = $this->base . DIRECTORY_SEPARATOR . 'project';
         $this->outside = $this->base . DIRECTORY_SEPARATOR . 'outside';
-        self::assertTrue(mkdir($this->root, 0777, true));
-        self::assertTrue(mkdir($this->outside . DIRECTORY_SEPARATOR . 'subdir', 0777, true));
+        self::assertTrue(mkdir($this->root, 0o777, true));
+        self::assertTrue(mkdir($this->outside . DIRECTORY_SEPARATOR . 'subdir', 0o777, true));
         self::assertTrue(chdir($this->root));
 
         $link = $this->root . DIRECTORY_SEPARATOR . 'link';
@@ -56,21 +60,21 @@ final class FilesystemPathResolutionTest extends TestCase
         file_put_contents($insideFile, 'source');
 
         // Act / Assert
-        $this->assertRejected(fn() => new DeleteTask(['path' => $escape], $this->logger));
-        $this->assertRejected(fn() => new CreateDirectoryTask(['name' => $escape], $this->logger));
-        $this->assertRejected(fn() => new CopyTask([
+        $this->assertRejected(fn(): \PhpMake\Task\Types\DeleteTask => new DeleteTask(['path' => $escape], $this->logger));
+        $this->assertRejected(fn(): \PhpMake\Task\Types\CreateDirectoryTask => new CreateDirectoryTask(['name' => $escape], $this->logger));
+        $this->assertRejected(fn(): \PhpMake\Task\Types\CopyTask => new CopyTask([
             'source' => $escape,
             'dest' => 'copy.txt',
         ], $this->logger));
-        $this->assertRejected(fn() => new CopyTask([
+        $this->assertRejected(fn(): \PhpMake\Task\Types\CopyTask => new CopyTask([
             'source' => 'source.txt',
             'dest' => 'link' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'written.txt',
         ], $this->logger));
-        $this->assertRejected(fn() => new ZipTask([
+        $this->assertRejected(fn(): \PhpMake\Task\Types\ZipTask => new ZipTask([
             'source' => $escape,
             'output' => 'archive.zip',
         ], $this->logger));
-        $this->assertRejected(fn() => new ZipTask([
+        $this->assertRejected(fn(): \PhpMake\Task\Types\ZipTask => new ZipTask([
             'source' => 'source.txt',
             'output' => 'link' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'archive.zip',
         ], $this->logger));
@@ -99,7 +103,7 @@ final class FilesystemPathResolutionTest extends TestCase
             self::assertTrue($task->execute(false, true));
             self::assertDirectoryExists($this->root . DIRECTORY_SEPARATOR . 'case-check');
         } else {
-            $this->assertRejected(fn() => new CreateDirectoryTask(['name' => $candidate], $this->logger));
+            $this->assertRejected(fn(): \PhpMake\Task\Types\CreateDirectoryTask => new CreateDirectoryTask(['name' => $candidate], $this->logger));
         }
     }
 
@@ -146,12 +150,15 @@ final class FilesystemPathResolutionTest extends TestCase
             if (is_link($safeDirectory) || $this->isDirectoryJunction($safeDirectory)) {
                 $this->removeDirectoryLink($safeDirectory);
             }
+
             if (is_dir($savedDirectory)) {
                 rename($savedDirectory, $safeDirectory);
             }
+
             if (is_file($outsideVictim)) {
                 unlink($outsideVictim);
             }
+
             if (is_file($this->root . DIRECTORY_SEPARATOR . 'source.txt')) {
                 unlink($this->root . DIRECTORY_SEPARATOR . 'source.txt');
             }
@@ -164,8 +171,8 @@ final class FilesystemPathResolutionTest extends TestCase
         try {
             $factory();
             self::fail('Expected filesystem path validation to reject the traversal path.');
-        } catch (\InvalidArgumentException $exception) {
-            self::assertStringContainsString('escapes project directory', $exception->getMessage());
+        } catch (\InvalidArgumentException $invalidArgumentException) {
+            self::assertStringContainsString('escapes project directory', $invalidArgumentException->getMessage());
         }
     }
 
@@ -176,10 +183,12 @@ final class FilesystemPathResolutionTest extends TestCase
             $this->removeDirectoryLink($path);
             return;
         }
+
         if (is_file($path)) {
             @unlink($path);
             return;
         }
+
         if (!is_dir($path)) {
             return;
         }
@@ -192,6 +201,7 @@ final class FilesystemPathResolutionTest extends TestCase
                 }
             }
         }
+
         @rmdir($path);
     }
 }
