@@ -87,6 +87,9 @@ jobs:
       - name: Lint codes
         run: composer lint
 
+      - name: Run PHPStan static analysis
+        run: composer analyse
+
       - name: Check code formatting (existing baseline debt)
         continue-on-error: true
         run: composer format-check
