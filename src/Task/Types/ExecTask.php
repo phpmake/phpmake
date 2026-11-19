@@ -131,7 +131,7 @@ PHP;
         if ($processPidPath !== null) {
             for ($attempt = 0; $attempt < 100; ++$attempt) {
                 $childPid = trim((string) @file_get_contents($processPidPath));
-                if (ctype_digit($childPid) && (int) $childPid > 0) {
+                if (preg_match('/^[0-9]+$/D', $childPid) === 1 && (int) $childPid > 0) {
                     $processPid = (int) $childPid;
                     break;
                 }
