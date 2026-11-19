@@ -336,7 +336,7 @@ final class BuildValidatorTest extends TestCase
         $errors = (new BuildValidator())->validate($config);
 
         // Assert
-        self::assertStringContainsString("has no valid 'params' object", implode("\\n", $errors));
+        self::assertStringContainsString("has no valid 'params' object", implode("\n", $errors));
     }
 
 }
