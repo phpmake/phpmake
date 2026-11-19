@@ -39,6 +39,7 @@
         "maglnet/composer-require-checker": "^4.0",
         "overtrue/phplint": "^9.0",
         "phpunit/phpunit": "^12.0",
+        "phpstan/phpstan": "^2.1",
         "rector/rector": "^2.0"
     },
     "minimum-stability": "dev",
@@ -83,6 +84,7 @@
         "refactor-check": "rector --dry-run",
         "reformat": "php-cs-fixer fix",
         "test": "phpunit --configuration phpunit.xml",
+        "analyse": "phpstan analyse --configuration=phpstan.neon --no-progress",
         "benchmark": "php benchmarks/run.php"
     },
     "scripts-descriptions": {
@@ -92,6 +94,7 @@
         "refactor-check": "Check code refactoring rules.",
         "reformat": "Fix coding style issues.",
         "test": "Run all tests.",
+        "analyse": "Run PHPStan static analysis on the source tree.",
         "benchmark": "Measure process startup, concurrent execution, file writes, ZIP throughput, and peak memory."
     }
 }
