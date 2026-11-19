@@ -384,10 +384,12 @@ final class TaskExecutionTest extends TestCase
     public function testExecTaskTerminatesProcessTreeOnTimeout(): void
     {
         // Arrange
-        if (PHP_OS_FAMILY !== 'Windows') {
-            self::assertTrue(
-                function_exists('posix_setpgid') && function_exists('posix_kill'),
-                'POSIX process-group support is required for descendant termination tests.'
+        if (PHP_OS_FAMILY !== 'Windows' && (
+            !function_exists('posix_setsid')
+            || !function_exists('posix_kill')
+        )) {
+            self::markTestSkipped(
+                'POSIX process-group support (posix_setsid and posix_kill) is unavailable.'
             );
         }
 
