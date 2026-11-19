@@ -173,16 +173,16 @@ vendor/bin/phpunit tests/
 
 | Command                      | Description                      |
 | ---------------------------- | -------------------------------- |
-| `phpmake`                    | Run default target               |
-| `phpmake <target>`           | Run specific target              |
-| `phpmake --help` / `-h`      | Show help menu                   |
-| `phpmake --version` / `-v`   | Show PHPMake version             |
-| `phpmake --validate-build` / `-vb` | Validate build file        |
-| `phpmake --diagnostics`      | Show system information          |
-| `phpmake -d` / `--debug`     | Enable debug/verbose logging     |
-| `phpmake -nl` / `--no-log`   | Disable file logging             |
-| `phpmake -s` / `--silent`    | Suppress normal output; errors remain visible on STDERR |
-| `phpmake --init`             | Create sample build.json file    |
+| `php vendor/bin/phpmake.php`  | Run default target               |
+| `php vendor/bin/phpmake.php <target>` | Run specific target       |
+| `php vendor/bin/phpmake.php --help` / `-h` | Show help menu      |
+| `php vendor/bin/phpmake.php --version` / `-v` | Show PHPMake version |
+| `php vendor/bin/phpmake.php --validate-build` / `-vb` | Validate build file |
+| `php vendor/bin/phpmake.php --diagnostics` | Show system information |
+| `php vendor/bin/phpmake.php -d` / `--debug` | Enable debug/verbose logging |
+| `php vendor/bin/phpmake.php -nl` / `--no-log` | Disable file logging |
+| `php vendor/bin/phpmake.php -s` / `--silent` | Suppress normal output; errors remain visible on STDERR |
+| `php vendor/bin/phpmake.php --init` | Create sample build.json file |
 
 ### Supported tasks
 
