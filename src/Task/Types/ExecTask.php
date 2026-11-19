@@ -48,10 +48,13 @@ final class ExecTask extends BaseTask
             $processOptions['create_process_group'] = true;
         }
 
-        $windowsPidPath = null;
-        if (PHP_OS_FAMILY === 'Windows') {
+        $processPidPath = null;
+        if (
+            PHP_OS_FAMILY === 'Windows'
+            || (!$hasPosixExtension && $setsidExecutable !== null)
+        ) {
             $pidPath = tempnam(sys_get_temp_dir(), 'phpmake-pid-');
-            $windowsPidPath = $pidPath === false ? null : $pidPath;
+            $processPidPath = $pidPath === false ? null : $pidPath;
         }
 
         if (PHP_OS_FAMILY === 'Windows' || $hasPosixProcessGroups) {
@@ -94,8 +97,8 @@ PHP;
             if (!$hasPosixExtension && $setsidExecutable !== null) {
                 array_unshift($launchArgv, $setsidExecutable);
             }
-            if ($windowsPidPath !== null) {
-                $launchArgv[] = $windowsPidPath;
+            if ($processPidPath !== null) {
+                $launchArgv[] = $processPidPath;
             }
             $processGroupCreated = $hasPosixProcessGroups;
         }
@@ -114,8 +117,8 @@ PHP;
             $processOptions
         );
         if (!is_resource($process)) {
-            if ($windowsPidPath !== null) {
-                @unlink($windowsPidPath);
+            if ($processPidPath !== null) {
+                @unlink($processPidPath);
             }
             $this->logger->error('Unable to start command process.');
             return false;
@@ -125,9 +128,9 @@ PHP;
         stream_set_blocking($pipes[2], false);
         $processPid = proc_get_status($process)['pid'] ?? null;
         $launcherPid = $processPid;
-        if ($windowsPidPath !== null) {
-            for ($attempt = 0; $attempt < 20; ++$attempt) {
-                $childPid = trim((string) @file_get_contents($windowsPidPath));
+        if ($processPidPath !== null) {
+            for ($attempt = 0; $attempt < 100; ++$attempt) {
+                $childPid = trim((string) @file_get_contents($processPidPath));
                 if (ctype_digit($childPid) && (int) $childPid > 0) {
                     $processPid = (int) $childPid;
                     break;
@@ -197,8 +200,8 @@ PHP;
                     fclose($pipe);
                 }
             }
-            if ($windowsPidPath !== null) {
-                @unlink($windowsPidPath);
+            if ($processPidPath !== null) {
+                @unlink($processPidPath);
             }
             if ($previousAsyncSignals !== null) {
                 foreach ($previousSignalHandlers as $signal => $handler) {
