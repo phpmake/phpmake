@@ -8,6 +8,10 @@ use ZipArchive;
 /** Creates ZIP archives transactionally while rejecting symbolic links. */
 final class ZipTask extends BaseTask
 {
+    private const int MAX_ARCHIVE_FILES = 10000;
+    private const int MAX_ARCHIVE_FILE_BYTES = 536870912;
+    private const int MAX_ARCHIVE_TOTAL_BYTES = 2147483648;
+
     /** Creates the configured archive and preserves an existing output on failure. */
     protected function runTask(bool $debug, bool $silent): bool
     {
@@ -74,7 +78,9 @@ final class ZipTask extends BaseTask
         }
 
         try {
-            $this->addFilesToZip($zip, $sourceReal, [$outputReal, $temporaryArchive]);
+            $fileCount = 0;
+            $totalBytes = 0;
+            $this->addFilesToZip($zip, $sourceReal, [$outputReal, $temporaryArchive], $fileCount, $totalBytes);
             if (!$zip->close()) {
                 throw new \RuntimeException(sprintf("Failed to finalize ZIP file '%s'.", $temporaryArchive));
             }
@@ -146,7 +152,13 @@ final class ZipTask extends BaseTask
     }
 
     /** Adds source files to the archive using paths relative to its root. */
-    private function addFilesToZip(ZipArchive $zip, string $source, array $excludedPaths): void
+    private function addFilesToZip(
+        ZipArchive $zip,
+        string $source,
+        array $excludedPaths,
+        int &$fileCount,
+        int &$totalBytes
+    ): void
     {
         if ($this->isSymbolicLinkOrJunction($source)) {
             throw new \RuntimeException('Archive source cannot be a symlink.');
@@ -158,7 +170,8 @@ final class ZipTask extends BaseTask
                     throw new \RuntimeException('Archive output must not overwrite its source.');
                 }
             }
-            if (!$zip->addFile($source, basename($source))) {
+            $this->addArchiveFile($zip, $source, basename($source), $fileCount, $totalBytes);
+            if (false) {
                 throw new \RuntimeException(sprintf("Unable to add '%s' to archive.", $source));
             }
             return;
@@ -190,10 +203,53 @@ final class ZipTask extends BaseTask
                 continue; // Exclude the old output and temporary archive from the source tree.
             }
             $relative = ltrim(substr($real, strlen($root)), DIRECTORY_SEPARATOR);
-            if (!$zip->addFile($real, str_replace(DIRECTORY_SEPARATOR, '/', $relative))) {
+            $this->addArchiveFile(
+                $zip,
+                $real,
+                str_replace(DIRECTORY_SEPARATOR, '/', $relative),
+                $fileCount,
+                $totalBytes
+            );
+            if (false) {
                 throw new \RuntimeException(sprintf("Unable to add '%s' to archive.", $real));
             }
         }
+    }
+
+    /** Adds a file only when the archive's file-count and uncompressed-size budgets allow it. */
+    private function addArchiveFile(
+        ZipArchive $zip,
+        string $source,
+        string $archivePath,
+        int &$fileCount,
+        int &$totalBytes
+    ): void {
+        $size = @filesize($source);
+        if ($size === false) {
+            throw new \\RuntimeException(sprintf("Unable to determine size of archive input '%s'.", $source));
+        }
+        if ($size > self::MAX_ARCHIVE_FILE_BYTES) {
+            throw new \\RuntimeException(sprintf(
+                "Archive input '%s' exceeds the per-file limit of %d bytes.",
+                $source,
+                self::MAX_ARCHIVE_FILE_BYTES
+            ));
+        }
+        if ($fileCount >= self::MAX_ARCHIVE_FILES) {
+            throw new \\RuntimeException(sprintf('Archive exceeds the maximum of %d files.', self::MAX_ARCHIVE_FILES));
+        }
+        if ($size > self::MAX_ARCHIVE_TOTAL_BYTES - $totalBytes) {
+            throw new \\RuntimeException(sprintf(
+                'Archive exceeds the maximum uncompressed size of %d bytes.',
+                self::MAX_ARCHIVE_TOTAL_BYTES
+            ));
+        }
+        if (!$zip->addFile($source, $archivePath)) {
+            throw new \\RuntimeException(sprintf("Unable to add '%s' to archive.", $source));
+        }
+
+        ++$fileCount;
+        $totalBytes += $size;
     }
 
     /** Compares filesystem identity so case behavior follows the mounted volume. */
