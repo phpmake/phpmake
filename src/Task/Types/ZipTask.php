@@ -137,6 +137,10 @@ final class ZipTask extends BaseTask
     /** Adds source files to the archive using paths relative to its root. */
     private function addFilesToZip(ZipArchive $zip, string $source, array $excludedPaths): void
     {
+        if ($this->isSymbolicLinkOrJunction($source)) {
+            throw new \\RuntimeException('Archive source cannot be a symlink.');
+        }
+        $this->assertSafePath($source, 'archive input');
         if (is_file($source)) {
             foreach ($excludedPaths as $excludedPath) {
                 if ($this->pathsReferToSameFile($source, $excludedPath)) {
