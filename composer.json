@@ -78,23 +78,22 @@
         "vendor-dir": "vendor"
     },
     "scripts": {
+        "analyse": "phpstan analyse --configuration=phpstan.neon --no-progress",
+        "benchmark": "php benchmarks/run.php",
         "format-check": "php-cs-fixer check",
         "lint": "phplint",
         "refactor": "rector process",
         "refactor-check": "rector --dry-run",
         "reformat": "php-cs-fixer fix",
-        "test": "phpunit --configuration phpunit.xml",
-        "analyse": "phpstan analyse --configuration=phpstan.neon --no-progress",
-        "benchmark": "php benchmarks/run.php"
+        "test": "phpunit --configuration phpunit.xml"
     },
     "scripts-descriptions": {
+        "analyse": "Run PHPStan static analysis on the source tree.",
+        "benchmark": "Measure process startup, concurrent execution, file writes, ZIP throughput, and peak memory.",
         "format-check": "Check coding style issues.",
         "lint": "Check PHP files for syntax errors.",
         "refactor": "Apply code refactoring.",
         "refactor-check": "Check code refactoring rules.",
         "reformat": "Fix coding style issues.",
-        "test": "Run all tests.",
-        "analyse": "Run PHPStan static analysis on the source tree.",
-        "benchmark": "Measure process startup, concurrent execution, file writes, ZIP throughput, and peak memory."
-    }
-}
+        "test": "Run all tests."
+    }}
