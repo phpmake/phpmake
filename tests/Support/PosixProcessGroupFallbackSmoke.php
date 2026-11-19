@@ -5,7 +5,10 @@ declare(strict_types=1);
 use PhpMake\Task\Types\ExecTask;
 use PhpMake\Utilities\Logger;
 
-require dirname(__DIR__, 2) . '/vendor/autoload.php';
+require dirname(__DIR__, 2) . '/src/Task/TaskInterface.php';
+require dirname(__DIR__, 2) . '/src/Utilities/Logger.php';
+require dirname(__DIR__, 2) . '/src/Task/BaseTask.php';
+require dirname(__DIR__, 2) . '/src/Task/Types/ExecTask.php';
 
 if (PHP_OS_FAMILY === 'Windows') {
     exit(0);
