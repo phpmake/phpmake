@@ -36,7 +36,13 @@ final class ZipTask extends BaseTask
         if ($sourceReal === false || $outputParent === false) {
             throw new \RuntimeException('Unable to resolve archive source or output directory.');
         }
+        $this->assertSafePath($sourceReal, 'archive source');
+        $this->assertSafePath($outputParent, 'archive output directory');
         $outputReal = $outputParent . DIRECTORY_SEPARATOR . basename($output);
+        $this->assertSafePath($outputReal, 'archive output');
+        if ($this->isSymbolicLinkOrJunction($outputReal)) {
+            throw new \RuntimeException('Archive output cannot be a symbolic link or junction.');
+        }
         if (is_dir($outputReal)) {
             throw new \RuntimeException(sprintf("Archive output '%s' is a directory.", $outputReal));
         }
