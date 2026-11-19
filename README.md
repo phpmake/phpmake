@@ -65,8 +65,8 @@ PHPMake provides a modular task architecture, dependency-aware targets, filesyst
 
 | Package version | Branch        | PHP version | Status         |
 |-----------------|---------------|-------------|----------------|
-| dev-main        | `main`        | 8.3         | Active         |
-| 2.*             | `main`        | 8.3         | Active         |
+| dev-main        | `main`        | 8.3+ (CI: 8.3–8.5) | Active         |
+| 2.*             | `main`        | 8.3+ (CI: 8.3–8.5) | Active         |
 
 * **Active**: Full support
 * **Maintenance**: Bug/Security fixes only
