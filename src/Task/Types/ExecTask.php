@@ -244,6 +244,7 @@ PHP;
             $taskkill = $systemRoot . DIRECTORY_SEPARATOR . 'System32'
                 . DIRECTORY_SEPARATOR . 'taskkill.exe';
             $taskkillError = '';
+            $taskkillSucceeded = false;
             foreach (array_unique(array_filter([$launcherPid, $processPid], static fn($pid): bool => is_int($pid) && $pid > 0)) as $targetPid) {
                 $terminator = @proc_open(
                     [$taskkill, '/PID', (string) $targetPid, '/T', '/F'],
@@ -263,7 +264,15 @@ PHP;
                 $taskkillError .= (string) stream_get_contents($pipes[2]);
                 fclose($pipes[1]);
                 fclose($pipes[2]);
-                proc_close($terminator);
+                if (proc_close($terminator) === 0) {
+                    $taskkillSucceeded = true;
+                }
+            }
+
+            // taskkill /T has already handled the tree if either stable PID
+            // was terminated successfully; avoid an unnecessary WMI fallback.
+            if ($taskkillSucceeded) {
+                return;
             }
 
             // taskkill cannot enumerate descendants after the original parent
