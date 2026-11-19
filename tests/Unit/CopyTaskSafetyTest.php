@@ -42,7 +42,7 @@ final class CopyTaskSafetyTest extends TestCase
         }
         $source = $this->root . DIRECTORY_SEPARATOR . 'source.txt';
         $destination = $this->root . DIRECTORY_SEPARATOR . 'destination.txt';
-        self::assertSame(11, file_put_contents($source, 'preserved!'));
+        self::assertSame(10, file_put_contents($source, 'preserved!'));
         if (!@link($source, $destination)) {
             self::markTestSkipped('The current filesystem does not support hardlinks.');
         }
