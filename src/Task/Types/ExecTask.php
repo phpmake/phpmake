@@ -132,12 +132,38 @@ PHP;
         $outputLimitExceeded = false;
         $stdout = '';
         $stderr = '';
+        $cancelledSignal = null;
+        $previousAsyncSignals = null;
+        $previousSignalHandlers = [];
+
+        // On POSIX CLI runtimes, turn SIGINT/SIGTERM into cooperative
+        // cancellation so the child process tree can be stopped before exit.
+        if (
+            PHP_OS_FAMILY !== 'Windows'
+            && function_exists('pcntl_signal')
+            && function_exists('pcntl_async_signals')
+        ) {
+            $previousAsyncSignals = pcntl_async_signals(true);
+            foreach ([SIGINT, SIGTERM] as $signal) {
+                $previousSignalHandlers[$signal] = function_exists('pcntl_signal_get_handler')
+                    ? pcntl_signal_get_handler($signal)
+                    : SIG_DFL;
+                pcntl_signal($signal, static function (int $receivedSignal) use (&$cancelledSignal): void {
+                    $cancelledSignal = $receivedSignal;
+                });
+            }
+        }
 
         try {
             while (true) {
                 $outputLimitExceeded = self::captureAvailableOutput($pipes[1], $stdout)
                     || self::captureAvailableOutput($pipes[2], $stderr);
                 if ($outputLimitExceeded) {
+                    $this->terminateProcessTree($process, $processPid, $processGroupCreated, $launcherPid);
+                    break;
+                }
+
+                if ($cancelledSignal !== null) {
                     $this->terminateProcessTree($process, $processPid, $processGroupCreated, $launcherPid);
                     break;
                 }
@@ -165,6 +191,12 @@ PHP;
             if ($windowsPidPath !== null) {
                 @unlink($windowsPidPath);
             }
+            if ($previousAsyncSignals !== null) {
+                foreach ($previousSignalHandlers as $signal => $handler) {
+                    pcntl_signal((int) $signal, $handler);
+                }
+                pcntl_async_signals($previousAsyncSignals);
+            }
         }
 
         $closeCode = proc_close($process);
@@ -182,6 +214,11 @@ PHP;
         }
         if ($outputLimitExceeded) {
             $this->logger->error(sprintf('Command output exceeded the %d-byte per-stream limit.', self::MAX_CAPTURE_BYTES));
+            return false;
+        }
+        if ($cancelledSignal !== null) {
+            $signalName = $cancelledSignal === SIGINT ? 'SIGINT' : 'SIGTERM';
+            $this->logger->error(sprintf('Command cancelled after receiving %s.', $signalName));
             return false;
         }
         if ($timedOut) {
@@ -325,15 +362,18 @@ PHP;
             }
         }
 
+        // The launcher creates the session, so its PID is the process-group ID.
+        // The configured command's PID is a member of that group, not its ID.
+        $processGroupId = $launcherPid ?? $processPid;
         if (
             $processGroupCreated
-            && $processPid !== null
+            && $processGroupId !== null
             && function_exists('posix_kill')
         ) {
-            if (@posix_kill(-$processPid, 15)) {
+            if (@posix_kill(-$processGroupId, 15)) {
                 usleep(200000);
-                if (@posix_kill(-$processPid, 0)) {
-                    @posix_kill(-$processPid, 9);
+                if (@posix_kill(-$processGroupId, 0)) {
+                    @posix_kill(-$processGroupId, 9);
                 }
                 return;
             }
