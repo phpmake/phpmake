@@ -21,9 +21,10 @@ trait DirectoryLinkTestHelper
     /** Removes a directory link without traversing its target. */
     private function removeDirectoryLink(string $path): void
     {
-        if (PHP_OS_FAMILY === 'Windows' && is_dir($path)) {
-            rmdir($path);
-            return;
+        if (PHP_OS_FAMILY === 'Windows' && (is_dir($path) || is_link($path))) {
+            if (@rmdir($path)) {
+                return;
+            }
         }
         unlink($path);
     }
