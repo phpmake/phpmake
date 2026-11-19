@@ -32,63 +32,130 @@ final class ExecTask extends BaseTask
             $this->logger->debug('Executing process: ' . implode(' ', array_map('escapeshellarg', $argv)));
         }
 
-        $pipes = [];
-        $process = proc_open($argv, [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, getcwd(), null, ['bypass_shell' => true]);
-        if (!is_resource($process)) {
-            $this->logger->error('Unable to start command process.');
+        $stdoutPath = tempnam(sys_get_temp_dir(), 'phpmake-stdout-');
+        $stderrPath = tempnam(sys_get_temp_dir(), 'phpmake-stderr-');
+        if ($stdoutPath === false || $stderrPath === false) {
+            if (is_string($stdoutPath)) {
+                @unlink($stdoutPath);
+            }
+            if (is_string($stderrPath)) {
+                @unlink($stderrPath);
+            }
+            $this->logger->error('Unable to create temporary process output files.');
             return false;
         }
 
-        fclose($pipes[0]);
-        stream_set_blocking($pipes[1], false);
-        stream_set_blocking($pipes[2], false);
-        $stdout = $stderr = '';
-        $start = microtime(true);
-        $timedOut = false;
-        $observedExitCode = null;
-        $stdoutTruncated = false;
-        $stderrTruncated = false;
-        $outputLimitExceeded = false;
+        try {
+            $processOptions = ['bypass_shell' => true];
+            $launchArgv = $argv;
+            $processGroupCreated = false;
+            $hasPosixProcessGroups = PHP_OS_FAMILY !== 'Windows'
+                && function_exists('posix_setsid')
+                && function_exists('posix_kill');
 
-        do {
-            $this->captureOutput($pipes[1], $stdout, $stdoutTruncated);
-            $this->captureOutput($pipes[2], $stderr, $stderrTruncated);
-            if ($stdoutTruncated || $stderrTruncated) {
+            if (PHP_OS_FAMILY === 'Windows') {
+                $processOptions['create_process_group'] = true;
+            }
+
+            if (PHP_OS_FAMILY === 'Windows' || $hasPosixProcessGroups) {
+                // Keep a stable launcher alive while the configured command runs.
+                // On POSIX, establish its session before spawning the target process.
+                $launcher = <<<'PHP'
+$command = json_decode(base64_decode($argv[1], true), true, 512, JSON_THROW_ON_ERROR);
+if (!is_array($command)) {
+    exit(126);
+}
+if (function_exists('posix_setsid') && !posix_setsid()) {
+    exit(126);
+}
+$child = proc_open(
+    $command,
+    [0 => STDIN, 1 => STDOUT, 2 => STDERR],
+    $pipes,
+    getcwd(),
+    null,
+    ['bypass_shell' => true]
+);
+if (!is_resource($child)) {
+    exit(127);
+}
+$exitCode = proc_close($child);
+exit($exitCode >= 0 ? $exitCode : 1);
+PHP;
+                $launchArgv = [
+                    PHP_BINARY,
+                    '-r',
+                    $launcher,
+                    base64_encode(json_encode($argv, JSON_THROW_ON_ERROR)),
+                ];
+                $processGroupCreated = $hasPosixProcessGroups;
+            }
+
+            $nullDevice = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
+            $process = proc_open(
+                $launchArgv,
+                [
+                    0 => ['file', $nullDevice, 'r'],
+                    1 => ['file', $stdoutPath, 'w'],
+                    2 => ['file', $stderrPath, 'w'],
+                ],
+                $pipes,
+                getcwd(),
+                null,
+                $processOptions
+            );
+            if (!is_resource($process)) {
+                $this->logger->error('Unable to start command process.');
+                return false;
+            }
+
+            $processPid = proc_get_status($process)['pid'] ?? null;
+            $start = microtime(true);
+            $timedOut = false;
+            $observedExitCode = null;
+            $outputLimitExceeded = false;
+
+            while (true) {
+                $stdoutSize = self::getOutputFileSize($stdoutPath);
+                $stderrSize = self::getOutputFileSize($stderrPath);
+                if ($stdoutSize > self::MAX_CAPTURE_BYTES || $stderrSize > self::MAX_CAPTURE_BYTES) {
+                    $outputLimitExceeded = true;
+                    $this->terminateProcessTree($process, $processPid, $processGroupCreated);
+                    break;
+                }
+
+                $status = proc_get_status($process);
+                if (microtime(true) - $start > $timeout) {
+                    $timedOut = true;
+                    $this->terminateProcessTree($process, $processPid, $processGroupCreated);
+                    break;
+                }
+                if (!$status['running']) {
+                    $observedExitCode = $status['exitcode'];
+                    break;
+                }
+                usleep(10000);
+            }
+
+            $closeCode = proc_close($process);
+            $exitCode = ($observedExitCode !== null && $observedExitCode >= 0)
+                ? $observedExitCode
+                : $closeCode;
+
+            $stdoutSize = self::getOutputFileSize($stdoutPath);
+            $stderrSize = self::getOutputFileSize($stderrPath);
+            if ($stdoutSize > self::MAX_CAPTURE_BYTES || $stderrSize > self::MAX_CAPTURE_BYTES) {
                 $outputLimitExceeded = true;
-                proc_terminate($process, 15);
-                usleep(200000);
-                if (proc_get_status($process)['running']) {
-                    proc_terminate($process, 9);
-                }
-                break;
             }
-            $status = proc_get_status($process);
-            if (microtime(true) - $start > $timeout) {
-                $timedOut = true;
-                if ($status['running']) {
-                    proc_terminate($process, 15);
-                    usleep(200000);
-                    if (proc_get_status($process)['running']) {
-                        proc_terminate($process, 9);
-                    }
-                }
-                break;
-            }
-            if (!$status['running']) {
-                $observedExitCode = $status['exitcode'];
-                break;
-            }
-            usleep(20000);
-        } while (true);
 
-        $this->captureOutput($pipes[1], $stdout, $stdoutTruncated);
-        $this->captureOutput($pipes[2], $stderr, $stderrTruncated);
-        fclose($pipes[1]);
-        fclose($pipes[2]);
-        $closeCode = proc_close($process);
-        $exitCode = ($observedExitCode !== null && $observedExitCode >= 0) ? $observedExitCode : $closeCode;
+            $stdout = (string) file_get_contents($stdoutPath, false, null, 0, self::MAX_CAPTURE_BYTES);
+            $stderr = (string) file_get_contents($stderrPath, false, null, 0, self::MAX_CAPTURE_BYTES);
+        } finally {
+            @unlink($stdoutPath);
+            @unlink($stderrPath);
+        }
 
-        foreach (preg_split('/\R/', rtrim($stdout)) as $line) {
+        foreach (preg_split('/\\R/', rtrim($stdout)) as $line) {
             if ($line !== '') {
                 $this->logger->info($line);
             }
@@ -108,6 +175,15 @@ final class ExecTask extends BaseTask
         return $exitCode === 0;
     }
 
+    /** Returns the current size of a process output file without using cached stat data. */
+    private static function getOutputFileSize(string $path): int
+    {
+        clearstatcache(true, $path);
+        $size = filesize($path);
+
+        return $size === false ? 0 : $size;
+    }
+
     #[\Override]
     /** Returns the exec task identifier. */
     public function getType(): string
@@ -115,23 +191,112 @@ final class ExecTask extends BaseTask
         return 'exec';
     }
 
-    /** Reads available process output while enforcing a per-stream memory limit. */
-    private function captureOutput($pipe, string &$buffer, bool &$truncated): void
+    /**
+     * Terminates the process and descendants without invoking a shell.
+     *
+     * Windows uses taskkill's process-tree switch. POSIX platforms use a
+     * dedicated process group when the POSIX extension is available.
+     */
+    private function terminateProcessTree($process, ?int $processPid, bool $processGroupCreated): void
     {
-        while (!feof($pipe)) {
-            $chunk = fread($pipe, 8192);
-            if ($chunk === false || $chunk === '') {
-                break;
+        $processWasRunning = proc_get_status($process)['running'] ?? false;
+
+        if (PHP_OS_FAMILY === 'Windows' && $processPid !== null) {
+            $systemRoot = getenv('SystemRoot') ?: 'C:\\Windows';
+            $taskkill = $systemRoot . DIRECTORY_SEPARATOR . 'System32'
+                . DIRECTORY_SEPARATOR . 'taskkill.exe';
+            $terminator = @proc_open(
+                [$taskkill, '/PID', (string) $processPid, '/T', '/F'],
+                [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+                $pipes,
+                null,
+                null,
+                ['bypass_shell' => true]
+            );
+            $taskkillError = '';
+            if (is_resource($terminator)) {
+                fclose($pipes[0]);
+                stream_get_contents($pipes[1]);
+                $taskkillError = (string) stream_get_contents($pipes[2]);
+                fclose($pipes[1]);
+                fclose($pipes[2]);
+                if (proc_close($terminator) === 0) {
+                    return;
+                }
             }
-            $remaining = self::MAX_CAPTURE_BYTES - strlen($buffer);
-            if ($remaining > 0) {
-                $buffer .= substr($chunk, 0, $remaining);
-            }
-            if (strlen($chunk) > $remaining) {
-                $truncated = true;
+
+            // taskkill cannot enumerate descendants after the original parent
+            // has already exited. Use the recorded ParentProcessId chain as a fallback.
+            $powerShell = $systemRoot . DIRECTORY_SEPARATOR . 'System32'
+                . DIRECTORY_SEPARATOR . 'WindowsPowerShell' . DIRECTORY_SEPARATOR
+                . 'v1.0' . DIRECTORY_SEPARATOR . 'powershell.exe';
+            $script = '$rootPid = ' . $processPid . '; '
+                . '$all = @(Get-CimInstance -ClassName Win32_Process); '
+                . '$queue = [System.Collections.Generic.Queue[int]]::new(); '
+                . '$descendants = [System.Collections.Generic.List[int]]::new(); '
+                . '$queue.Enqueue($rootPid); '
+                . 'while ($queue.Count -gt 0) { $parent = $queue.Dequeue(); '
+                . 'foreach ($item in $all) { if ([int]$item.ParentProcessId -eq $parent) { '
+                . '$child = [int]$item.ProcessId; if (-not $descendants.Contains($child)) { '
+                . '$descendants.Add($child); $queue.Enqueue($child) } } } }; '
+                . 'foreach ($child in $descendants) { Stop-Process -Id $child -Force -ErrorAction SilentlyContinue }; '
+                . 'Stop-Process -Id $rootPid -Force -ErrorAction SilentlyContinue';
+            $fallback = @proc_open(
+                [$powerShell, '-NoProfile', '-NonInteractive', '-Command', $script],
+                [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+                $fallbackPipes,
+                null,
+                null,
+                ['bypass_shell' => true]
+            );
+            if (is_resource($fallback)) {
+                fclose($fallbackPipes[0]);
+                stream_get_contents($fallbackPipes[1]);
+                $fallbackError = (string) stream_get_contents($fallbackPipes[2]);
+                fclose($fallbackPipes[1]);
+                fclose($fallbackPipes[2]);
+                if (proc_close($fallback) === 0) {
+                    return;
+                }
+                if ($processWasRunning) {
+                    $this->logger->error(sprintf(
+                        'Windows process-tree termination failed for PID %s: taskkill=%s PowerShell=%s',
+                        (string) $processPid,
+                        trim($taskkillError),
+                        trim($fallbackError)
+                    ));
+                }
+            } elseif ($processWasRunning) {
+                $this->logger->error(sprintf(
+                    'Unable to start Windows process-tree termination fallback for PID %s: %s',
+                    (string) $processPid,
+                    trim($taskkillError)
+                ));
             }
         }
+
+        if (
+            $processGroupCreated
+            && $processPid !== null
+            && function_exists('posix_kill')
+        ) {
+            if (@posix_kill(-$processPid, 15)) {
+                usleep(200000);
+                if (@posix_kill(-$processPid, 0)) {
+                    @posix_kill(-$processPid, 9);
+                }
+                return;
+            }
+        }
+
+        // Best-effort fallback when process groups are unavailable.
+        proc_terminate($process, 15);
+        usleep(200000);
+        if (proc_get_status($process)['running']) {
+            proc_terminate($process, 9);
+        }
     }
+
 
     /** Validates the command, argument list, and optional timeout. */
     protected function validateParams(): void

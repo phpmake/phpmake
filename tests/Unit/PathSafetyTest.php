@@ -118,7 +118,7 @@ final class PathSafetyTest extends TestCase
     }
 
     /** Rejects paths that traverse a symlinked ancestor outside the project. */
-    public function testRejectsSymlinkedAncestorEscapingProject(): void
+    public function testRejectsSymlinkOrJunctionAncestorEscapingProject(): void
     {
         // Arrange
         $originalCwd = getcwd();
@@ -135,6 +135,9 @@ final class PathSafetyTest extends TestCase
         try {
             self::assertTrue(chdir($project));
             $this->createDirectoryLink($outside, $link);
+            if (PHP_OS_FAMILY === 'Windows') {
+                self::assertTrue($this->isDirectoryJunction($link));
+            }
 
             $this->expectException(\InvalidArgumentException::class);
             $this->expectExceptionMessage('Safety Violation');
@@ -298,5 +301,98 @@ final class PathSafetyTest extends TestCase
             rmdir($project);
         }
     }
+
+
+    /** Rejects UNC paths as external paths on Windows. */
+    public function testRejectsUncPathOnWindows(): void
+    {
+        if (PHP_OS_FAMILY !== 'Windows') {
+            self::assertTrue(true, 'UNC path handling is Windows-specific.');
+            return;
+        }
+
+        // Assert
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Safety Violation');
+
+        // Act
+        new DeleteTask(['path' => '\\\\server\\share\\victim.txt'], $this->logger);
+    }
+
+    /** Rejects case-only sibling paths on filesystems that distinguish case. */
+    public function testRejectsCaseVariantSiblingOnCaseSensitiveFilesystem(): void
+    {
+        // Arrange
+        $originalCwd = getcwd();
+        $base = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-case-' . bin2hex(random_bytes(6));
+        self::assertTrue(mkdir($base));
+        $project = $base . DIRECTORY_SEPARATOR . 'CaseRoot';
+        $sibling = $base . DIRECTORY_SEPARATOR . 'caseroot';
+        self::assertTrue(mkdir($project));
+
+        // Case-insensitive volumes cannot create both names independently.
+        if (!@mkdir($sibling)) {
+            rmdir($project);
+            rmdir($base);
+            self::assertTrue(true, 'Case-only siblings cannot exist on this filesystem.');
+            return;
+        }
+
+        $victim = $sibling . DIRECTORY_SEPARATOR . 'victim.txt';
+        file_put_contents($victim, 'outside');
+        try {
+            self::assertTrue(chdir($project));
+
+            // Assert
+            $this->expectException(\InvalidArgumentException::class);
+            $this->expectExceptionMessage('Safety Violation');
+
+            // Act
+            new DeleteTask(['path' => $victim], $this->logger);
+        } finally {
+            chdir($originalCwd);
+            if (is_file($victim)) {
+                unlink($victim);
+            }
+            rmdir($sibling);
+            rmdir($project);
+            rmdir($base);
+        }
+    }
+
+
+
+    /** Rejects extended-length UNC paths as external Windows paths. */
+    public function testRejectsExtendedUncPathOnWindows(): void
+    {
+        if (PHP_OS_FAMILY !== 'Windows') {
+            self::assertTrue(true, 'Extended UNC path handling is Windows-specific.');
+            return;
+        }
+
+        // Assert
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Safety Violation');
+
+        // Act
+        new DeleteTask(['path' => '\\\\?\\UNC\\server\\share\\victim.txt'], $this->logger);
+    }
+
+    /** Rejects Windows drive-relative paths because their base depends on per-drive state. */
+    public function testRejectsDriveRelativePathOnWindows(): void
+    {
+        if (PHP_OS_FAMILY !== 'Windows') {
+            self::assertTrue(true, 'Drive-relative path handling is Windows-specific.');
+            return;
+        }
+
+        // Assert
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Drive-relative paths are not allowed');
+
+        // Act
+        new DeleteTask(['path' => 'C:relative\\victim.txt'], $this->logger);
+    }
+
 
 }

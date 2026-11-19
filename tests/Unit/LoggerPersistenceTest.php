@@ -130,6 +130,73 @@ final class LoggerPersistenceTest extends TestCase
         self::assertFileDoesNotExist('disabled.log');
     }
 
+
+    /** Writes complete log entries even when the underlying stream accepts partial chunks. */
+    public function testLoggerRetriesPartialWrites(): void
+    {
+        // Arrange
+        self::assertTrue(stream_wrapper_register('phpmake-partial-log', PartialWriteLogStreamWrapper::class));
+        PartialWriteLogStreamWrapper::$contents = '';
+        try {
+            // Act
+            (new Logger(false, true, false, 'phpmake-partial-log://build.log'))->info('partial-write-entry');
+
+            // Assert
+            self::assertStringContainsString('INFO: partial-write-entry', PartialWriteLogStreamWrapper::$contents);
+            self::assertSame(1, substr_count(PartialWriteLogStreamWrapper::$contents, 'INFO: partial-write-entry'));
+        } finally {
+            stream_wrapper_unregister('phpmake-partial-log');
+        }
+    }
+
+    /** Verifies concurrent processes append every log entry without interleaving or loss. */
+    public function testConcurrentLoggerProcessesPreserveEveryEntry(): void
+    {
+        // Arrange
+        $autoload = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
+        self::assertFileExists($autoload);
+        $logFile = $this->temporaryDirectory . DIRECTORY_SEPARATOR . 'concurrent.log';
+        $workerCount = 6;
+        $messagesPerWorker = 25;
+        $workerCode = 'require $argv[1]; $logger = new \\PhpMake\\Utilities\\Logger(false, true, false, $argv[2]);'
+            . ' for ($i = 0; $i < (int) $argv[4]; ++$i) { $logger->info($argv[3] . "-" . $i); }';
+        $processes = [];
+
+        for ($worker = 0; $worker < $workerCount; ++$worker) {
+            $pipes = [];
+            $process = proc_open(
+                [PHP_BINARY, '-r', $workerCode, $autoload, $logFile, 'worker-' . $worker, (string) $messagesPerWorker],
+                [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+                $pipes,
+                $this->temporaryDirectory
+            );
+            self::assertIsResource($process);
+            fclose($pipes[0]);
+            $processes[] = [$process, $pipes];
+        }
+
+        // Act
+        foreach ($processes as [$process, $pipes]) {
+            $stdout = stream_get_contents($pipes[1]);
+            $stderr = stream_get_contents($pipes[2]);
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            self::assertSame(0, proc_close($process), (string) $stdout . (string) $stderr);
+        }
+
+        // Assert
+        $lines = file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        self::assertIsArray($lines);
+        self::assertCount($workerCount * $messagesPerWorker, $lines);
+        $entries = [];
+        foreach ($lines as $line) {
+            self::assertMatchesRegularExpression('/INFO: worker-(\\d+)-(\\d+)$/', $line);
+            preg_match('/INFO: worker-(\\d+)-(\\d+)$/', $line, $matches);
+            $entries[$matches[1] . '-' . $matches[2]] = true;
+        }
+        self::assertCount($workerCount * $messagesPerWorker, $entries);
+    }
+
     /** Recursively removes test directories without following symbolic links. */
     private function removeDirectory(string $directory): void
     {
@@ -280,5 +347,58 @@ final class WriteFailureLogStreamWrapper
     public function stream_write(string $data)
     {
         return false;
+    }
+}
+
+
+/** Captures partial writes to exercise Logger's write-all loop. */
+final class PartialWriteLogStreamWrapper
+{
+    public static string $contents = '';
+
+    public mixed $context;
+
+    private string $path = '';
+
+    /** Opens the virtual lock or log stream. */
+    public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
+    {
+        $this->path = $path;
+        return true;
+    }
+
+    /** Allows Logger to serialize access to the virtual stream. */
+    public function stream_lock(int $operation): bool
+    {
+        return true;
+    }
+
+    /** Accepts only a short prefix to force repeated fwrite calls. */
+    public function stream_write(string $data): int
+    {
+        if (str_ends_with($this->path, '.lock')) {
+            return strlen($data);
+        }
+        $chunk = substr($data, 0, 3);
+        self::$contents .= $chunk;
+        return strlen($chunk);
+    }
+
+    /** Reports no existing log so rotation is not attempted. */
+    public function url_stat(string $path, int $flags): array|false
+    {
+        return false;
+    }
+
+    /** Returns metadata for an opened virtual stream. */
+    public function stream_stat(): array
+    {
+        return ['mode' => 0100666, 'size' => strlen(self::$contents)];
+    }
+
+    /** Confirms buffered writes are accepted. */
+    public function stream_flush(): bool
+    {
+        return true;
     }
 }

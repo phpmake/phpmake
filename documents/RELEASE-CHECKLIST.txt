@@ -6,7 +6,12 @@
 * Check/Update composer.json file.
 * Check/Update .github/workflows/default.yml
 * Verify Linux, Windows, and macOS CI jobs.
-* Install from a clean Composer project and test the generated vendor/bin proxy.
+* Verify process-tree timeout tests on Windows and POSIX CI runners.
+* Verify UNC, junction-ancestor, and case-sensitive path-boundary tests.
+* Verify logger partial-write and concurrent-process tests.
+* Verify schema/runtime parity tests for every built-in task.
+* Install from a clean Composer consumer project and test the generated vendor/bin proxy.
+* Run the installed binary with --version and validate a consumer build.json.
 * Validate build.json.example and run its default and package targets.
 * Check/Update .styleci.yml
 * Check/Update .php-cs-fixer.php

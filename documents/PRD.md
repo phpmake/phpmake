@@ -16,6 +16,8 @@ PHPMake is a lightweight PHP-based build automation tool inspired by GNU Make an
 - Offer a lightweight, modular, and extensible build system.
 - Support cross-platform development environments.
 - Provide safe and predictable filesystem operations.
+- Execute external processes with bounded output and configurable deadlines.
+- Preserve log integrity during concurrent builds.
 - Integrate easily into CI/CD pipelines.
 
 ## 3. Target Users
@@ -43,7 +45,8 @@ PHPMake is a lightweight PHP-based build automation tool inspired by GNU Make an
 - JSON-based build definitions.
 - Dependency-aware task execution.
 - Built-in task implementations.
-- Filesystem safety restrictions.
-- CLI and logging functionality.
+- Filesystem safety restrictions, including symlink and junction escape prevention.
+- CLI and logging functionality with serialized file writes and bounded rotation.
+- External process execution without shell interpretation, bounded output, and timeout handling.
 - Cross-platform compatibility.
 - Composer-based distribution.

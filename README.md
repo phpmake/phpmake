@@ -2,7 +2,7 @@
 
 A PHP build automation tool using JSON configuration file.
 
-[![current version](https://img.shields.io/packagist/v/phpmake/phpmake.svg)](https://packagist.org/packages/phpmake/phpmake) [![Build and Test](https://github.com/phpmake/phpmake/actions/workflows/default.yml/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/default.yml) [![CodeQL](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql) [![Dependabot Updates](https://github.com/phpmake/phpmake/actions/workflows/dependabot/dependabot-updates/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/dependabot/dependabot-updates)
+[![current version](https://img.shields.io/packagist/v/phpmake/phpmake.svg)](https://packagist.org/packages/phpmake/phpmake) [![Build and Test](https://github.com/phpmake/phpmake/actions/workflows/default.yml/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/default.yml) [![CodeQL](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql)
 [![PHP](https://img.shields.io/badge/PHP-8.3-617CBE)](https://php.net/) [![issues](https://img.shields.io/github/issues/phpmake/phpmake)](https://github.com/phpmake/phpmake/issues) ![repo size](https://img.shields.io/github/repo-size/phpmake/phpmake) [![GitHub license](https://img.shields.io/github/license/phpmake/phpmake)](LICENSE) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](documents/CONTRIBUTING.txt)
 
 ![Logo](resources/images/logo.png)
@@ -27,13 +27,13 @@ A PHP build automation tool using JSON configuration file.
 
 ## Overview
 
-A lightweight PHP-based build automation tool inspired by Linux Make & Apache Ant, using JSON configuration files. It supports common tasks like file operations, command execution, and dependency management with cross-platform compatibility. (Windows/Linux/macOS)
+A lightweight PHP build automation tool inspired by GNU Make and Apache Ant, using JSON configuration files. It supports common tasks like file operations, command execution, and dependency management with cross-platform compatibility. (Windows/Linux/macOS)
 
-PHPMake is a well-architected, modern PHP build tool that follows best practices in design and implementation. Its modular structure, good testing, and clean API make it both robust and extendable.
+PHPMake provides a modular task architecture, dependency-aware targets, filesystem safeguards, and a command-line interface for repeatable build workflows.
 
 ## Features
 
-* No runtime PHP package dependencies; PHP extensions and Composer are still required.
+* No third-party PHP package dependencies at runtime; Composer is used for installation and PHP extensions are required.
 * Define build processes in human-readable JSON
 * Specify execution order with dependencies
 * Works on Microsoft Windows, GNU+Linux, and Apple macOS
@@ -48,19 +48,18 @@ PHPMake is a well-architected, modern PHP build tool that follows best practices
 * Logging options:
   * `-d`/`--debug` for detailed logs
   * `-nl`/`--no-log` to disable file logging
-  * `-s`/`--silent` for minimal output
+  * `-s`/`--silent` to suppress normal console output (errors remain visible on STDERR)
 * `-vb`/`--validate-build` to check configuration syntax
 * `--diagnostics` to show environment info
 * `--init` to create a sample `build.json`
 * CI/CD pipeline integration
 * PHP 8.3+ (active)
-* Microsoft Windows, GNU+Linux, Apple macOS
 
 ## Requirements
 
 1. PHP >= 8.3
 2. Composer >= 2
-3. PHP extensions: `ctype`, `json`, and `zip`
+3. PHP extensions: `ctype`, `json`, `random`, and `zip`
 
 ### Versions
 
@@ -92,7 +91,7 @@ composer global require phpmake/phpmake
 1. **Create a `build.json` file** (or generate a sample):
 
     ```sh
-    php vendor/bin/phpmake --init
+    php vendor/bin/phpmake.php --init
     ```
 
     Example configuration:
@@ -130,30 +129,30 @@ chmod +x bin/phpmake.php
 Then
 
 ```sh
-vendor/bin/phpmake
+vendor/bin/phpmake.php
 ```
 
 Or
 
 ```sh
-php vendor/bin/phpmake
+php vendor/bin/phpmake.php
 ```
 
 Or
 
 ```sh
 # Validate configuration.
-php vendor/bin/phpmake --validate-build
+php vendor/bin/phpmake.php --validate-build
 
 # Run default target with debug logging.
-php vendor/bin/phpmake --debug
+php vendor/bin/phpmake.php --debug
 ```
 
 Or
 
 ```sh
 # Run test target silently.
-php vendor/bin/phpmake test --silent
+php vendor/bin/phpmake.php test --silent
 ```
 
 ### QA/QC test
@@ -182,7 +181,7 @@ vendor/bin/phpunit tests/
 | `phpmake --diagnostics`      | Show system information          |
 | `phpmake -d` / `--debug`     | Enable debug/verbose logging     |
 | `phpmake -nl` / `--no-log`   | Disable file logging             |
-| `phpmake -s` / `--silent`    | Suppress console output          |
+| `phpmake -s` / `--silent`    | Suppress normal output; errors remain visible on STDERR |
 | `phpmake --init`             | Create sample build.json file    |
 
 ### Supported tasks
@@ -192,11 +191,11 @@ vendor/bin/phpunit tests/
 | `create_directory` | `name` (string)                              | Create directory       |
 | `delete`           | `path` (string)                              | Delete file/directory  |
 | `copy`             | `source` (string), `dest` (string)           | Copy files/directories |
-| `exec`             | `command` (string), optional `args` (scalar array), `timeout` (seconds, 0<timeout<=86400) | Execute a process without a shell |
+| `exec`             | `command` (string), optional `args` (scalar array), `timeout` (seconds, greater than 0 and at most 86400) | Execute a process without a shell |
 | `echo`             | `message` (string)                           | Output message         |
 | `archive`          | `source` (string), `output` (string)         | Archive a file/directory to ZIP |
 
-`exec` passes an argument vector directly to the process (no shell expansion or pipelines). Its default timeout is 300 seconds; each output stream is capped at 1 MiB. Filesystem task paths must resolve inside the project working directory. Destructive tasks reject the project root, and paths that escape the project (for example via `..` or absolute paths outside CWD) are rejected.
+`exec` passes an argument vector directly to the process (no shell expansion or pipelines). Its default timeout is 300 seconds (maximum 86400); each output stream is capped at 1 MiB. On timeout or output overflow, PHPMake terminates the process tree using Windows `taskkill /T` or a POSIX process group when the POSIX extension is available; otherwise it falls back to terminating the direct process. Filesystem task paths are normalized and must resolve inside the project working directory. Symlink/junction ancestors that escape the project are rejected. UNC and drive-relative Windows paths are rejected. Destructive tasks reject the project root; `..` is permitted only when the normalized result remains inside CWD.
 
 ### Example build file
 
@@ -208,7 +207,7 @@ See [FAQ.txt](documents/FAQ.txt) file.
 
 ## Support
 
-For any question, issues and feature requests, [open an issue.](https://github.com/phpmake/phpmake/issues).
+For questions, bug reports, and feature requests, [open an issue](https://github.com/phpmake/phpmake/issues).
 
 ## Changelog
 
