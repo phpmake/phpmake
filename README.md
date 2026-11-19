@@ -163,6 +163,12 @@ Run tests to ensure everything works as expected:
 composer test
 ```
 
+Run the repeatable performance benchmark (file writes, ZIP creation, process startup, concurrent workers, and peak memory):
+
+```shell
+composer benchmark
+```
+
 Or
 
 ```shell
