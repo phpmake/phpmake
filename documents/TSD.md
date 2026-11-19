@@ -88,7 +88,7 @@ Unknown properties are rejected. The runtime validator and `schema/build-schema.
 ## 5. Platform Compatibility
 
 - Supported runtime: PHP 8.3+ with Composer 2+.
-- Required extensions: `ctype`, `json`, and `zip`.
+- Required extensions: `ctype`, `json`, `random`, and `zip`.
 - Supported operating systems: Microsoft Windows, GNU/Linux, and macOS.
 - Path comparisons follow host filesystem semantics: Windows is treated as case-insensitive; macOS volumes may be case-sensitive or case-insensitive.
 - Windows junctions and POSIX symbolic links are treated as path redirection boundaries.
