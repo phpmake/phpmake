@@ -1,5 +1,10 @@
 PHPMake - Unreleased
 --------------------
+* Revalidate filesystem paths immediately before operations and during recursive traversal to reject symlink/junction swaps.
+* Make single-file copies transactional, preserve existing destinations on failure, and reject source/destination hardlink aliases.
+* Create ZIP archives in a staging file and publish only after successful finalization, preserving existing archives on failure.
+* Fix selection of numeric target names, including the target "0".
+* Use a monotonic clock for process timeouts and avoid redundant Windows process-tree fallback after successful taskkill.
 * Prevent deleting the project root and reject dangling symlinks during --init.
 * Make directory copies transactional and bound external process output capture.
 * Align JSON schema and runtime validation, including raw JSON array/object shapes.
