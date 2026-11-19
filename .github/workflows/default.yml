@@ -250,9 +250,9 @@ jobs:
           volume="$RUNNER_TEMP/phpmake-case-sensitive.sparsebundle"
           mount="$RUNNER_TEMP/phpmake-case-sensitive"
           mkdir -p "$mount"
-          hdiutil create -quiet -type SPARSEBUNDLE -fs APFSX -size 2g \
+          hdiutil create -type SPARSEBUNDLE -fs "Case-sensitive APFS" -size 2g \
             -volname PHPMakeCaseSensitive "$volume"
-          hdiutil attach -quiet -nobrowse -mountpoint "$mount" "$volume"
+          hdiutil attach -nobrowse -mountpoint "$mount" "$volume"
           echo "PHPMAKE_APFS_MOUNT=$mount" >> "$GITHUB_ENV"
           echo "PHPMAKE_APFS_VOLUME=$volume" >> "$GITHUB_ENV"
 
