@@ -87,31 +87,16 @@ jobs:
       - name: Lint codes
         run: composer lint
 
-      # One-time cleanup: export formatter/Rector results so they can be
-      # reviewed and committed as normal source changes.
-      - name: Generate PHP-CS-Fixer and Rector cleanup
-        run: |
-          composer refactor
-          composer reformat
-          git diff --name-only --diff-filter=ACM -- '*.php' |
-            while IFS= read -r file; do
-            printf '\n===PHPMakeFixStart:%s===\n' "$file"
-            base64 -w0 "$file"
-            printf '\n===PHPMakeFixEnd===\n'
-          done
-
       - name: Run PHPStan static analysis
         run: composer analyse
 
       - name: Verify POSIX process-group fallback without ext-posix
         run: php -n tests/Support/PosixProcessGroupFallbackSmoke.php
 
-      - name: Check code formatting (existing baseline debt)
-        continue-on-error: true
+      - name: Check code formatting
         run: composer format-check
 
-      - name: Check Rector rules (existing baseline debt)
-        continue-on-error: true
+      - name: Check Rector rules
         run: composer refactor-check
 
       - name: Check unused Composer dependencies
