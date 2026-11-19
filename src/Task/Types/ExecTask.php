@@ -539,10 +539,9 @@ public static class PhpMakeJobRunner
     }
 }
 CSHARP;
-        $script = '$ErrorActionPreference = "Stop"; '
-            . 'try { Add-Type -TypeDefinition @\''
-            . "\n" . $source . "\n"
-            . "'@ -Language CSharp; "
+        $script = '$ErrorActionPreference = "Stop"; try { $source = @\\''
+            . "\\n" . $source . "\\n"
+            . "'@\\nAdd-Type -TypeDefinition $source -Language CSharp; "
             . '$payload = "' . $payload . '"; '
             . '$arguments = [string[]](ConvertFrom-Json ([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($payload)))); '
             . 'exit [PhpMakeJobRunner]::Run($arguments) '
