@@ -177,7 +177,9 @@ jobs:
           php-version: ${{ matrix.php-version }}
           extensions: zip
           tools: composer:v2
-          ini-values: memory_limit=256M, zend.assertions=1, error_reporting=-1, display_errors=On
+          ini-values: >-
+            memory_limit=256M, zend.assertions=1,
+            error_reporting=-1, display_errors=On
 
       - name: Validate Composer manifest
         run: composer validate --strict
