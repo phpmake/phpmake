@@ -91,12 +91,14 @@ final class FilesystemPathResolutionTest extends TestCase
     public function testAbsolutePathCaseHandlingFollowsMountedVolume(): void
     {
         // Arrange
-        $alternateRoot = preg_replace_callback(
+        $alternateBaseName = (string) preg_replace_callback(
             '/[a-zA-Z]/',
             static fn(array $match): string => ctype_lower($match[0]) ? strtoupper($match[0]) : strtolower($match[0]),
-            $this->root,
+            basename($this->base),
             1
         );
+        $alternateRoot = dirname($this->base) . DIRECTORY_SEPARATOR
+            . $alternateBaseName . DIRECTORY_SEPARATOR . basename($this->root);
         $candidate = $alternateRoot . DIRECTORY_SEPARATOR . 'case-check';
 
         // Act / Assert
