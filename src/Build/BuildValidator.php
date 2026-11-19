@@ -98,11 +98,11 @@ final class BuildValidator
                     continue;
                 }
 
-                $params = $task['params'] ?? [];
-                if (!is_array($params)) {
-                    $errors[] = sprintf("Task %s in target '%s' has invalid 'params'.", (string) $index, (string) $targetName);
+                if (!array_key_exists('params', $task) || !is_array($task['params'])) {
+                    $errors[] = sprintf("Task %s in target '%s' has no valid 'params' object.", (string) $index, (string) $targetName);
                     continue;
                 }
+                $params = $task['params'];
 
                 $required = match ($type) {
                     'delete' => ['path'],
