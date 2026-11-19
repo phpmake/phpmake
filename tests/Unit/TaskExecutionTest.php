@@ -514,4 +514,85 @@ final class TaskExecutionTest extends TestCase
         }
     }
 
+
+    /** SIGTERM cancels an active exec task and terminates its child process group. */
+    public function testExecTaskHandlesPosixCancellation(): void
+    {
+        // Arrange
+        if (
+            PHP_OS_FAMILY === 'Windows'
+            || !function_exists('pcntl_signal')
+            || !function_exists('pcntl_async_signals')
+            || !function_exists('posix_kill')
+        ) {
+            self::markTestSkipped('POSIX process and signal extensions are required.');
+        }
+
+        $marker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-cancel-' . bin2hex(random_bytes(8));
+        $workerPidFile = $marker . '.worker';
+        $autoload = getcwd() . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
+        $workerCode = <<<'PHP'
+require $argv[1];
+$logger = new \\PhpMake\\Utilities\\Logger(false, true, true);
+$task = new \\PhpMake\\Task\\Types\\ExecTask([
+    'command' => PHP_BINARY,
+    'args' => [
+        '-r',
+        'file_put_contents($argv[1] . ".started", "started"); usleep(1500000); file_put_contents($argv[1] . ".survived", "survived");',
+        $argv[2],
+    ],
+    'timeout' => 10,
+], $logger);
+file_put_contents($argv[2] . ".worker", (string) getmypid());
+exit($task->execute(false, true) ? 0 : 1);
+PHP;
+        $process = proc_open(
+            [PHP_BINARY, '-r', $workerCode, $autoload, $marker],
+            [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+            $pipes,
+            getcwd(),
+            null,
+            ['bypass_shell' => true]
+        );
+        self::assertIsResource($process);
+        foreach ($pipes as $pipe) {
+            fclose($pipe);
+        }
+
+        try {
+            $deadline = hrtime(true) + 5_000_000_000;
+            while (!is_file($marker . '.started') && hrtime(true) < $deadline) {
+                usleep(10000);
+            }
+            self::assertFileExists($marker . '.started');
+            $workerPid = (int) file_get_contents($workerPidFile);
+
+            // Act
+            self::assertTrue(posix_kill($workerPid, SIGTERM));
+            $deadline = hrtime(true) + 5_000_000_000;
+            do {
+                $status = proc_get_status($process);
+                if (!$status['running']) {
+                    break;
+                }
+                usleep(10000);
+            } while (hrtime(true) < $deadline);
+
+            // Assert
+            self::assertFalse($status['running'], 'The cancelled worker must exit promptly.');
+            self::assertFileDoesNotExist($marker . '.survived');
+        } finally {
+            $status = proc_get_status($process);
+            if ($status['running']) {
+                proc_terminate($process, 9);
+            }
+            proc_close($process);
+            foreach (['.started', '.survived', '.worker'] as $suffix) {
+                if (is_file($marker . $suffix)) {
+                    unlink($marker . $suffix);
+                }
+            }
+        }
+    }
+
 }
