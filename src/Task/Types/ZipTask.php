@@ -112,6 +112,9 @@ final class ZipTask extends BaseTask
 
         if (!@rename($temporaryArchive, $output)) {
             if (!@rename($backup, $output)) {
+                if (!@unlink($temporaryArchive)) {
+                    $this->logger->error(sprintf("Unable to remove incomplete temporary archive '%s'.", $temporaryArchive));
+                }
                 throw new \RuntimeException(sprintf(
                     "CRITICAL: Archive publication and rollback failed. The previous archive is preserved at '%s'; restore it manually to '%s'.",
                     $backup,
