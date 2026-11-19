@@ -597,8 +597,8 @@ PHP;
     }
 
 
-    /** Documents that descendants which create a new POSIX session escape the original process group. */
-    public function testExecTaskCannotTerminateDescendantThatCreatesNewSession(): void
+    /** Terminates descendants that create a new POSIX session before the command times out. */
+    public function testExecTaskTerminatesDescendantThatCreatesNewSession(): void
     {
         // Arrange
         if (
@@ -630,14 +630,13 @@ PHP;
                 'timeout' => 0.4,
             ], $this->logger);
             self::assertFalse($task->execute(false, true));
-
-            $deadline = hrtime(true) + 2_000_000_000;
-            while (!is_file($marker) && hrtime(true) < $deadline) {
-                usleep(10000);
-            }
+            usleep(1500000);
 
             // Assert
-            self::assertFileExists($marker, 'The detached descendant should outlive termination of the original process group.');
+            self::assertFileDoesNotExist(
+                $marker,
+                'The detached descendant must be terminated even after leaving the original process group.'
+            );
         } finally {
             if (is_file($pidFile)) {
                 $detachedPid = (int) file_get_contents($pidFile);
