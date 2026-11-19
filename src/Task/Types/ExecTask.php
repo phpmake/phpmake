@@ -126,7 +126,7 @@ PHP;
                 usleep(1000);
             }
         }
-        $start = microtime(true);
+        $start = hrtime(true);
         $timedOut = false;
         $observedExitCode = null;
         $outputLimitExceeded = false;
@@ -143,7 +143,7 @@ PHP;
                 }
 
                 $status = proc_get_status($process);
-                if (microtime(true) - $start > $timeout) {
+                if ((hrtime(true) - $start) / 1_000_000_000 > $timeout) {
                     $timedOut = true;
                     $this->terminateProcessTree($process, $processPid, $processGroupCreated, $launcherPid);
                     break;
