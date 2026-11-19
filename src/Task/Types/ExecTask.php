@@ -360,28 +360,28 @@ PHP;
                 }
             }
 
-            // taskkill /T has already handled the tree if either stable PID
-            // was terminated successfully; avoid an unnecessary WMI fallback.
-            if ($taskkillSucceeded) {
-                return;
-            }
-
-            // taskkill cannot enumerate descendants after the original parent
-            // has already exited. Use the recorded ParentProcessId chain as a fallback.
+            // taskkill /T normally handles live descendants, but a child may
+            // have outlived an intermediate parent. Sweep the captured parent
+            // PID chain as well, rooted at both the launcher and target process.
             $powerShell = $systemRoot . DIRECTORY_SEPARATOR . 'System32'
                 . DIRECTORY_SEPARATOR . 'WindowsPowerShell' . DIRECTORY_SEPARATOR
                 . 'v1.0' . DIRECTORY_SEPARATOR . 'powershell.exe';
-            $script = '$rootPid = ' . $processPid . '; '
+            $rootPids = array_values(array_unique(array_filter(
+                [$launcherPid, $processPid],
+                static fn($pid): bool => is_int($pid) && $pid > 0
+            )));
+            $rootPidList = implode(',', $rootPids);
+            $script = '$rootPids = @(' . $rootPidList . '); '
                 . '$all = @(Get-CimInstance -ClassName Win32_Process); '
                 . '$queue = [System.Collections.Generic.Queue[int]]::new(); '
                 . '$descendants = [System.Collections.Generic.List[int]]::new(); '
-                . '$queue.Enqueue($rootPid); '
+                . 'foreach ($rootPid in $rootPids) { $queue.Enqueue([int]$rootPid) }; '
                 . 'while ($queue.Count -gt 0) { $parent = $queue.Dequeue(); '
                 . 'foreach ($item in $all) { if ([int]$item.ParentProcessId -eq $parent) { '
                 . '$child = [int]$item.ProcessId; if (-not $descendants.Contains($child)) { '
                 . '$descendants.Add($child); $queue.Enqueue($child) } } } }; '
                 . 'foreach ($child in $descendants) { Stop-Process -Id $child -Force -ErrorAction SilentlyContinue }; '
-                . 'Stop-Process -Id $rootPid -Force -ErrorAction SilentlyContinue';
+                . 'foreach ($rootPid in $rootPids) { Stop-Process -Id $rootPid -Force -ErrorAction SilentlyContinue }';
             $fallback = @proc_open(
                 [$powerShell, '-NoProfile', '-NonInteractive', '-Command', $script],
                 [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
