@@ -169,6 +169,8 @@ Run the repeatable performance benchmark (file writes, ZIP creation, process sta
 composer benchmark
 ```
 
+The concurrency measurement runs four independent PHPMake worker processes; tasks within a single build remain sequential. Results are runner-specific and should be compared only across similar environments.
+
 Or
 
 ```shell
