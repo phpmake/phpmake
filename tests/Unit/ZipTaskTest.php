@@ -1,12 +1,12 @@
 <?php
 
-namespace PhpMake\\Tests\\Unit;
+namespace PhpMake\Tests\Unit;
 
-use PHPUnit\\Framework\\TestCase;
-use PhpMake\\Task\\Types\\ZipTask;
-use PhpMake\\Task\\BaseTask;
-use PhpMake\\Tests\\Support\\DirectoryLinkTestHelper;
-use PhpMake\\Utilities\\Logger;
+use PHPUnit\Framework\TestCase;
+use PhpMake\Task\Types\ZipTask;
+use PhpMake\Task\BaseTask;
+use PhpMake\Tests\Support\DirectoryLinkTestHelper;
+use PhpMake\Utilities\Logger;
 
 /** Tests ZIP task structure, archive contents, and symlink handling. */
 final class ZipTaskTest extends TestCase
@@ -64,7 +64,7 @@ final class ZipTaskTest extends TestCase
     public function testArchiveDoesNotIncludeItselfWhenOutputIsInsideSource(): void
     {
         // Arrange
-        if (!class_exists(\\ZipArchive::class)) {
+        if (!class_exists(\ZipArchive::class)) {
             // Assert
             $this->markTestSkipped('ext-zip is not available.');
         }
@@ -76,7 +76,7 @@ final class ZipTaskTest extends TestCase
             $task = new ZipTask(['source' => $root, 'output' => $output], new Logger(false, true, true));
             // Act
             $this->assertTrue($task->execute(false, true));
-            $zip = new \\ZipArchive();
+            $zip = new \ZipArchive();
             $this->assertTrue($zip->open($output));
             $this->assertSame(1, $zip->numFiles);
             $this->assertSame('input.txt', $zip->getNameIndex(0));
@@ -98,7 +98,7 @@ final class ZipTaskTest extends TestCase
     public function testArchiveExcludesOutputWhenPathCaseAliasesIt(): void
     {
         // Arrange
-        if (!class_exists(\\ZipArchive::class)) {
+        if (!class_exists(\ZipArchive::class)) {
             self::markTestSkipped('ext-zip is not available.');
         }
         if (!in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true)) {
@@ -126,7 +126,7 @@ final class ZipTaskTest extends TestCase
             self::assertTrue($task->execute(false, true));
 
             // Assert
-            $zip = new \\ZipArchive();
+            $zip = new \ZipArchive();
             self::assertTrue($zip->open($configuredOutput));
             self::assertSame($pathsAlias ? 1 : 2, $zip->numFiles);
             self::assertNotFalse($zip->locateName('input.txt'));
@@ -153,7 +153,7 @@ final class ZipTaskTest extends TestCase
     public function testArchiveFailurePreservesExistingOutput(): void
     {
         // Arrange
-        if (!class_exists(\\ZipArchive::class)) {
+        if (!class_exists(\ZipArchive::class)) {
             self::markTestSkipped('ext-zip is not available.');
         }
 
@@ -163,8 +163,8 @@ final class ZipTaskTest extends TestCase
         self::assertTrue(mkdir($outside));
         $output = $root . DIRECTORY_SEPARATOR . 'archive.zip';
         $link = $root . DIRECTORY_SEPARATOR . 'linked-directory';
-        $original = new \\ZipArchive();
-        self::assertTrue($original->open($output, \\ZipArchive::CREATE | \\ZipArchive::OVERWRITE));
+        $original = new \ZipArchive();
+        self::assertTrue($original->open($output, \ZipArchive::CREATE | \ZipArchive::OVERWRITE));
         self::assertTrue($original->addFromString('preserve.txt', 'original archive'));
         self::assertTrue($original->close());
         $this->createDirectoryLink($outside, $link);
@@ -175,7 +175,7 @@ final class ZipTaskTest extends TestCase
             self::assertFalse($task->execute(false, true));
 
             // Assert
-            $preserved = new \\ZipArchive();
+            $preserved = new \ZipArchive();
             self::assertTrue($preserved->open($output));
             self::assertSame('original archive', $preserved->getFromName('preserve.txt'));
             self::assertTrue($preserved->close());
