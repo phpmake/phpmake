@@ -94,7 +94,9 @@ jobs:
         run: php -n tests/Support/PosixProcessGroupFallbackSmoke.php
 
       - name: Check code formatting
-        run: composer format-check
+        run: |
+          vendor/bin/php-cs-fixer fix src/Task/Types/ExecTask.php --dry-run --diff || true
+          composer format-check
 
       - name: Check Rector rules
         run: composer refactor-check
