@@ -1,4 +1,5 @@
-* Add a dedicated case-sensitive APFS test volume to macOS CI; the current path test exercises case-only siblings when the runner filesystem supports them.
-* Define and test a process-tree termination strategy for POSIX environments without the POSIX extension; current fallback terminates only the direct process.
-* Document and test the limits of Windows process-tree cleanup when an intermediate descendant exits before the timeout or a child detaches from the process tree.
-* Document the limits of POSIX process-group termination for descendants that deliberately create a new session.
+* Add a dedicated case-sensitive APFS test volume to macOS CI; current tests only exercise case-only siblings when the runner filesystem supports them.
+* Add CI coverage for the POSIX process-group fallback on a host without the POSIX extension; it requires both `setsid` and `kill` executables, otherwise only the direct process can be terminated.
+* Evaluate Windows Job Object support for reliable descendant cleanup; `taskkill /T` and the WMI parent-chain fallback cannot guarantee cleanup when an intermediate process exits before cleanup or a descendant detaches.
+* Document and test that POSIX descendants which deliberately create a new session escape PHPMake's original process group.
+* Define Windows host-cancellation behavior; cooperative SIGINT/SIGTERM cancellation is currently supported only on POSIX CLI runtimes with `pcntl`.
