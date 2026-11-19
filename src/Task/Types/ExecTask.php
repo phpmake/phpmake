@@ -488,7 +488,7 @@ public static class PhpMakeJobRunner
             startup.hStdError = GetStdHandle(-12);
 
             if (!CreateProcess(
-                arguments[0], commandLine, IntPtr.Zero, IntPtr.Zero, true,
+                null, commandLine, IntPtr.Zero, IntPtr.Zero, true,
                 CreateSuspended | CreateNoWindow, IntPtr.Zero, Environment.CurrentDirectory,
                 ref startup, out process))
             {
@@ -748,8 +748,6 @@ CSHARP;
         ?int $launcherPid = null,
         array $trackedDescendantPids = []
     ): void {
-        $processWasRunning = proc_get_status($process)['running'] ?? false;
-
         if (PHP_OS_FAMILY === 'Windows') {
             // The PowerShell launcher owns the Job Object. Terminating it
             // closes the last Job handle, enforcing KILL_ON_JOB_CLOSE for the
