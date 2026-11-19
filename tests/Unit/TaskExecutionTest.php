@@ -421,4 +421,48 @@ final class TaskExecutionTest extends TestCase
         }
     }
 
+
+    /** Terminates descendants when a process exceeds the bounded output capture limit. */
+    public function testExecTaskTerminatesProcessTreeWhenOutputLimitIsExceeded(): void
+    {
+        // Arrange
+        if (PHP_OS_FAMILY !== 'Windows' && (
+            !function_exists('posix_setsid')
+            || !function_exists('posix_kill')
+        )) {
+            self::markTestSkipped(
+                'POSIX process-group support (posix_setsid and posix_kill) is unavailable.'
+            );
+        }
+
+        $marker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-output-child-survived-' . bin2hex(random_bytes(8));
+        $childCode = 'usleep(1600000); file_put_contents($argv[1], "survived");';
+        $parentCode = '$pipes = []; $child = proc_open([PHP_BINARY, "-r", '
+            . var_export($childCode, true)
+            . ', $argv[1]], [0 => ["pipe", "r"], 1 => ["pipe", "w"], 2 => ["pipe", "w"]], $pipes);'
+            . ' if (!is_resource($child)) { exit(9); } foreach ($pipes as $pipe) { fclose($pipe); }'
+            . ' echo str_repeat("x", 1100000);';
+
+        $task = new ExecTask([
+            'command' => PHP_BINARY,
+            'args' => ['-r', $parentCode, $marker],
+            'timeout' => 10,
+        ], $this->logger);
+
+        try {
+            // Act
+            $result = $task->execute(false, true);
+            usleep(1900000);
+
+            // Assert
+            self::assertFalse($result);
+            self::assertFileDoesNotExist($marker);
+        } finally {
+            if (is_file($marker)) {
+                unlink($marker);
+            }
+        }
+    }
+
+
 }
