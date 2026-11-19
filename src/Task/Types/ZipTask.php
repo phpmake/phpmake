@@ -9,6 +9,8 @@ use ZipArchive;
 final class ZipTask extends BaseTask
 {
     private const int MAX_ARCHIVE_FILES = 10000;
+    private const int MAX_ARCHIVE_ENTRIES = 20000;
+    private const int MAX_ARCHIVE_DEPTH = 256;
     private const int MAX_ARCHIVE_FILE_BYTES = 536870912;
     private const int MAX_ARCHIVE_TOTAL_BYTES = 2147483648;
 
@@ -79,8 +81,9 @@ final class ZipTask extends BaseTask
 
         try {
             $fileCount = 0;
+            $entryCount = 0;
             $totalBytes = 0;
-            $this->addFilesToZip($zip, $sourceReal, [$outputReal, $temporaryArchive], $fileCount, $totalBytes);
+            $this->addFilesToZip($zip, $sourceReal, [$outputReal, $temporaryArchive], $fileCount, $entryCount, $totalBytes);
             if (!$zip->close()) {
                 throw new \RuntimeException(sprintf("Failed to finalize ZIP file '%s'.", $temporaryArchive));
             }
@@ -157,6 +160,7 @@ final class ZipTask extends BaseTask
         string $source,
         array $excludedPaths,
         int &$fileCount,
+        int &$entryCount,
         int &$totalBytes
     ): void
     {
@@ -170,6 +174,7 @@ final class ZipTask extends BaseTask
                     throw new \RuntimeException('Archive output must not overwrite its source.');
                 }
             }
+            ++$entryCount;
             $this->addArchiveFile($zip, $source, basename($source), $fileCount, $totalBytes);
             return;
         }
@@ -180,6 +185,13 @@ final class ZipTask extends BaseTask
             \RecursiveIteratorIterator::SELF_FIRST
         );
         foreach ($iterator as $file) {
+            if ($entryCount >= self::MAX_ARCHIVE_ENTRIES) {
+                throw new \RuntimeException(sprintf('Archive exceeds the maximum of %d entries.', self::MAX_ARCHIVE_ENTRIES));
+            }
+            ++$entryCount;
+            if ($iterator->getDepth() > self::MAX_ARCHIVE_DEPTH) {
+                throw new \RuntimeException(sprintf('Archive exceeds the maximum directory depth of %d.', self::MAX_ARCHIVE_DEPTH));
+            }
             $path = $file->getPathname();
             if ($file->isLink() || $this->isSymbolicLinkOrJunction($path)) {
                 throw new \RuntimeException(sprintf("Refusing to archive symlink '%s'.", $path));
