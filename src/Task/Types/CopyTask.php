@@ -115,6 +115,9 @@ final class CopyTask extends BaseTask
             }
             if (!@rename($temporary, $destPath)) {
                 if (!@rename($backup, $destPath)) {
+                    if (!@unlink($temporary)) {
+                        $this->logger->error(sprintf("Unable to remove incomplete staged copy '%s'.", $temporary));
+                    }
                     $this->logger->error(sprintf(
                         "CRITICAL: File copy publication and rollback failed. The original file is preserved at '%s'; restore it manually to '%s'.",
                         $backup,
