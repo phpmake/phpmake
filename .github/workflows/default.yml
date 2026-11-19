@@ -95,7 +95,8 @@ jobs:
 
       - name: Check code formatting
         run: |
-          vendor/bin/php-cs-fixer fix src/Task/Types/ExecTask.php --dry-run --diff || true
+          vendor/bin/php-cs-fixer fix \
+            src/Task/Types/ExecTask.php --dry-run --diff || true
           composer format-check
 
       - name: Check Rector rules
