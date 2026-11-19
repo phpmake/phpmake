@@ -596,4 +596,60 @@ PHP;
         }
     }
 
+
+    /** Documents that descendants which create a new POSIX session escape the original process group. */
+    public function testExecTaskCannotTerminateDescendantThatCreatesNewSession(): void
+    {
+        // Arrange
+        if (
+            PHP_OS_FAMILY === 'Windows'
+            || !function_exists('posix_setsid')
+            || !function_exists('posix_kill')
+        ) {
+            self::assertTrue(true, 'POSIX session escape behavior is not available on this platform.');
+            return;
+        }
+
+        $marker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-detached-child-' . bin2hex(random_bytes(8));
+        $pidFile = $marker . '.pid';
+        $childCode = 'if (!posix_setsid()) { exit(9); } '
+            . 'file_put_contents($argv[1] . ".pid", (string) getmypid()); '
+            . 'usleep(1200000); file_put_contents($argv[1], "survived");';
+        $parentCode = '$pipes = []; $child = proc_open([PHP_BINARY, "-r", '
+            . var_export($childCode, true)
+            . ', $argv[1]], [0 => ["pipe", "r"], 1 => ["pipe", "w"], 2 => ["pipe", "w"]], $pipes);'
+            . ' if (!is_resource($child)) { exit(9); } foreach ($pipes as $pipe) { fclose($pipe); }'
+            . ' $deadline = hrtime(true) + 1000000000; while (!is_file($argv[1] . ".pid") && hrtime(true) < $deadline) { usleep(10000); }'
+            . ' sleep(10);';
+
+        try {
+            // Act
+            $task = new ExecTask([
+                'command' => PHP_BINARY,
+                'args' => ['-r', $parentCode, $marker],
+                'timeout' => 0.4,
+            ], $this->logger);
+            self::assertFalse($task->execute(false, true));
+
+            $deadline = hrtime(true) + 2_000_000_000;
+            while (!is_file($marker) && hrtime(true) < $deadline) {
+                usleep(10000);
+            }
+
+            // Assert
+            self::assertFileExists($marker, 'The detached descendant should outlive termination of the original process group.');
+        } finally {
+            if (is_file($pidFile)) {
+                $detachedPid = (int) file_get_contents($pidFile);
+                if ($detachedPid > 0) {
+                    posix_kill($detachedPid, 9);
+                }
+                unlink($pidFile);
+            }
+            if (is_file($marker)) {
+                unlink($marker);
+            }
+        }
+    }
+
 }
