@@ -15,6 +15,8 @@ final class CopyTask extends BaseTask
         if ($source === '' || $dest === '') {
             throw new \InvalidArgumentException("Missing 'source' or 'dest' parameter.");
         }
+        $this->assertSafePath($source, 'copy source');
+        $this->assertSafePath($dest, 'copy dest', false);
         if ($this->isSymbolicLinkOrJunction($source) || !file_exists($source)) {
             $this->logger->error(sprintf("Copy source '%s' does not exist or is a symlink.", $source));
             return false;
@@ -34,6 +36,8 @@ final class CopyTask extends BaseTask
     /** Copies one file through a same-directory staging file before publication. */
     private function copyFile(string $source, string $dest): bool
     {
+        $this->assertSafePath($source, 'copy source');
+        $this->assertSafePath($dest, 'copy dest', false);
         if ($this->isSymbolicLinkOrJunction($dest)) {
             $this->logger->error(sprintf("Refusing to write through destination link '%s'.", $dest));
             return false;
@@ -152,6 +156,8 @@ final class CopyTask extends BaseTask
     /** Recursively copies a directory and stops on the first failure. */
     private function copyDirectory(string $source, string $dest): bool
     {
+        $this->assertSafePath($source, 'copy source');
+        $this->assertSafePath($dest, 'copy destination', false);
         if ($this->isSymbolicLinkOrJunction($source)) {
             $this->logger->error(sprintf("Refusing to traverse symlink directory '%s'.", $source));
             return false;
