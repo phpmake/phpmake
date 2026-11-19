@@ -110,6 +110,9 @@ jobs:
       - name: Run PHPUnit tests
         run: composer test
 
+      - name: Run performance benchmark
+        run: composer benchmark
+
       - name: Verify clean Composer consumer installation
         shell: bash
         run: |
