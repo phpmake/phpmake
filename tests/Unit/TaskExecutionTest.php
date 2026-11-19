@@ -441,7 +441,7 @@ final class TaskExecutionTest extends TestCase
             . var_export($childCode, true)
             . ', $argv[1]], [0 => ["pipe", "r"], 1 => ["pipe", "w"], 2 => ["pipe", "w"]], $pipes);'
             . ' if (!is_resource($child)) { exit(9); } foreach ($pipes as $pipe) { fclose($pipe); }'
-            . ' echo str_repeat("x", 1100000);';
+            . ' echo str_repeat("x", 1100000); sleep(10);';
 
         $task = new ExecTask([
             'command' => PHP_BINARY,
