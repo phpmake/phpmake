@@ -35,13 +35,7 @@ final class ZipTask extends BaseTask
             throw new \RuntimeException('Unable to resolve archive source or output directory.');
         }
         $outputReal = $outputParent . DIRECTORY_SEPARATOR . basename($output);
-        $sourcePath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $sourceReal);
-        $outputPath = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $outputReal);
-        if (PHP_OS_FAMILY === 'Windows') {
-            $sourcePath = strtolower($sourcePath);
-            $outputPath = strtolower($outputPath);
-        }
-        if ($sourcePath === $outputPath) {
+        if ($this->pathsReferToSameFile($sourceReal, $outputReal)) {
             throw new \RuntimeException('Archive output must not overwrite its source.');
         }
 
@@ -92,7 +86,7 @@ final class ZipTask extends BaseTask
                 continue;
             }
             $real = $file->getRealPath();
-            $samePath = $real !== false && (in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true) ? strcasecmp($real, $output) === 0 : $real === $output);
+            $samePath = $real !== false && $this->pathsReferToSameFile($real, $output);
             if ($real === false || $samePath) {
                 continue; // Exclude the output archive, including when it is inside the source tree.
             }
@@ -101,6 +95,20 @@ final class ZipTask extends BaseTask
                 throw new \RuntimeException(sprintf("Unable to add '%s' to archive.", $real));
             }
         }
+    }
+
+    /** Compares filesystem identity so case behavior follows the mounted volume. */
+    private function pathsReferToSameFile(string $left, string $right): bool
+    {
+        clearstatcache(true, $left);
+        clearstatcache(true, $right);
+        $leftStat = @stat($left);
+        $rightStat = @stat($right);
+        if (is_array($leftStat) && is_array($rightStat)) {
+            return $leftStat['dev'] === $rightStat['dev'] && $leftStat['ino'] === $rightStat['ino'];
+        }
+
+        return PHP_OS_FAMILY === 'Windows' ? strcasecmp($left, $right) === 0 : $left === $right;
     }
 
     #[\Override]

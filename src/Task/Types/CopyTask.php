@@ -139,62 +139,87 @@ final class CopyTask extends BaseTask
         $backup = $base . $suffix . '.backup';
 
         if (is_dir($destination) && !$this->copyDirectory($destination, $staging)) {
-            $this->removeCreatedTree($staging);
+            if (!$this->removeCreatedTree($staging)) {
+                $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
+            }
             return false;
         }
         if (!$this->copyDirectory($source, $staging)) {
-            $this->removeCreatedTree($staging);
+            if (!$this->removeCreatedTree($staging)) {
+                $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
+            }
             return false;
         }
 
         $hadDestination = file_exists($destination);
         if ($hadDestination && !@rename($destination, $backup)) {
             $this->logger->error(sprintf("Unable to stage existing destination '%s'.", $destination));
-            $this->removeCreatedTree($staging);
+            if (!$this->removeCreatedTree($staging)) {
+                $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
+            }
             return false;
         }
 
         if (!@rename($staging, $destination)) {
             $this->logger->error(sprintf("Unable to publish copied directory '%s'.", $destination));
-            if ($hadDestination) {
-                @rename($backup, $destination);
+            if ($hadDestination && !@rename($backup, $destination)) {
+                $this->logger->error(sprintf(
+                    "CRITICAL: Copy rollback failed. The original destination is preserved at backup path '%s'; restore it manually to '%s'.",
+                    $backup,
+                    $destination
+                ));
             }
-            $this->removeCreatedTree($staging);
+            if (!$this->removeCreatedTree($staging)) {
+                $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
+            }
             return false;
         }
 
-        if ($hadDestination) {
-            $this->removeCreatedTree($backup);
+        if ($hadDestination && !$this->removeCreatedTree($backup)) {
+            $this->logger->error(sprintf(
+                "Copy completed at '%s', but the previous destination could not be removed. Recovery backup retained at '%s'.",
+                $destination,
+                $backup
+            ));
+            return false;
         }
         return true;
     }
 
-    /** Removes a newly-created partial destination tree after a failed copy. */
-    private function removeCreatedTree(string $path): void
+    /** Removes a partial tree and reports whether every filesystem operation succeeded. */
+    private function removeCreatedTree(string $path): bool
     {
         if ($this->isSymbolicLinkOrJunction($path)) {
-            $this->removeSymbolicLinkOrJunction($path);
-            return;
+            return $this->removeSymbolicLinkOrJunction($path);
         }
         if (!is_dir($path)) {
-            @unlink($path);
-            return;
+            return !file_exists($path) || @unlink($path);
         }
+
         $items = @scandir($path);
-        if ($items !== false) {
-            foreach ($items as $item) {
-                if ($item === '.' || $item === '..') {
-                    continue;
-                }
-                $child = $path . DIRECTORY_SEPARATOR . $item;
-                if ($this->isSymbolicLinkOrJunction($child) || !is_dir($child)) {
-                    @unlink($child);
-                } else {
-                    $this->removeCreatedTree($child);
-                }
+        if ($items === false) {
+            return false;
+        }
+
+        $success = true;
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+            $child = $path . DIRECTORY_SEPARATOR . $item;
+            if ($this->isSymbolicLinkOrJunction($child)) {
+                $removed = $this->removeSymbolicLinkOrJunction($child);
+            } elseif (!is_dir($child)) {
+                $removed = !file_exists($child) || @unlink($child);
+            } else {
+                $removed = $this->removeCreatedTree($child);
+            }
+            if (!$removed) {
+                return false;
             }
         }
-        @rmdir($path);
+
+        return @rmdir($path);
     }
 
     /** Rejects destination paths that resolve to the source or one of its descendants. */
@@ -209,59 +234,20 @@ final class CopyTask extends BaseTask
 
         $sourcePath = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $sourceReal), DIRECTORY_SEPARATOR);
         $destinationPath = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $destinationReal), DIRECTORY_SEPARATOR);
-        if (PHP_OS_FAMILY === 'Windows') {
-            $sourcePath = strtolower($sourcePath);
-            $destinationPath = strtolower($destinationPath);
-        }
-
+        // Both paths have canonical existing prefixes. Preserve their case:
+        // case-insensitive comparison is wrong for case-sensitive Windows volumes.
         return $destinationPath === $sourcePath
             || str_starts_with($destinationPath, $sourcePath . DIRECTORY_SEPARATOR);
     }
 
-    /** Resolves existing path prefixes and appends any missing destination segments. */
+    /** Resolves a destination using the same symlink-aware rules as task validation. */
     private function resolvePathForComparison(string $path): ?string
     {
-        $path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
-        if (
-            !str_starts_with($path, DIRECTORY_SEPARATOR)
-            && !(PHP_OS_FAMILY === 'Windows' && preg_match('/^[A-Za-z]:\\\\/', $path) === 1)
-        ) {
-            $path = getcwd() . DIRECTORY_SEPARATOR . $path;
-        }
-
-        $path = rtrim($path, DIRECTORY_SEPARATOR);
-        if ($path === '') {
-            return DIRECTORY_SEPARATOR;
-        }
-
-        $missingSegments = [];
-        $probe = $path;
-        while (!file_exists($probe) && !is_link($probe)) {
-            $parent = dirname($probe);
-            if ($parent === $probe) {
-                return null;
-            }
-            array_unshift($missingSegments, basename($probe));
-            $probe = $parent;
-        }
-
-        $resolved = realpath($probe);
-        if ($resolved === false) {
+        try {
+            return $this->resolvePathInFilesystemOrder($path, 'copy destination comparison');
+        } catch (\Throwable) {
             return null;
         }
-
-        foreach ($missingSegments as $segment) {
-            if ($segment === '' || $segment === '.') {
-                continue;
-            }
-            if ($segment === '..') {
-                $resolved = dirname($resolved);
-                continue;
-            }
-            $resolved .= DIRECTORY_SEPARATOR . $segment;
-        }
-
-        return $resolved;
     }
 
     #[\Override]

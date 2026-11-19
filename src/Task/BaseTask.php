@@ -97,33 +97,87 @@ abstract class BaseTask implements TaskInterface
         }
 
         $candidate = $this->isAbsolutePath($path) ? $path : $cwd . DIRECTORY_SEPARATOR . $path;
-        $candidate = $this->normalizePath($candidate);
+
+        // Resolve each component in filesystem order. Resolve a symlink before
+        // applying a subsequent ".."; lexical normalization first is unsafe.
+        $candidate = $this->resolvePathInFilesystemOrder($candidate, $label);
         $this->assertWithinDirectory($candidate, $cwd, $label);
         if (!$allowProjectRoot && $this->pathsEqual($candidate, $cwd)) {
             throw new \InvalidArgumentException(sprintf("Safety Violation: Refusing to operate on the project root for %s.", $label));
         }
+    }
 
-        // Resolve the deepest existing prefix. realpath() follows symlinks,
-        // exposing symlink escapes even when the final path does not exist.
-        $probe = $candidate;
-        while (!file_exists($probe) && !is_link($probe)) {
-            $parent = dirname($probe);
-            if ($parent === $probe) {
-                break;
+    /**
+     * Resolves path components in operating-system order, following links
+     * before applying subsequent parent-directory components.
+     */
+    protected function resolvePathInFilesystemOrder(string $path, string $label): string
+    {
+        if (!$this->isAbsolutePath($path)) {
+            $cwd = realpath(getcwd());
+            if ($cwd === false) {
+                throw new \RuntimeException('Unable to resolve current working directory.');
             }
-            $probe = $parent;
+            $path = $cwd . DIRECTORY_SEPARATOR . $path;
         }
 
-        $resolved = realpath($probe);
-        if ($resolved === false) {
-            // A dangling symlink is not safe to traverse.
-            if (is_link($probe)) {
-                throw new \InvalidArgumentException(sprintf("Safety Violation: Dangling symlink in path for %s.", $label));
+        $path = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $path);
+        $root = DIRECTORY_SEPARATOR;
+        $remaining = ltrim($path, DIRECTORY_SEPARATOR);
+
+        if (PHP_OS_FAMILY === 'Windows' && preg_match('/^[A-Za-z]:\\\\/', $path) === 1) {
+            $root = substr($path, 0, 3);
+            $remaining = substr($path, 3);
+        } elseif (PHP_OS_FAMILY === 'Windows' && str_starts_with($path, DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR)) {
+            $parts = explode(DIRECTORY_SEPARATOR, ltrim($path, DIRECTORY_SEPARATOR), 3);
+            if (count($parts) < 2) {
+                throw new \InvalidArgumentException(sprintf("Safety Violation: Invalid UNC path for %s.", $label));
             }
-            return;
+            $root = DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR . $parts[0] . DIRECTORY_SEPARATOR . $parts[1] . DIRECTORY_SEPARATOR;
+            $remaining = $parts[2] ?? '';
         }
 
-        $this->assertWithinDirectory($this->normalizePath($resolved), $this->normalizePath($cwd), $label);
+        $current = rtrim($root, DIRECTORY_SEPARATOR);
+        if ($current === '' || preg_match('/^[A-Za-z]:$/', $current) === 1) {
+            $current .= DIRECTORY_SEPARATOR;
+        }
+
+        foreach (explode(DIRECTORY_SEPARATOR, $remaining) as $component) {
+            if ($component === '' || $component === '.') {
+                continue;
+            }
+
+            if ($component === '..') {
+                if (!file_exists($current) && !$this->isSymbolicLinkOrJunction($current)) {
+                    throw new \InvalidArgumentException(sprintf("Safety Violation: Unresolved path component before '..' for %s.", $label));
+                }
+                if (!is_dir($current)) {
+                    throw new \InvalidArgumentException(sprintf("Safety Violation: Non-directory path component for %s.", $label));
+                }
+                $rootBoundary = rtrim($root, DIRECTORY_SEPARATOR);
+                $currentBoundary = rtrim($current, DIRECTORY_SEPARATOR);
+                if ($currentBoundary !== $rootBoundary) {
+                    $current = dirname($currentBoundary);
+                    if ($current === '') {
+                        $current = DIRECTORY_SEPARATOR;
+                    }
+                }
+                continue;
+            }
+
+            $candidate = rtrim($current, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $component;
+            if (file_exists($candidate) || $this->isSymbolicLinkOrJunction($candidate)) {
+                $resolved = realpath($candidate);
+                if ($resolved === false) {
+                    throw new \InvalidArgumentException(sprintf("Safety Violation: Dangling or unresolvable link in path for %s.", $label));
+                }
+                $current = $resolved;
+            } else {
+                $current = $candidate;
+            }
+        }
+
+        return $this->normalizePath($current);
     }
 
     /** Rejects paths that are not contained within the allowed directory. */
@@ -131,7 +185,11 @@ abstract class BaseTask implements TaskInterface
     {
         $path = rtrim($path, DIRECTORY_SEPARATOR);
         $cwd = rtrim($cwd, DIRECTORY_SEPARATOR);
-        $matches = PHP_OS_FAMILY === 'Windows' ? strncasecmp($path, $cwd . DIRECTORY_SEPARATOR, strlen($cwd . DIRECTORY_SEPARATOR)) === 0 : str_starts_with($path, $cwd . DIRECTORY_SEPARATOR);
+        $prefix = ($cwd === '' ? DIRECTORY_SEPARATOR : $cwd . DIRECTORY_SEPARATOR);
+        // Existing components have already been canonicalized by realpath().
+        // A case-sensitive comparison is therefore correct on both sensitive
+        // and insensitive Windows/macOS volumes.
+        $matches = str_starts_with($path, $prefix);
         if (!$this->pathsEqual($path, $cwd) && !$matches) {
             throw new \InvalidArgumentException(sprintf("Safety Violation: Path for %s escapes project directory: '%s'.", $label, $path));
         }
@@ -140,6 +198,21 @@ abstract class BaseTask implements TaskInterface
     /** Compares normalized paths using the host filesystem's case semantics. */
     private function pathsEqual(string $left, string $right): bool
     {
+        clearstatcache(true, $left);
+        clearstatcache(true, $right);
+        $leftStat = @stat($left);
+        $rightStat = @stat($right);
+        if (is_array($leftStat) && is_array($rightStat)) {
+            // Device/inode identity follows the actual mounted volume semantics.
+            return $leftStat['dev'] === $rightStat['dev'] && $leftStat['ino'] === $rightStat['ino'];
+        }
+
+        $leftReal = realpath($left);
+        $rightReal = realpath($right);
+        if ($leftReal !== false && $rightReal !== false) {
+            return $leftReal === $rightReal;
+        }
+
         $left = rtrim($this->normalizePath($left), DIRECTORY_SEPARATOR);
         $right = rtrim($this->normalizePath($right), DIRECTORY_SEPARATOR);
         return PHP_OS_FAMILY === 'Windows' ? strcasecmp($left, $right) === 0 : $left === $right;
@@ -156,7 +229,11 @@ abstract class BaseTask implements TaskInterface
     private function normalizePath(string $path): string
     {
         $path = str_replace(['\\', '/'], DIRECTORY_SEPARATOR, $path);
-        $prefix = str_starts_with($path, DIRECTORY_SEPARATOR) ? DIRECTORY_SEPARATOR : '';
+        $isUnc = PHP_OS_FAMILY === 'Windows'
+            && str_starts_with($path, DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR);
+        $prefix = $isUnc
+            ? DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR
+            : (str_starts_with($path, DIRECTORY_SEPARATOR) ? DIRECTORY_SEPARATOR : '');
         $parts = [];
         foreach (explode(DIRECTORY_SEPARATOR, $path) as $part) {
             if ($part === '' || $part === '.') {

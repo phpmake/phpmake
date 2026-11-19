@@ -394,15 +394,25 @@ final class TaskExecutionTest extends TestCase
         }
 
         $marker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-child-survived-' . bin2hex(random_bytes(8));
-        $childCode = 'usleep(1600000); file_put_contents($argv[1], "survived");';
-        $parentCode = '$pipes = []; usleep(200000); $child = proc_open([PHP_BINARY, "-r", '
+        $detailsFile = $marker . '.details';
+        $parentPidFile = $marker . '.parent';
+        $childCode = 'file_put_contents($argv[1], "child=" . getmypid() . "; expected-parent=" . $argv[2]); '
+            . '$query = "(Get-CimInstance -ClassName Win32_Process -Filter \"ProcessId = " + getmypid() + "\").ParentProcessId"; '
+            . '$pipes = []; $probe = proc_open(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", $query], '
+            . '[0 => ["pipe", "r"], 1 => ["pipe", "w"], 2 => ["pipe", "w"]], $pipes); '
+            . 'if (is_resource($probe)) { fclose($pipes[0]); $actual = trim((string) stream_get_contents($pipes[1])); '
+            . 'stream_get_contents($pipes[2]); fclose($pipes[1]); fclose($pipes[2]); proc_close($probe); '
+            . 'file_put_contents($argv[1], "; actual-parent=" . $actual, FILE_APPEND); } '
+            . 'usleep(1600000); file_put_contents($argv[1] . ".survived", "survived");';
+        $parentCode = 'file_put_contents($argv[2], (string) getmypid()); '
+            . '$pipes = []; usleep(200000); $child = proc_open([PHP_BINARY, "-r", '
             . var_export($childCode, true)
-            . ', $argv[1]], [0 => ["pipe", "r"], 1 => ["pipe", "w"], 2 => ["pipe", "w"]], $pipes);'
+            . ', $argv[1], (string) getmypid()], [0 => ["pipe", "r"], 1 => ["pipe", "w"], 2 => ["pipe", "w"]], $pipes);'
             . ' if (!is_resource($child)) { exit(9); } foreach ($pipes as $pipe) { fclose($pipe); } sleep(10);';
 
         $task = new ExecTask([
             'command' => PHP_BINARY,
-            'args' => ['-r', $parentCode, $marker],
+            'args' => ['-r', $parentCode, $detailsFile, $parentPidFile],
             'timeout' => 0.7,
         ], $this->logger);
 
@@ -413,10 +423,19 @@ final class TaskExecutionTest extends TestCase
 
             // Assert
             self::assertFalse($result);
-            self::assertFileDoesNotExist($marker);
+            self::assertFileDoesNotExist(
+                $detailsFile . '.survived',
+                sprintf(
+                    'Surviving child details: %s; parent PID: %s',
+                    (string) @file_get_contents($detailsFile),
+                    (string) @file_get_contents($parentPidFile)
+                )
+            );
         } finally {
-            if (is_file($marker)) {
-                unlink($marker);
+            foreach ([$marker, $detailsFile, $detailsFile . '.survived', $parentPidFile] as $path) {
+                if (is_file($path)) {
+                    unlink($path);
+                }
             }
         }
     }
@@ -464,5 +483,35 @@ final class TaskExecutionTest extends TestCase
         }
     }
 
+
+
+    /** Confirms process output is captured through bounded pipes rather than temporary disk files. */
+    public function testExecTaskDoesNotSpoolOutputToTemporaryFiles(): void
+    {
+        // Arrange
+        $marker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-output-spool-check-' . bin2hex(random_bytes(8));
+        $childCode = '$files = array_merge('
+            . 'glob(sys_get_temp_dir() . DIRECTORY_SEPARATOR . "phpmake-stdout-*") ?: [], '
+            . 'glob(sys_get_temp_dir() . DIRECTORY_SEPARATOR . "phpmake-stderr-*") ?: []); '
+            . 'file_put_contents($argv[1], (string) count($files)); '
+            . 'echo str_repeat("x", 1100000);';
+        $task = new ExecTask([
+            'command' => PHP_BINARY,
+            'args' => ['-r', $childCode, $marker],
+        ], $this->logger);
+
+        try {
+            // Act
+            $result = $task->execute(false, true);
+
+            // Assert
+            self::assertFalse($result);
+            self::assertSame('0', file_get_contents($marker));
+        } finally {
+            if (is_file($marker)) {
+                unlink($marker);
+            }
+        }
+    }
 
 }

@@ -299,4 +299,24 @@ final class BuildValidatorTest extends TestCase
         self::assertStringContainsString('dependencies must be an array', implode("\n", $errors));
     }
 
+
+    /** Accepts numeric JSON object keys as target names after associative decoding. */
+    public function testNumericTargetNameMatchesSchema(): void
+    {
+        // Arrange
+        $config = json_decode(
+            '{"name":"NumericTarget","description":"Numeric target","version":"1.0","targets":{"1":{"tasks":[]}},"default_target":"1"}',
+            true,
+            512,
+            JSON_THROW_ON_ERROR
+        );
+
+        // Act
+        $errors = (new BuildValidator())->validate($config);
+
+        // Assert
+        self::assertSame([], $errors);
+    }
+
+
 }

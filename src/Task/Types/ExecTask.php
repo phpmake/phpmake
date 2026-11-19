@@ -32,35 +32,27 @@ final class ExecTask extends BaseTask
             $this->logger->debug('Executing process: ' . implode(' ', array_map('escapeshellarg', $argv)));
         }
 
-        $stdoutPath = tempnam(sys_get_temp_dir(), 'phpmake-stdout-');
-        $stderrPath = tempnam(sys_get_temp_dir(), 'phpmake-stderr-');
-        if ($stdoutPath === false || $stderrPath === false) {
-            if (is_string($stdoutPath)) {
-                @unlink($stdoutPath);
-            }
-            if (is_string($stderrPath)) {
-                @unlink($stderrPath);
-            }
-            $this->logger->error('Unable to create temporary process output files.');
-            return false;
+        $processOptions = ['bypass_shell' => true];
+        $launchArgv = $argv;
+        $processGroupCreated = false;
+        $hasPosixProcessGroups = PHP_OS_FAMILY !== 'Windows'
+            && function_exists('posix_setsid')
+            && function_exists('posix_kill');
+
+        if (PHP_OS_FAMILY === 'Windows') {
+            $processOptions['create_process_group'] = true;
         }
 
-        try {
-            $processOptions = ['bypass_shell' => true];
-            $launchArgv = $argv;
-            $processGroupCreated = false;
-            $hasPosixProcessGroups = PHP_OS_FAMILY !== 'Windows'
-                && function_exists('posix_setsid')
-                && function_exists('posix_kill');
+        $windowsPidPath = null;
+        if (PHP_OS_FAMILY === 'Windows') {
+            $pidPath = tempnam(sys_get_temp_dir(), 'phpmake-pid-');
+            $windowsPidPath = $pidPath === false ? null : $pidPath;
+        }
 
-            if (PHP_OS_FAMILY === 'Windows') {
-                $processOptions['create_process_group'] = true;
-            }
-
-            if (PHP_OS_FAMILY === 'Windows' || $hasPosixProcessGroups) {
-                // Keep a stable launcher alive while the configured command runs.
-                // On POSIX, establish its session before spawning the target process.
-                $launcher = <<<'PHP'
+        if (PHP_OS_FAMILY === 'Windows' || $hasPosixProcessGroups) {
+            // Keep a stable launcher alive while the configured command runs.
+            // On POSIX, establish its session before spawning the target process.
+            $launcher = <<<'PHP'
 $command = json_decode(base64_decode($argv[1], true), true, 512, JSON_THROW_ON_ERROR);
 if (!is_array($command)) {
     exit(126);
@@ -79,81 +71,106 @@ $child = proc_open(
 if (!is_resource($child)) {
     exit(127);
 }
+$childPid = proc_get_status($child)['pid'] ?? null;
+$pidFile = $argv[2] ?? null;
+if (is_int($childPid) && is_string($pidFile) && $pidFile !== '') {
+    @file_put_contents($pidFile, (string) $childPid, LOCK_EX);
+}
 $exitCode = proc_close($child);
 exit($exitCode >= 0 ? $exitCode : 1);
 PHP;
-                $launchArgv = [
-                    PHP_BINARY,
-                    '-r',
-                    $launcher,
-                    base64_encode(json_encode($argv, JSON_THROW_ON_ERROR)),
-                ];
-                $processGroupCreated = $hasPosixProcessGroups;
+            $launchArgv = [
+                PHP_BINARY,
+                '-r',
+                $launcher,
+                base64_encode(json_encode($argv, JSON_THROW_ON_ERROR)),
+            ];
+            if ($windowsPidPath !== null) {
+                $launchArgv[] = $windowsPidPath;
             }
+            $processGroupCreated = $hasPosixProcessGroups;
+        }
 
-            $nullDevice = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
-            $process = proc_open(
-                $launchArgv,
-                [
-                    0 => ['file', $nullDevice, 'r'],
-                    1 => ['file', $stdoutPath, 'w'],
-                    2 => ['file', $stderrPath, 'w'],
-                ],
-                $pipes,
-                getcwd(),
-                null,
-                $processOptions
-            );
-            if (!is_resource($process)) {
-                $this->logger->error('Unable to start command process.');
-                return false;
+        $nullDevice = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
+        $process = proc_open(
+            $launchArgv,
+            [
+                0 => ['file', $nullDevice, 'r'],
+                1 => ['pipe', 'w'],
+                2 => ['pipe', 'w'],
+            ],
+            $pipes,
+            getcwd(),
+            null,
+            $processOptions
+        );
+        if (!is_resource($process)) {
+            if ($windowsPidPath !== null) {
+                @unlink($windowsPidPath);
             }
+            $this->logger->error('Unable to start command process.');
+            return false;
+        }
 
-            $processPid = proc_get_status($process)['pid'] ?? null;
-            $start = microtime(true);
-            $timedOut = false;
-            $observedExitCode = null;
-            $outputLimitExceeded = false;
+        stream_set_blocking($pipes[1], false);
+        stream_set_blocking($pipes[2], false);
+        $processPid = proc_get_status($process)['pid'] ?? null;
+        $launcherPid = $processPid;
+        if ($windowsPidPath !== null) {
+            for ($attempt = 0; $attempt < 20; ++$attempt) {
+                $childPid = trim((string) @file_get_contents($windowsPidPath));
+                if (ctype_digit($childPid) && (int) $childPid > 0) {
+                    $processPid = (int) $childPid;
+                    break;
+                }
+                usleep(1000);
+            }
+        }
+        $start = microtime(true);
+        $timedOut = false;
+        $observedExitCode = null;
+        $outputLimitExceeded = false;
+        $stdout = '';
+        $stderr = '';
 
+        try {
             while (true) {
-                $stdoutSize = self::getOutputFileSize($stdoutPath);
-                $stderrSize = self::getOutputFileSize($stderrPath);
-                if ($stdoutSize > self::MAX_CAPTURE_BYTES || $stderrSize > self::MAX_CAPTURE_BYTES) {
-                    $outputLimitExceeded = true;
-                    $this->terminateProcessTree($process, $processPid, $processGroupCreated);
+                $outputLimitExceeded = self::captureAvailableOutput($pipes[1], $stdout)
+                    || self::captureAvailableOutput($pipes[2], $stderr);
+                if ($outputLimitExceeded) {
+                    $this->terminateProcessTree($process, $processPid, $processGroupCreated, $launcherPid);
                     break;
                 }
 
                 $status = proc_get_status($process);
                 if (microtime(true) - $start > $timeout) {
                     $timedOut = true;
-                    $this->terminateProcessTree($process, $processPid, $processGroupCreated);
+                    $this->terminateProcessTree($process, $processPid, $processGroupCreated, $launcherPid);
                     break;
                 }
                 if (!$status['running']) {
                     $observedExitCode = $status['exitcode'];
+                    $outputLimitExceeded = self::captureAvailableOutput($pipes[1], $stdout)
+                        || self::captureAvailableOutput($pipes[2], $stderr);
                     break;
                 }
                 usleep(10000);
             }
-
-            $closeCode = proc_close($process);
-            $exitCode = ($observedExitCode !== null && $observedExitCode >= 0)
-                ? $observedExitCode
-                : $closeCode;
-
-            $stdoutSize = self::getOutputFileSize($stdoutPath);
-            $stderrSize = self::getOutputFileSize($stderrPath);
-            if ($stdoutSize > self::MAX_CAPTURE_BYTES || $stderrSize > self::MAX_CAPTURE_BYTES) {
-                $outputLimitExceeded = true;
-            }
-
-            $stdout = (string) file_get_contents($stdoutPath, false, null, 0, self::MAX_CAPTURE_BYTES);
-            $stderr = (string) file_get_contents($stderrPath, false, null, 0, self::MAX_CAPTURE_BYTES);
         } finally {
-            @unlink($stdoutPath);
-            @unlink($stderrPath);
+            foreach ($pipes as $pipe) {
+                if (is_resource($pipe)) {
+                    fclose($pipe);
+                }
+            }
+            if ($windowsPidPath !== null) {
+                @unlink($windowsPidPath);
+            }
         }
+
+        $closeCode = proc_close($process);
+        $exitCode = ($observedExitCode !== null && $observedExitCode >= 0)
+            ? $observedExitCode
+            : $closeCode;
 
         foreach (preg_split('/\\R/', rtrim($stdout)) as $line) {
             if ($line !== '') {
@@ -168,20 +185,41 @@ PHP;
             return false;
         }
         if ($timedOut) {
-            $this->logger->error(sprintf('Command timed out after %.1f seconds.', $timeout));
+            $this->logger->error(sprintf(
+                'Command timed out after %.1f seconds (PID %s).',
+                $timeout,
+                (string) $processPid
+            ));
             return false;
         }
 
         return $exitCode === 0;
     }
 
-    /** Returns the current size of a process output file without using cached stat data. */
-    private static function getOutputFileSize(string $path): int
+    /**
+     * Captures currently available pipe data without allowing either stream
+     * buffer to exceed MAX_CAPTURE_BYTES. No output is spooled to disk.
+     */
+    private static function captureAvailableOutput($pipe, string &$buffer): bool
     {
-        clearstatcache(true, $path);
-        $size = filesize($path);
+        while (!feof($pipe)) {
+            $chunk = fread($pipe, 65536);
+            if ($chunk === false || $chunk === '') {
+                break;
+            }
 
-        return $size === false ? 0 : $size;
+            $remaining = self::MAX_CAPTURE_BYTES - strlen($buffer);
+            if (strlen($chunk) > $remaining) {
+                if ($remaining > 0) {
+                    $buffer .= substr($chunk, 0, $remaining);
+                }
+                return true;
+            }
+
+            $buffer .= $chunk;
+        }
+
+        return false;
     }
 
     #[\Override]
@@ -197,7 +235,7 @@ PHP;
      * Windows uses taskkill's process-tree switch. POSIX platforms use a
      * dedicated process group when the POSIX extension is available.
      */
-    private function terminateProcessTree($process, ?int $processPid, bool $processGroupCreated): void
+    private function terminateProcessTree($process, ?int $processPid, bool $processGroupCreated, ?int $launcherPid = null): void
     {
         $processWasRunning = proc_get_status($process)['running'] ?? false;
 
@@ -205,24 +243,27 @@ PHP;
             $systemRoot = getenv('SystemRoot') ?: 'C:\\Windows';
             $taskkill = $systemRoot . DIRECTORY_SEPARATOR . 'System32'
                 . DIRECTORY_SEPARATOR . 'taskkill.exe';
-            $terminator = @proc_open(
-                [$taskkill, '/PID', (string) $processPid, '/T', '/F'],
-                [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
-                $pipes,
-                null,
-                null,
-                ['bypass_shell' => true]
-            );
             $taskkillError = '';
-            if (is_resource($terminator)) {
+            foreach (array_unique(array_filter([$launcherPid, $processPid], static fn($pid): bool => is_int($pid) && $pid > 0)) as $targetPid) {
+                $terminator = @proc_open(
+                    [$taskkill, '/PID', (string) $targetPid, '/T', '/F'],
+                    [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+                    $pipes,
+                    null,
+                    null,
+                    ['bypass_shell' => true]
+                );
+                if (!is_resource($terminator)) {
+                    $taskkillError .= sprintf('Unable to start taskkill for PID %d. ', $targetPid);
+                    continue;
+                }
+
                 fclose($pipes[0]);
                 stream_get_contents($pipes[1]);
-                $taskkillError = (string) stream_get_contents($pipes[2]);
+                $taskkillError .= (string) stream_get_contents($pipes[2]);
                 fclose($pipes[1]);
                 fclose($pipes[2]);
-                if (proc_close($terminator) === 0) {
-                    return;
-                }
+                proc_close($terminator);
             }
 
             // taskkill cannot enumerate descendants after the original parent
