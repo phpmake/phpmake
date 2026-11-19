@@ -152,6 +152,7 @@ PHP;
         // cancellation so the child process tree can be stopped before exit.
         if (
             PHP_OS_FAMILY !== 'Windows'
+            && PHP_SAPI === 'cli'
             && function_exists('pcntl_signal')
             && function_exists('pcntl_async_signals')
         ) {
