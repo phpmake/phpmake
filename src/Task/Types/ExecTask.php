@@ -399,7 +399,7 @@ PHP;
                 if (proc_close($fallback) === 0) {
                     return;
                 }
-                if ($processWasRunning) {
+                if ($processWasRunning && !$taskkillSucceeded) {
                     $this->logger->error(sprintf(
                         'Windows process-tree termination failed for PID %s: taskkill=%s PowerShell=%s',
                         (string) $processPid,
@@ -407,12 +407,16 @@ PHP;
                         trim($fallbackError)
                     ));
                 }
-            } elseif ($processWasRunning) {
+            } elseif ($processWasRunning && !$taskkillSucceeded) {
                 $this->logger->error(sprintf(
                     'Unable to start Windows process-tree termination fallback for PID %s: %s',
                     (string) $processPid,
                     trim($taskkillError)
                 ));
+            }
+
+            if ($taskkillSucceeded) {
+                return;
             }
         }
 
