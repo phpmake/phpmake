@@ -91,7 +91,7 @@ final class FilesystemTreeTest extends TestCase
         self::assertFalse(is_dir($link));
     }
 
-    /** Returns false when a directory cannot be enumerated or removed. */
+    /** Treats a missing path as already removed. */
     public function testRemoveReturnsTrueForMissingPath(): void
     {
         // Arrange
