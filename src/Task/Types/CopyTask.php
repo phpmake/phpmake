@@ -2,6 +2,7 @@
 
 namespace PhpMake\Task\Types;
 
+use PhpMake\Filesystem\AtomicDirectoryPublisher;
 use PhpMake\Filesystem\AtomicFilePublisher;
 use PhpMake\Filesystem\FilesystemIdentity;
 use PhpMake\Filesystem\FilesystemTree;
@@ -135,7 +136,7 @@ final class CopyTask extends BaseTask
         return true;
     }
 
-    /** Copies into a staging tree and swaps it into place only after success. */
+    /** Copies into a staging tree and publishes it with rollback on failure. */
     private function copyDirectoryTransactionally(string $source, string $destination): bool
     {
         if ($this->destinationIsWithinSource($source, $destination)) {
@@ -156,10 +157,8 @@ final class CopyTask extends BaseTask
             return false;
         }
 
-        $base = rtrim($destination, DIRECTORY_SEPARATOR);
-        $suffix = '.phpmake-' . bin2hex(random_bytes(8));
-        $staging = $base . $suffix . '.staging';
-        $backup = $base . $suffix . '.backup';
+        $staging = rtrim($destination, DIRECTORY_SEPARATOR)
+            . '.phpmake-' . bin2hex(random_bytes(8)) . '.staging';
 
         if (is_dir($destination) && !$this->copyDirectory($destination, $staging)) {
             if (!FilesystemTree::remove($staging)) {
@@ -177,39 +176,14 @@ final class CopyTask extends BaseTask
             return false;
         }
 
-        $hadDestination = file_exists($destination);
-        if ($hadDestination && !@rename($destination, $backup)) {
-            $this->logger->error(sprintf("Unable to stage existing destination '%s'.", $destination));
+        try {
+            AtomicDirectoryPublisher::publish($staging, $destination);
+        } catch (\\Throwable $exception) {
+            $this->logger->error($exception->getMessage());
             if (!FilesystemTree::remove($staging)) {
                 $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
             }
 
-            return false;
-        }
-
-        if (!@rename($staging, $destination)) {
-            $this->logger->error(sprintf("Unable to publish copied directory '%s'.", $destination));
-            if ($hadDestination && !@rename($backup, $destination)) {
-                $this->logger->error(sprintf(
-                    "CRITICAL: Copy rollback failed. The original destination is preserved at backup path '%s'; restore it manually to '%s'.",
-                    $backup,
-                    $destination
-                ));
-            }
-
-            if (!FilesystemTree::remove($staging)) {
-                $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
-            }
-
-            return false;
-        }
-
-        if ($hadDestination && !FilesystemTree::remove($backup)) {
-            $this->logger->error(sprintf(
-                "Copy completed at '%s', but the previous destination could not be removed. Recovery backup retained at '%s'.",
-                $destination,
-                $backup
-            ));
             return false;
         }
 
