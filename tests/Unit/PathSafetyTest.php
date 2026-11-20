@@ -443,7 +443,7 @@ final class PathSafetyTest extends TestCase
         $extendedPath = '\\\\\\\\?\\\\' . $outside;
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Safety Violation');
 
         // Act
