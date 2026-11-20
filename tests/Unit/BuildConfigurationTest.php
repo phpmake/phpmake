@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PhpMake\\Tests\\Unit;
+namespace PhpMake\Tests\Unit;
 
-use PhpMake\\Build\\BuildConfiguration;
-use PHPUnit\\Framework\\TestCase;
+use PhpMake\Build\BuildConfiguration;
+use PHPUnit\Framework\TestCase;
 
 /** Tests the immutable build configuration value object. */
 final class BuildConfigurationTest extends TestCase
