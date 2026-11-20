@@ -313,16 +313,14 @@ final class FilesystemTree
             return false;
         }
 
-        if (!@mkdir($directory, 0777) && !is_dir($directory)) {
-            return false;
-        }
-
-        if (is_dir($directory)) {
+        if (@mkdir($directory, 0777)) {
             $created[] = $directory;
             return true;
         }
 
-        return false;
+        // A concurrent process may have created the directory after the
+        // initial check. Accept it, but never claim it as ours for rollback.
+        return is_dir($directory) && !self::isLink($directory);
     }
 
     /** Removes only newly-created empty parent directories, from deepest to shallowest. */
