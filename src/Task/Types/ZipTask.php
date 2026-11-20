@@ -333,6 +333,7 @@ final class ZipTask extends BaseTask
             $afterStat = @fstat($input);
             $currentPathStat = @lstat($source);
             if (!is_array($afterStat) || !is_array($currentPathStat)
+                || !isset($currentPathStat['dev'], $currentPathStat['ino'])
                 || $copied !== $size
                 || $afterStat['size'] !== $openedStat['size']
                 || $afterStat['mtime'] !== $openedStat['mtime']
