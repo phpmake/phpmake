@@ -6,11 +6,14 @@ namespace PhpMake\Tests\Unit;
 
 use PhpMake\Filesystem\AtomicDirectoryPublisher;
 use PhpMake\Filesystem\FilesystemTree;
+use PhpMake\Tests\Support\DirectoryLinkTestHelper;
 use PHPUnit\Framework\TestCase;
 
 /** Covers same-parent directory publication and preservation of previous content. */
 final class AtomicDirectoryPublisherTest extends TestCase
 {
+    use DirectoryLinkTestHelper;
+
     private string $base;
 
     protected function setUp(): void
@@ -82,5 +85,48 @@ final class AtomicDirectoryPublisherTest extends TestCase
         // Act / Assert
         $this->expectException(\InvalidArgumentException::class);
         AtomicDirectoryPublisher::publish($staging, $destination);
+    }
+
+    /** Rejects a destination file instead of replacing it with a directory. */
+    public function testPublishRejectsFileDestination(): void
+    {
+        // Arrange
+        $staging = $this->base . DIRECTORY_SEPARATOR . 'staging';
+        $destination = $this->base . DIRECTORY_SEPARATOR . 'destination.txt';
+        self::assertTrue(mkdir($staging));
+        self::assertSame(4, file_put_contents($destination, 'keep'));
+
+        // Act / Assert
+        $this->expectException(\InvalidArgumentException::class);
+        AtomicDirectoryPublisher::publish($staging, $destination);
+    }
+
+    /** Rejects a destination link without moving or modifying its target. */
+    public function testPublishRejectsDestinationDirectoryLink(): void
+    {
+        // Arrange
+        $staging = $this->base . DIRECTORY_SEPARATOR . 'staging';
+        $target = $this->base . DIRECTORY_SEPARATOR . 'target';
+        $destination = $this->base . DIRECTORY_SEPARATOR . 'destination-link';
+        self::assertTrue(mkdir($staging));
+        self::assertTrue(mkdir($target));
+        self::assertSame(4, file_put_contents($target . DIRECTORY_SEPARATOR . 'keep.txt', 'keep'));
+        $this->createDirectoryLink($target, $destination);
+
+        // Act / Assert
+        $this->expectException(\InvalidArgumentException::class);
+        AtomicDirectoryPublisher::publish($staging, $destination);
+    }
+
+    /** Rejects using the same directory as both staging and destination. */
+    public function testPublishRejectsSameStagingAndDestination(): void
+    {
+        // Arrange
+        $stagingAndDestination = $this->base . DIRECTORY_SEPARATOR . 'same';
+        self::assertTrue(mkdir($stagingAndDestination));
+
+        // Act / Assert
+        $this->expectException(\InvalidArgumentException::class);
+        AtomicDirectoryPublisher::publish($stagingAndDestination, $stagingAndDestination);
     }
 }
