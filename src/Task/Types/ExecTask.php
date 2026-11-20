@@ -3,6 +3,7 @@
 namespace PhpMake\Task\Types;
 
 use PhpMake\Process\CommandLineParser;
+use PhpMake\Process\ProcessLauncher;
 use PhpMake\Task\BaseTask;
 
 /** Runs an external process without invoking a command shell. */
@@ -35,74 +36,10 @@ final class ExecTask extends BaseTask
         }
 
         $processOptions = ['bypass_shell' => true];
-        $launchArgv = $argv;
-        $processGroupCreated = false;
-        $hasPosixExtension = function_exists('posix_setsid') && function_exists('posix_kill');
-        $setsidExecutable = null;
-        $hasPosixProcessGroups = PHP_OS_FAMILY !== 'Windows' && $hasPosixExtension;
-        if (PHP_OS_FAMILY !== 'Windows' && !$hasPosixProcessGroups) {
-            $setsidExecutable = self::findExecutable('setsid');
-            $hasPosixProcessGroups = $setsidExecutable !== null
-                && self::findExecutable('kill') !== null;
-        }
-
-        $processPidPath = null;
-        if (!$hasPosixExtension && $hasPosixProcessGroups) {
-            $pidPath = tempnam(sys_get_temp_dir(), 'phpmake-pid-');
-            $processPidPath = $pidPath === false ? null : $pidPath;
-        }
-
-        if (PHP_OS_FAMILY === 'Windows') {
-            // The PowerShell launcher creates the target suspended, assigns it
-            // to a kill-on-close Job Object, and only then resumes execution.
-            $launchArgv = self::buildWindowsJobLauncher($argv);
-        } elseif ($hasPosixProcessGroups) {
-            // Keep a stable launcher alive while the configured command runs.
-            // On POSIX, establish its session before spawning the target process.
-            $launcher = <<<'PHP_WRAP'
-                $command = json_decode(base64_decode($argv[1], true), true, 512, JSON_THROW_ON_ERROR);
-                if (!is_array($command)) {
-                    exit(126);
-                }
-                if (function_exists('posix_setsid') && !posix_setsid()) {
-                    exit(126);
-                }
-                $child = proc_open(
-                    $command,
-                    [0 => STDIN, 1 => STDOUT, 2 => STDERR],
-                    $pipes,
-                    getcwd(),
-                    null,
-                    ['bypass_shell' => true]
-                );
-                if (!is_resource($child)) {
-                    exit(127);
-                }
-                $childPid = proc_get_status($child)['pid'] ?? null;
-                $pidFile = $argv[2] ?? null;
-                $recordedPid = PHP_OS_FAMILY === 'Windows' ? $childPid : getmypid();
-                if (is_int($recordedPid) && is_string($pidFile) && $pidFile !== '') {
-                    @file_put_contents($pidFile, (string) $recordedPid, LOCK_EX);
-                }
-                $exitCode = proc_close($child);
-                exit($exitCode >= 0 ? $exitCode : 1);
-                PHP_WRAP;
-            $launchArgv = [
-                PHP_BINARY,
-                '-r',
-                $launcher,
-                base64_encode(json_encode($argv, JSON_THROW_ON_ERROR)),
-            ];
-            if (!$hasPosixExtension && $setsidExecutable !== null) {
-                array_unshift($launchArgv, $setsidExecutable);
-            }
-
-            if ($processPidPath !== null) {
-                $launchArgv[] = $processPidPath;
-            }
-
-            $processGroupCreated = $hasPosixProcessGroups;
-        }
+        $launch = ProcessLauncher::prepare($argv);
+        $launchArgv = $launch['argv'];
+        $processPidPath = $launch['pidPath'];
+        $processGroupCreated = $launch['processGroupCreated'];
 
         $nullDevice = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
         $process = proc_open(
@@ -275,34 +212,6 @@ final class ExecTask extends BaseTask
         return $exitCode === 0;
     }
 
-    /**
-     * Builds a PowerShell launcher that assigns the target to a Windows Job
-     * Object before it can execute. Closing the launcher closes the Job handle
-     * and terminates every process still assigned to the job.
-     *
-     * @param list<string> $argv
-     * @return list<string>
-     */
-    private static function buildWindowsJobLauncher(array $argv): array
-    {
-        $payload = base64_encode(json_encode($argv, JSON_THROW_ON_ERROR));
-        $systemRoot = getenv('SystemRoot') ?: 'C:\\Windows';
-        $powerShell = $systemRoot . DIRECTORY_SEPARATOR . 'System32'
-            . DIRECTORY_SEPARATOR . 'WindowsPowerShell' . DIRECTORY_SEPARATOR
-            . 'v1.0' . DIRECTORY_SEPARATOR . 'powershell.exe';
-        $runner = __DIR__ . DIRECTORY_SEPARATOR . 'WindowsJobRunner.ps1';
-
-        return [
-            $powerShell,
-            '-NoProfile',
-            '-NonInteractive',
-            '-ExecutionPolicy',
-            'Bypass',
-            '-File',
-            $runner,
-            $payload,
-        ];
-    }
 
     /** Finds an executable in PATH without invoking a command shell. */
     private static function findExecutable(string $name): ?string
