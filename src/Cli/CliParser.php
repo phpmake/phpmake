@@ -16,6 +16,26 @@ use PhpMake\Config;
 final class CliParser
 {
     /**
+     * @var array<string, array{key:string, action:?string}>
+     */
+    private const FLAG_OPTIONS = [
+        '-h' => ['key' => 'help', 'action' => 'help'],
+        '--help' => ['key' => 'help', 'action' => 'help'],
+        '-v' => ['key' => 'showVersion', 'action' => 'showVersion'],
+        '--version' => ['key' => 'showVersion', 'action' => 'showVersion'],
+        '--diagnostics' => ['key' => 'diagnostics', 'action' => 'diagnostics'],
+        '--validate-build' => ['key' => 'validateBuild', 'action' => 'validateBuild'],
+        '-vb' => ['key' => 'validateBuild', 'action' => 'validateBuild'],
+        '-d' => ['key' => 'debug', 'action' => null],
+        '--debug' => ['key' => 'debug', 'action' => null],
+        '-s' => ['key' => 'silent', 'action' => null],
+        '--silent' => ['key' => 'silent', 'action' => null],
+        '-nl' => ['key' => 'noLog', 'action' => null],
+        '--no-log' => ['key' => 'noLog', 'action' => null],
+        '--init' => ['key' => 'init', 'action' => 'init'],
+    ];
+
+    /**
      * Parse command-line arguments.
      *
      * Extracts options, flags, and the target to execute from user input.
@@ -38,84 +58,18 @@ final class CliParser
             'init' => false,
         ];
 
-        $knownFlags = [
-            '-h',
-            '--help',
-            '-v',
-            '--version',
-            '--diagnostics',
-            '--validate-build',
-            '-vb',
-            '-d',
-            '--debug',
-            '-s',
-            '--silent',
-            '-nl',
-            '--no-log',
-            '--init',
-        ];
-
-        $actionByFlag = [
-            '-h' => 'help', '--help' => 'help',
-            '-v' => 'showVersion', '--version' => 'showVersion',
-            '--diagnostics' => 'diagnostics',
-            '--validate-build' => 'validateBuild', '-vb' => 'validateBuild',
-            '--init' => 'init',
-        ];
-        $selectedAction = null;
-
-        foreach ($argv as $index => $arg) {
-            if (!is_string($arg)) {
-                throw new \InvalidArgumentException('Command-line arguments must be strings.');
-            }
-
-            if ($index === 0) {
-                continue;
-            }
-
-            if (in_array($arg, $knownFlags, true)) {
-                if (isset($actionByFlag[$arg])) {
-                    $action = $actionByFlag[$arg];
+            if (isset(self::FLAG_OPTIONS[$arg])) {
+                $option = self::FLAG_OPTIONS[$arg];
+                $action = $option['action'];
+                if ($action !== null) {
                     if ($selectedAction !== null && $selectedAction !== $action) {
-                        throw new \InvalidArgumentException('Conflicting command actions were specified.');
+                        throw new \\InvalidArgumentException('Conflicting command actions were specified.');
                     }
 
                     $selectedAction = $action;
                 }
 
-                switch ($arg) {
-                    case '--help':
-                    case '-h':
-                        $result['help'] = true;
-                        break;
-                    case '--version':
-                    case '-v':
-                        $result['showVersion'] = true;
-                        break;
-                    case '--diagnostics':
-                        $result['diagnostics'] = true;
-                        break;
-                    case '--validate-build':
-                    case '-vb':
-                        $result['validateBuild'] = true;
-                        break;
-                    case '--debug':
-                    case '-d':
-                        $result['debug'] = true;
-                        break;
-                    case '--silent':
-                    case '-s':
-                        $result['silent'] = true;
-                        break;
-                    case '--no-log':
-                    case '-nl':
-                        $result['noLog'] = true;
-                        break;
-                    case '--init':
-                        $result['init'] = true;
-                        break;
-                }
-
+                $result[$option['key']] = true;
                 continue;
             }
 
