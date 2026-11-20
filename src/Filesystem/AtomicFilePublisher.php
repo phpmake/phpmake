@@ -16,7 +16,7 @@ final class AtomicFilePublisher
     public static function publish(string $stagedFile, string $destination): void
     {
         $directory = dirname($destination);
-        if (dirname($stagedFile) !== $directory) {
+        if (!FilesystemIdentity::sameFile(dirname($stagedFile), $directory)) {
             throw new \InvalidArgumentException('Staged file and destination must share a directory.');
         }
 
@@ -30,7 +30,7 @@ final class AtomicFilePublisher
         }
 
         $backup = @tempnam($directory, '.phpmake-backup-');
-        if ($backup === false || dirname($backup) !== $directory) {
+        if ($backup === false || !FilesystemIdentity::sameFile(dirname($backup), $directory)) {
             if (is_string($backup)) {
                 @unlink($backup);
             }
