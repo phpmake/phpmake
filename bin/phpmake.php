@@ -114,7 +114,7 @@ try {
         }
 
         @unlink($destFile);
-        fwrite(STDERR, "Error: Failed to create build.json.\n");
+        $output->error('Error: Failed to create build.json.');
         exit(1);
     }
 
@@ -127,7 +127,7 @@ try {
         exit(0);
     }
 
-    $logger = new Logger($args['debug'], $args['silent'], $args['noLog']);
+    $logger = new Logger($args['debug'], $args['silent'], $args['noLog'], 'build.log', $output);
     if (!$args['silent']) {
         $logger->info('Project: ' . $config->getName());
         $logger->info('Version: ' . $config->getVersion());
@@ -137,7 +137,7 @@ try {
 
     $taskFactory = new TaskFactory($logger);
     $dependencyResolver = new DependencyResolver();
-    $taskExecutor = new TaskExecutor();
+    $taskExecutor = new TaskExecutor($output);
     $executor = new BuildExecutor($taskFactory, $dependencyResolver, $taskExecutor);
     $exitCode = $executor->execute($config, $args['target'], $logger);
 
