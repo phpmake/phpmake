@@ -2,6 +2,7 @@
 
 namespace PhpMake\Task\Types;
 
+use PhpMake\Process\CommandLineParser;
 use PhpMake\Task\BaseTask;
 
 /** Runs an external process without invoking a command shell. */
@@ -19,11 +20,11 @@ final class ExecTask extends BaseTask
             throw new \InvalidArgumentException('Exec timeout must be greater than 0 and at most 86400 seconds.');
         }
 
-        if (!self::hasBalancedQuotes($command)) {
+        if (!CommandLineParser::hasBalancedQuotes($command)) {
             throw new \InvalidArgumentException('Exec command contains an unbalanced quote.');
         }
 
-        $argv = self::tokenizeCommand($command);
+        $argv = CommandLineParser::tokenize($command);
         if ($argv === []) {
             throw new \InvalidArgumentException('Exec command is empty.');
         }
@@ -568,7 +569,7 @@ final class ExecTask extends BaseTask
             throw new \InvalidArgumentException("Exec task requires a non-empty string 'command'.");
         }
 
-        if (!self::hasBalancedQuotes($this->params['command'])) {
+        if (!CommandLineParser::hasBalancedQuotes($this->params['command'])) {
             throw new \InvalidArgumentException('Exec command contains an unbalanced quote.');
         }
 
@@ -584,62 +585,6 @@ final class ExecTask extends BaseTask
         )) {
             throw new \InvalidArgumentException("Exec task 'timeout' must be greater than 0 and at most 86400 seconds.");
         }
-    }
-
-    /** Checks that single and double quoted command segments are closed. */
-    private static function hasBalancedQuotes(string $command): bool
-    {
-        $quote = null;
-        $length = strlen($command);
-        for ($i = 0; $i < $length; ++$i) {
-            $character = $command[$i];
-            if ($quote !== null) {
-                if ($character === '\\' && $i + 1 < $length
-                    && ($command[$i + 1] === $quote || $command[$i + 1] === '\\')) {
-                    ++$i;
-                    continue;
-                }
-
-                if ($character === $quote) {
-                    $quote = null;
-                }
-
-                continue;
-            }
-
-            if ($character === '"' || $character === "'") {
-                $quote = $character;
-            }
-        }
-
-        return $quote === null;
-    }
-
-    /**
-     * Splits a command into argv tokens without interpreting Windows path separators as escapes.
-     *
-     * @return list<string>
-     */
-    private static function tokenizeCommand(string $command): array
-    {
-        preg_match_all('/"((?:\\\\.|[^"])*)"|\'((?:\\\\.|[^\'])*)\'|(\S+)/', $command, $matches, PREG_SET_ORDER);
-        $argv = [];
-
-        foreach ($matches as $match) {
-            if ($match[1] !== '') {
-                // Double-quoted tokens only escape a quote or a literal backslash.
-                $token = preg_replace('/\\\\(["\\\\])/', '$1', $match[1]);
-            } elseif ($match[2] !== '') {
-                // Single-quoted tokens only escape a quote or a literal backslash.
-                $token = preg_replace('/\\\\([\'\\\\])/', '$1', $match[2]);
-            } else {
-                $token = $match[3];
-            }
-
-            $argv[] = $token;
-        }
-
-        return $argv;
     }
 
 }
