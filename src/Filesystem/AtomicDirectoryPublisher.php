@@ -22,11 +22,11 @@ final class AtomicDirectoryPublisher
             throw new \\InvalidArgumentException('Staging directory and destination must share an existing parent directory.');
         }
 
-        if (!is_dir($stagedDirectory) || is_link($stagedDirectory)) {
+        if (!is_dir($stagedDirectory) || FilesystemTree::isLink($stagedDirectory)) {
             throw new \\InvalidArgumentException('Staging path must be a directory and must not be a symbolic link.');
         }
 
-        $hadDestination = file_exists($destination);
+        if (FilesystemTree::isLink($destination)) {\n            throw new \\InvalidArgumentException('Destination must not be a symbolic link or junction.');\n        }\n\n        $hadDestination = file_exists($destination);
         $backup = $destination . '.phpmake-' . bin2hex(random_bytes(8)) . '.backup';
 
         if ($hadDestination && !@rename($destination, $backup)) {
