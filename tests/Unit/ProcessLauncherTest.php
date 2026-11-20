@@ -42,14 +42,14 @@ final class ProcessLauncherTest extends TestCase
         $command = WindowsProcessLauncher::build($arguments);
 
         // Assert
-        self::assertCount(7, $command);
+        self::assertCount(8, $command);
         self::assertStringContainsString('powershell.exe', strtolower($command[0]));
         self::assertSame('-NoProfile', $command[1]);
         self::assertSame('-File', $command[5]);
         self::assertStringEndsWith(
             'Task' . DIRECTORY_SEPARATOR . 'Types' . DIRECTORY_SEPARATOR . 'WindowsJobRunner.ps1',
-            $command[5]
+            $command[6]
         );
-        self::assertSame(base64_encode(json_encode($arguments, JSON_THROW_ON_ERROR)), $command[6]);
+        self::assertSame(base64_encode(json_encode($arguments, JSON_THROW_ON_ERROR)), $command[7]);
     }
 }
