@@ -91,6 +91,22 @@ final class FilesystemTreeTest extends TestCase
         self::assertFalse(is_dir($link));
     }
 
+    /** Refuses empty paths and the current working directory. */
+    public function testRemoveRejectsProtectedPaths(): void
+    {
+        // Arrange
+        $currentDirectory = getcwd();
+
+        // Act
+        $emptyPathRemoved = FilesystemTree::remove('');
+        $currentDirectoryRemoved = FilesystemTree::remove($currentDirectory);
+
+        // Assert
+        self::assertFalse($emptyPathRemoved);
+        self::assertFalse($currentDirectoryRemoved);
+        self::assertDirectoryExists($currentDirectory);
+    }
+
     /** Treats a missing path as already removed. */
     public function testRemoveReturnsTrueForMissingPath(): void
     {
