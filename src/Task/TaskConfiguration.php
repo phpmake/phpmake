@@ -28,6 +28,7 @@ final class TaskConfiguration
             throw new \InvalidArgumentException(sprintf("Parameters for task '%s' must be an array.", $type));
         }
 
+        /** @var array<string, mixed> $params */
         return new self($type, $params);
     }
 
