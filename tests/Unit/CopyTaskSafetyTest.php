@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PhpMake\Tests\Unit;
+namespace PhpMake\\Tests\\Unit;
 
-use PhpMake\Task\Types\CopyTask;
-use PhpMake\Utilities\Logger;
-use PHPUnit\Framework\TestCase;
+use PhpMake\\Task\\Types\\CopyTask;
+use PhpMake\\Utilities\\Logger;
+use PHPUnit\\Framework\\TestCase;
 
 /** Tests transactional file-copy behavior and filesystem alias protection. */
 final class CopyTaskSafetyTest extends TestCase
@@ -17,7 +17,9 @@ final class CopyTaskSafetyTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->root = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-copy-safety-' . bin2hex(random_bytes(6));
+        // Use the system temp volume: the repository checkout may be on a
+        // filesystem that does not support hardlinks (notably Windows CI).
+        $this->root = sys_get_temp_dir() . DIRECTORY_SEPARATOR . '.phpmake-copy-safety-' . bin2hex(random_bytes(6));
         self::assertTrue(mkdir($this->root));
         $this->logger = new Logger(false, true, true);
     }
@@ -39,16 +41,15 @@ final class CopyTaskSafetyTest extends TestCase
     public function testCopyToHardlinkAliasDoesNotTruncateSource(): void
     {
         // Arrange
-        if (!function_exists('link')) {
-            self::markTestSkipped('Hardlink creation is unavailable.');
-        }
+        self::assertTrue(function_exists('link'), 'Hardlink creation is unavailable in this PHP runtime.');
 
         $source = $this->root . DIRECTORY_SEPARATOR . 'source.txt';
         $destination = $this->root . DIRECTORY_SEPARATOR . 'destination.txt';
         self::assertSame(10, file_put_contents($source, 'preserved!'));
-        if (!@link($source, $destination)) {
-            self::markTestSkipped('The current filesystem does not support hardlinks.');
-        }
+        self::assertTrue(
+            @link($source, $destination),
+            'The system temporary filesystem must support hardlinks for this safety test.'
+        );
 
         $task = new CopyTask(['source' => $source, 'dest' => $destination], $this->logger);
 
