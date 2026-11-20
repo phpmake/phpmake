@@ -110,8 +110,8 @@ final class CopyTask extends BaseTask
 
         try {
             AtomicFilePublisher::publish($temporary, $destPath);
-        } catch (\Throwable $exception) {
-            $this->logger->error($exception->getMessage());
+        } catch (\Throwable $throwable) {
+            $this->logger->error($throwable->getMessage());
             return false;
         }
 
@@ -177,8 +177,8 @@ final class CopyTask extends BaseTask
 
         try {
             AtomicDirectoryPublisher::publish($staging, $destination);
-        } catch (\Throwable $exception) {
-            $this->logger->error($exception->getMessage());
+        } catch (\Throwable $throwable) {
+            $this->logger->error($throwable->getMessage());
             if (!FilesystemTree::remove($staging)) {
                 $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
             }
