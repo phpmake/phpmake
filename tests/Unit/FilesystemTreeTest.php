@@ -119,4 +119,79 @@ final class FilesystemTreeTest extends TestCase
         // Assert
         self::assertTrue($removed);
     }
+
+    /** Copies into an existing destination while preserving unrelated files. */
+    public function testCopyDirectoryMergesExistingDestination(): void
+    {
+        // Arrange
+        $source = $this->base . DIRECTORY_SEPARATOR . 'source';
+        $destination = $this->base . DIRECTORY_SEPARATOR . 'destination';
+        self::assertTrue(mkdir($source));
+        self::assertTrue(mkdir($destination));
+        self::assertSame(3, file_put_contents($source . DIRECTORY_SEPARATOR . 'replace.txt', 'new'));
+        self::assertSame(3, file_put_contents($destination . DIRECTORY_SEPARATOR . 'replace.txt', 'old'));
+        self::assertSame(6, file_put_contents($destination . DIRECTORY_SEPARATOR . 'keep.txt', 'keep!!'));
+
+        // Act
+        $copied = FilesystemTree::copyDirectory($source, $destination);
+
+        // Assert
+        self::assertTrue($copied);
+        self::assertSame('new', file_get_contents($destination . DIRECTORY_SEPARATOR . 'replace.txt'));
+        self::assertSame('keep!!', file_get_contents($destination . DIRECTORY_SEPARATOR . 'keep.txt'));
+    }
+
+    /** Rejects a destination directory link without writing into its target. */
+    public function testCopyDirectoryRejectsDestinationDirectoryLinks(): void
+    {
+        // Arrange
+        $source = $this->base . DIRECTORY_SEPARATOR . 'source';
+        $target = $this->base . DIRECTORY_SEPARATOR . 'target';
+        $destinationLink = $this->base . DIRECTORY_SEPARATOR . 'destination-link';
+        self::assertTrue(mkdir($source));
+        self::assertTrue(mkdir($target));
+        self::assertSame(6, file_put_contents($source . DIRECTORY_SEPARATOR . 'new.txt', 'source'));
+        $this->createDirectoryLink($target, $destinationLink);
+
+        // Act
+        $copied = FilesystemTree::copyDirectory($source, $destinationLink);
+
+        // Assert
+        self::assertFalse($copied);
+        self::assertFileDoesNotExist($target . DIRECTORY_SEPARATOR . 'new.txt');
+        self::assertDirectoryExists($target);
+    }
+
+    /** Removes nested directories and their files recursively. */
+    public function testRemoveDeletesNestedDirectoryTree(): void
+    {
+        // Arrange
+        $tree = $this->base . DIRECTORY_SEPARATOR . 'tree'
+            . DIRECTORY_SEPARATOR . 'nested';
+        self::assertTrue(mkdir($tree, 0777, true));
+        self::assertSame(4, file_put_contents($tree . DIRECTORY_SEPARATOR . 'file.txt', 'data'));
+        $root = dirname($tree);
+
+        // Act
+        $removed = FilesystemTree::remove($root);
+
+        // Assert
+        self::assertTrue($removed);
+        self::assertDirectoryDoesNotExist($root);
+    }
+
+    /** Returns false when the source directory does not exist. */
+    public function testCopyDirectoryRejectsMissingSource(): void
+    {
+        // Arrange
+        $source = $this->base . DIRECTORY_SEPARATOR . 'missing';
+        $destination = $this->base . DIRECTORY_SEPARATOR . 'destination';
+
+        // Act
+        $copied = FilesystemTree::copyDirectory($source, $destination);
+
+        // Assert
+        self::assertFalse($copied);
+        self::assertDirectoryDoesNotExist($destination);
+    }
 }
