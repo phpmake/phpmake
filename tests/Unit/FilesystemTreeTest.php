@@ -393,4 +393,36 @@ final class FilesystemTreeTest extends TestCase
         }
     }
 
+
+
+    /** Preserves a pre-existing destination parent when a staged copy fails. */
+    public function testCopyDirectoryPreservesExistingParentAfterFailure(): void
+    {
+        // Arrange
+        $source = $this->base . DIRECTORY_SEPARATOR . 'source';
+        $parent = $this->base . DIRECTORY_SEPARATOR . 'existing-parent';
+        $destination = $parent . DIRECTORY_SEPARATOR . 'destination';
+        $outside = $this->base . DIRECTORY_SEPARATOR . 'outside';
+        self::assertTrue(mkdir($source));
+        self::assertTrue(mkdir($parent));
+        self::assertTrue(mkdir($outside));
+        self::assertSame(6, file_put_contents($outside . DIRECTORY_SEPARATOR . 'secret.txt', 'secret'));
+        $this->createDirectoryLink($outside, $source . DIRECTORY_SEPARATOR . 'linked');
+
+        try {
+            // Act
+            $copied = FilesystemTree::copyDirectory($source, $destination);
+
+            // Assert
+            self::assertFalse($copied);
+            self::assertDirectoryExists($parent);
+            self::assertDirectoryDoesNotExist($destination);
+            self::assertSame('secret', file_get_contents($outside . DIRECTORY_SEPARATOR . 'secret.txt'));
+        } finally {
+            if (is_link($source . DIRECTORY_SEPARATOR . 'linked') || $this->isDirectoryJunction($source . DIRECTORY_SEPARATOR . 'linked')) {
+                $this->removeDirectoryLink($source . DIRECTORY_SEPARATOR . 'linked');
+            }
+        }
+    }
+
 }
