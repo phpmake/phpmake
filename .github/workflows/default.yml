@@ -157,6 +157,44 @@ jobs:
           if (!isset($config["targets"]["package"])) { echo "build.json missing
           'package' target\\n"; exit(1); }'
 
+
+  coverage:
+    name: PHPUnit Coverage (PHP 8.3)
+    runs-on: ubuntu-latest
+    continue-on-error: false
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v7
+
+      - name: Setup PHP with coverage driver
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          extensions: zip, xdebug
+          tools: composer:v2
+          ini-values: memory_limit=512M, error_reporting=-1, display_errors=On
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Generate PHPUnit coverage reports
+        env:
+          XDEBUG_MODE: coverage
+        run: |
+          mkdir -p build
+          vendor/bin/phpunit --configuration phpunit.xml \
+            --coverage-clover=build/coverage.xml \
+            --coverage-text
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: phpunit-coverage
+          path: build/coverage.xml
+          if-no-files-found: error
+          retention-days: 14
+
   php-compatibility:
     name: PHP ${{ matrix.php-version }} compatibility
     runs-on: ubuntu-latest

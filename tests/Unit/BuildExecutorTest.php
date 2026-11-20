@@ -67,4 +67,29 @@ final class BuildExecutorTest extends TestCase
         // Assert
         self::assertSame(0, $exitCode);
     }
+
+    /** Uses the configured default target when no target is supplied. */
+    public function testExecuteUsesDefaultTargetWhenTargetIsNull(): void
+    {
+        // Arrange
+        $logger = new Logger(false, true, true);
+        $config = new BuildConfiguration(
+            'DefaultTarget',
+            'Default target selection',
+            '1.0.0',
+            ['default' => ['tasks' => [['type' => 'echo', 'params' => ['message' => 'default']]]]],
+            'default'
+        );
+        $executor = new BuildExecutor(
+            new TaskFactory($logger),
+            new DependencyResolver(),
+            new TaskExecutor()
+        );
+
+        // Act
+        $exitCode = $executor->execute($config, null, $logger);
+
+        // Assert
+        self::assertSame(0, $exitCode);
+    }
 }
