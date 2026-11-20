@@ -10,15 +10,6 @@ use PHPUnit\Framework\TestCase;
 /** Tests parsing of command-line flags and target arguments. */
 final class CliParserTest extends TestCase
 {
-
-
-
-    /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
     public function testParseVersionFlag(): void
     {
         // Arrange
@@ -30,12 +21,6 @@ final class CliParserTest extends TestCase
         $this->assertTrue((bool) $result['showVersion']);
     }
 
-    /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
     public function testParseHelpFlag(): void
     {
         // Arrange
@@ -47,12 +32,6 @@ final class CliParserTest extends TestCase
         $this->assertTrue((bool) $result['help']);
     }
 
-    /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
     public function testParseValidateBuild(): void
     {
         // Arrange
@@ -64,12 +43,6 @@ final class CliParserTest extends TestCase
         $this->assertTrue((bool) $result['validateBuild']);
     }
 
-    /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
     public function testParseInitFlag(): void
     {
         // Arrange
@@ -81,12 +54,6 @@ final class CliParserTest extends TestCase
         $this->assertTrue((bool) $result['init']);
     }
 
-    /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
     public function testParseTarget(): void
     {
         // Arrange
@@ -141,7 +108,6 @@ final class CliParserTest extends TestCase
         self::assertStringContainsString('Loaded extensions:', $output);
     }
 
-
     /** Rejects empty arguments rather than indexing an empty string. */
     public function testRejectsEmptyArgument(): void
     {
@@ -171,5 +137,4 @@ final class CliParserTest extends TestCase
         // Act
         (new CliParser())->parse(['script.php', '--help', '--version']);
     }
-
 }

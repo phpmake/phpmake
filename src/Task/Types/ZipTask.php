@@ -2,6 +2,8 @@
 
 namespace PhpMake\Task\Types;
 
+use PhpMake\Filesystem\AtomicFilePublisher;
+use PhpMake\Filesystem\FilesystemIdentity;
 use PhpMake\Task\BaseTask;
 use ZipArchive;
 
@@ -66,7 +68,7 @@ final class ZipTask extends BaseTask
             throw new \RuntimeException(sprintf("Archive output '%s' is a directory.", $outputReal));
         }
 
-        if ($this->pathsReferToSameFile($sourceReal, $outputReal)) {
+        if (FilesystemIdentity::sameFile($sourceReal, $outputReal, true)) {
             throw new \RuntimeException('Archive output must not overwrite its source.');
         }
 
@@ -115,59 +117,7 @@ final class ZipTask extends BaseTask
     /** Publishes the completed archive and restores the previous output on failure. */
     private function publishArchive(string $temporaryArchive, string $output): void
     {
-        if (!file_exists($output)) {
-            if (!@rename($temporaryArchive, $output)) {
-                @unlink($temporaryArchive);
-                throw new \RuntimeException(sprintf("Unable to publish archive '%s'.", $output));
-            }
-
-            return;
-        }
-
-        $backup = @tempnam(dirname($output), '.phpmake-backup-');
-        if ($backup === false || dirname($backup) !== dirname($output)) {
-            if (is_string($backup)) {
-                @unlink($backup);
-            }
-
-            @unlink($temporaryArchive);
-            throw new \RuntimeException(sprintf("Unable to create archive recovery path beside '%s'.", $output));
-        }
-
-        if (!@unlink($backup)) {
-            @unlink($temporaryArchive);
-            throw new \RuntimeException(sprintf("Unable to prepare archive recovery path '%s'.", $backup));
-        }
-
-        if (!@rename($output, $backup)) {
-            @unlink($temporaryArchive);
-            throw new \RuntimeException(sprintf("Unable to preserve existing archive '%s'.", $output));
-        }
-
-        if (!@rename($temporaryArchive, $output)) {
-            if (!@rename($backup, $output)) {
-                if (!@unlink($temporaryArchive)) {
-                    $this->logger->error(sprintf("Unable to remove incomplete temporary archive '%s'.", $temporaryArchive));
-                }
-
-                throw new \RuntimeException(sprintf(
-                    "CRITICAL: Archive publication and rollback failed. The previous archive is preserved at '%s'; restore it manually to '%s'.",
-                    $backup,
-                    $output
-                ));
-            }
-
-            @unlink($temporaryArchive);
-            throw new \RuntimeException(sprintf("Unable to publish archive '%s'; the previous archive was restored.", $output));
-        }
-
-        if (!@unlink($backup)) {
-            throw new \RuntimeException(sprintf(
-                "Archive created at '%s', but the previous archive could not be removed. Recovery backup retained at '%s'.",
-                $output,
-                $backup
-            ));
-        }
+        AtomicFilePublisher::publish($temporaryArchive, $output);
     }
 
     /** Adds source files to the archive using paths relative to its root. */
@@ -186,7 +136,7 @@ final class ZipTask extends BaseTask
         $this->assertSafePath($source, 'archive input');
         if (is_file($source)) {
             foreach ($excludedPaths as $excludedPath) {
-                if ($this->pathsReferToSameFile($source, $excludedPath)) {
+                if (FilesystemIdentity::sameFile($source, $excludedPath, true)) {
                     throw new \RuntimeException('Archive output must not overwrite its source.');
                 }
             }
@@ -224,7 +174,7 @@ final class ZipTask extends BaseTask
             $real = $file->getRealPath();
             $excluded = false;
             foreach ($excludedPaths as $excludedPath) {
-                if ($real !== false && $this->pathsReferToSameFile($real, $excludedPath)) {
+                if ($real !== false && FilesystemIdentity::sameFile($real, $excludedPath, true)) {
                     $excluded = true;
                     break;
                 }
@@ -285,19 +235,6 @@ final class ZipTask extends BaseTask
         $totalBytes += $size;
     }
 
-    /** Compares filesystem identity so case behavior follows the mounted volume. */
-    private function pathsReferToSameFile(string $left, string $right): bool
-    {
-        clearstatcache(true, $left);
-        clearstatcache(true, $right);
-        $leftStat = @stat($left);
-        $rightStat = @stat($right);
-        if (is_array($leftStat) && is_array($rightStat)) {
-            return $leftStat['dev'] === $rightStat['dev'] && $leftStat['ino'] === $rightStat['ino'];
-        }
-
-        return PHP_OS_FAMILY === 'Windows' ? strcasecmp($left, $right) === 0 : $left === $right;
-    }
 
     /** Returns the archive task identifier. */
     public function getType(): string

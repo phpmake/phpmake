@@ -14,6 +14,8 @@ namespace PhpMake\Build;
 final class BuildConfiguration
 {
     /**
+     * @param array<string, array{description?:string, depends?:list<string>, tasks:list<array{type:string, params:array<string, mixed>}>}> $targets Validated target definitions.
+     *
      * Constructor
      *
      * Initializes the build configuration with provided values.
@@ -59,7 +61,7 @@ final class BuildConfiguration
     /**
      * Get available build targets.
      *
-     * @return array The list of available build targets.
+     * @return array<string, array{description?:string, depends?:list<string>, tasks:list<array{type:string, params:array<string, mixed>}>}> The validated build targets.
      */
     public function getTargets(): array
     {

@@ -2,10 +2,17 @@
 
 namespace PhpMake\Build;
 
+use PhpMake\Task\TaskDefinitionRegistry;
+
 /** Validates build configuration fields, targets, dependencies, and task parameters. */
 final class BuildValidator
 {
-    /** Returns validation errors found in a build configuration. */
+    /**
+     * Returns validation errors found in a build configuration.
+     *
+     * @param array<string, mixed> $config
+     * @return list<string>
+     */
     public function validate(array $config): array
     {
         $errors = [];
@@ -109,29 +116,14 @@ final class BuildValidator
 
                 $params = $task['params'];
 
-                $required = match ($type) {
-                    'delete' => ['path'],
-                    'create_directory' => ['name'],
-                    'copy' => ['source', 'dest'],
-                    'exec' => ['command'],
-                    'echo' => ['message'],
-                    'archive' => ['source', 'output'],
-                    default => null,
-                };
-
-                if ($required === null) {
+                $definition = TaskDefinitionRegistry::find($type);
+                if ($definition === null) {
                     $errors[] = sprintf("Unknown task type '%s' in target '%s'.", $type, $targetName);
                     continue;
                 }
 
-                $allowedParams = match ($type) {
-                    'delete' => ['path'],
-                    'create_directory' => ['name'],
-                    'copy' => ['source', 'dest'],
-                    'exec' => ['command', 'args', 'timeout'],
-                    'echo' => ['message'],
-                    'archive' => ['source', 'output'],
-                };
+                $required = $definition['required'];
+                $allowedParams = $definition['allowed'];
                 foreach (array_keys($params) as $key) {
                     if (!in_array($key, $allowedParams, true)) {
                         $errors[] = sprintf("Unknown parameter '%s' for %s task in target '%s'.", (string) $key, $type, $targetName);

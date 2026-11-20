@@ -39,6 +39,9 @@ use PhpMake\Task\TaskExecutor;
 use PhpMake\Build\BuildExecutor;
 use PhpMake\Task\TaskFactory;
 use PhpMake\Target\DependencyResolver;
+use PhpMake\Cli\ConsoleOutput;
+
+$output = new ConsoleOutput();
 
 try {
     $parser = new CliParser();
@@ -76,18 +79,18 @@ try {
         $destFile = getcwd() . DIRECTORY_SEPARATOR . 'build.json';
         clearstatcache(true, $destFile);
         if (file_exists($destFile) || is_link($destFile) || @lstat($destFile) !== false) {
-            fwrite(STDERR, "Error: '{$destFile}' already exists.\n");
+            $output->error("Error: '{$destFile}' already exists.");
             exit(1);
         }
 
         if ($sampleFile === null) {
-            fwrite(STDERR, "Error: Sample config 'build.json.example' not found.\n");
+            $output->error("Error: Sample config 'build.json.example' not found.");
             exit(1);
         }
 
         $source = @fopen($sampleFile, 'rb');
         if ($source === false) {
-            fwrite(STDERR, "Error: Failed to read sample build configuration.\n");
+            $output->error('Error: Failed to read sample build configuration.');
             exit(1);
         }
 
@@ -95,7 +98,7 @@ try {
         $destination = @fopen($destFile, 'xb');
         if ($destination === false) {
             fclose($source);
-            fwrite(STDERR, "Error: Failed to create build.json.\n");
+            $output->error('Error: Failed to create build.json.');
             exit(1);
         }
 
@@ -106,12 +109,12 @@ try {
         fclose($destination);
 
         if ($copied !== false && $expectedSize !== false && $copied === $expectedSize && $flushed) {
-            echo "Sample build.json created successfully.\n";
+            $output->info('Sample build.json created successfully.');
             exit(0);
         }
 
         @unlink($destFile);
-        fwrite(STDERR, "Error: Failed to create build.json.\n");
+        $output->error('Error: Failed to create build.json.');
         exit(1);
     }
 
@@ -120,11 +123,11 @@ try {
     $config = $loader->load();
 
     if ($args['validateBuild']) {
-        echo "Build configuration is valid.\n";
+        $output->info('Build configuration is valid.');
         exit(0);
     }
 
-    $logger = new Logger($args['debug'], $args['silent'], $args['noLog']);
+    $logger = new Logger($args['debug'], $args['silent'], $args['noLog'], 'build.log', $output);
     if (!$args['silent']) {
         $logger->info('Project: ' . $config->getName());
         $logger->info('Version: ' . $config->getVersion());
@@ -134,7 +137,7 @@ try {
 
     $taskFactory = new TaskFactory($logger);
     $dependencyResolver = new DependencyResolver();
-    $taskExecutor = new TaskExecutor();
+    $taskExecutor = new TaskExecutor($output);
     $executor = new BuildExecutor($taskFactory, $dependencyResolver, $taskExecutor);
     $exitCode = $executor->execute($config, $args['target'], $logger);
 
@@ -146,6 +149,6 @@ try {
 
     exit($exitCode);
 } catch (\Throwable $throwable) {
-    fwrite(STDERR, $throwable->getMessage() . PHP_EOL);
+    $output->error($throwable->getMessage());
     exit(1);
 }

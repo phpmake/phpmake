@@ -2,6 +2,9 @@
 
 namespace PhpMake\Task\Types;
 
+use PhpMake\Process\CommandLineParser;
+use PhpMake\Process\ProcessLauncher;
+use PhpMake\Process\ProcessSupervisor;
 use PhpMake\Task\BaseTask;
 
 /** Runs an external process without invoking a command shell. */
@@ -19,11 +22,11 @@ final class ExecTask extends BaseTask
             throw new \InvalidArgumentException('Exec timeout must be greater than 0 and at most 86400 seconds.');
         }
 
-        if (!self::hasBalancedQuotes($command)) {
+        if (!CommandLineParser::hasBalancedQuotes($command)) {
             throw new \InvalidArgumentException('Exec command contains an unbalanced quote.');
         }
 
-        $argv = self::tokenizeCommand($command);
+        $argv = CommandLineParser::tokenize($command);
         if ($argv === []) {
             throw new \InvalidArgumentException('Exec command is empty.');
         }
@@ -34,74 +37,10 @@ final class ExecTask extends BaseTask
         }
 
         $processOptions = ['bypass_shell' => true];
-        $launchArgv = $argv;
-        $processGroupCreated = false;
-        $hasPosixExtension = function_exists('posix_setsid') && function_exists('posix_kill');
-        $setsidExecutable = null;
-        $hasPosixProcessGroups = PHP_OS_FAMILY !== 'Windows' && $hasPosixExtension;
-        if (PHP_OS_FAMILY !== 'Windows' && !$hasPosixProcessGroups) {
-            $setsidExecutable = self::findExecutable('setsid');
-            $hasPosixProcessGroups = $setsidExecutable !== null
-                && self::findExecutable('kill') !== null;
-        }
-
-        $processPidPath = null;
-        if (!$hasPosixExtension && $hasPosixProcessGroups) {
-            $pidPath = tempnam(sys_get_temp_dir(), 'phpmake-pid-');
-            $processPidPath = $pidPath === false ? null : $pidPath;
-        }
-
-        if (PHP_OS_FAMILY === 'Windows') {
-            // The PowerShell launcher creates the target suspended, assigns it
-            // to a kill-on-close Job Object, and only then resumes execution.
-            $launchArgv = self::buildWindowsJobLauncher($argv);
-        } elseif ($hasPosixProcessGroups) {
-            // Keep a stable launcher alive while the configured command runs.
-            // On POSIX, establish its session before spawning the target process.
-            $launcher = <<<'PHP_WRAP'
-                $command = json_decode(base64_decode($argv[1], true), true, 512, JSON_THROW_ON_ERROR);
-                if (!is_array($command)) {
-                    exit(126);
-                }
-                if (function_exists('posix_setsid') && !posix_setsid()) {
-                    exit(126);
-                }
-                $child = proc_open(
-                    $command,
-                    [0 => STDIN, 1 => STDOUT, 2 => STDERR],
-                    $pipes,
-                    getcwd(),
-                    null,
-                    ['bypass_shell' => true]
-                );
-                if (!is_resource($child)) {
-                    exit(127);
-                }
-                $childPid = proc_get_status($child)['pid'] ?? null;
-                $pidFile = $argv[2] ?? null;
-                $recordedPid = PHP_OS_FAMILY === 'Windows' ? $childPid : getmypid();
-                if (is_int($recordedPid) && is_string($pidFile) && $pidFile !== '') {
-                    @file_put_contents($pidFile, (string) $recordedPid, LOCK_EX);
-                }
-                $exitCode = proc_close($child);
-                exit($exitCode >= 0 ? $exitCode : 1);
-                PHP_WRAP;
-            $launchArgv = [
-                PHP_BINARY,
-                '-r',
-                $launcher,
-                base64_encode(json_encode($argv, JSON_THROW_ON_ERROR)),
-            ];
-            if (!$hasPosixExtension && $setsidExecutable !== null) {
-                array_unshift($launchArgv, $setsidExecutable);
-            }
-
-            if ($processPidPath !== null) {
-                $launchArgv[] = $processPidPath;
-            }
-
-            $processGroupCreated = $hasPosixProcessGroups;
-        }
+        $launch = ProcessLauncher::prepare($argv);
+        $launchArgv = $launch['argv'];
+        $processPidPath = $launch['pidPath'];
+        $processGroupCreated = $launch['processGroupCreated'];
 
         $nullDevice = PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null';
         $process = proc_open(
@@ -182,7 +121,7 @@ final class ExecTask extends BaseTask
                     if ($now - $lastProcessScan >= 50_000_000) {
                         $trackedDescendantPids = array_values(array_unique(array_merge(
                             $trackedDescendantPids,
-                            self::getDescendantProcessIds($launcherPid)
+                            ProcessSupervisor::getDescendantProcessIds($launcherPid)
                         )));
                         $lastProcessScan = $now;
                     }
@@ -191,19 +130,19 @@ final class ExecTask extends BaseTask
                 $outputLimitExceeded = self::captureAvailableOutput($pipes[1], $stdout)
                     || self::captureAvailableOutput($pipes[2], $stderr);
                 if ($outputLimitExceeded) {
-                    $this->terminateProcessTree($process, $processPid, $processGroupCreated, $launcherPid, $trackedDescendantPids);
+                    ProcessSupervisor::terminate($process, $processPid, $processGroupCreated, $launcherPid, $trackedDescendantPids);
                     break;
                 }
 
                 if ($cancelledSignal !== null) {
-                    $this->terminateProcessTree($process, $processPid, $processGroupCreated, $launcherPid, $trackedDescendantPids);
+                    ProcessSupervisor::terminate($process, $processPid, $processGroupCreated, $launcherPid, $trackedDescendantPids);
                     break;
                 }
 
                 $status = proc_get_status($process);
                 if ((hrtime(true) - $start) / 1_000_000_000 > $timeout) {
                     $timedOut = true;
-                    $this->terminateProcessTree($process, $processPid, $processGroupCreated, $launcherPid, $trackedDescendantPids);
+                    ProcessSupervisor::terminate($process, $processPid, $processGroupCreated, $launcherPid, $trackedDescendantPids);
                     break;
                 }
 
@@ -274,169 +213,7 @@ final class ExecTask extends BaseTask
         return $exitCode === 0;
     }
 
-    /**
-     * Builds a PowerShell launcher that assigns the target to a Windows Job
-     * Object before it can execute. Closing the launcher closes the Job handle
-     * and terminates every process still assigned to the job.
-     *
-     * @param list<string> $argv
-     * @return list<string>
-     */
-    private static function buildWindowsJobLauncher(array $argv): array
-    {
-        $payload = base64_encode(json_encode($argv, JSON_THROW_ON_ERROR));
-        $systemRoot = getenv('SystemRoot') ?: 'C:\\Windows';
-        $powerShell = $systemRoot . DIRECTORY_SEPARATOR . 'System32'
-            . DIRECTORY_SEPARATOR . 'WindowsPowerShell' . DIRECTORY_SEPARATOR
-            . 'v1.0' . DIRECTORY_SEPARATOR . 'powershell.exe';
-        $runner = __DIR__ . DIRECTORY_SEPARATOR . 'WindowsJobRunner.ps1';
 
-        return [
-            $powerShell,
-            '-NoProfile',
-            '-NonInteractive',
-            '-ExecutionPolicy',
-            'Bypass',
-            '-File',
-            $runner,
-            $payload,
-        ];
-    }
-
-    /** Finds an executable in PATH without invoking a command shell. */
-    private static function findExecutable(string $name): ?string
-    {
-        $path = getenv('PATH');
-        if (!is_string($path) || $path === '') {
-            return null;
-        }
-
-        foreach (explode(PATH_SEPARATOR, $path) as $directory) {
-            if ($directory === '') {
-                continue;
-            }
-
-            $candidate = rtrim($directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $name;
-            if (is_file($candidate) && is_executable($candidate)) {
-                return $candidate;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Returns all currently observable descendants of a process, including
-     * descendants that have moved into a different POSIX session.
-     *
-     * @return list<int>
-     */
-    private static function getDescendantProcessIds(int $rootPid): array
-    {
-        $ps = self::findExecutable('ps');
-        if ($ps === null) {
-            return [];
-        }
-
-        $process = @proc_open(
-            [$ps, '-axo', 'pid=,ppid='],
-            [
-                0 => ['file', '/dev/null', 'r'],
-                1 => ['pipe', 'w'],
-                2 => ['pipe', 'w'],
-            ],
-            $pipes,
-            null,
-            null,
-            ['bypass_shell' => true]
-        );
-        if (!is_resource($process)) {
-            return [];
-        }
-
-        $output = (string) stream_get_contents($pipes[1]);
-        stream_get_contents($pipes[2]);
-        fclose($pipes[1]);
-        fclose($pipes[2]);
-        if (proc_close($process) !== 0) {
-            return [];
-        }
-
-        $childrenByParent = [];
-        foreach (preg_split('/\\R/', trim($output)) ?: [] as $line) {
-            if (preg_match('/^\\s*(\\d+)\\s+(\\d+)\\s*$/D', $line, $matches) !== 1) {
-                continue;
-            }
-
-            $pid = (int) $matches[1];
-            $parentPid = (int) $matches[2];
-            if ($pid > 0 && $parentPid > 0) {
-                $childrenByParent[$parentPid][] = $pid;
-            }
-        }
-
-        $queue = [$rootPid];
-        $visited = [$rootPid => true];
-        $descendants = [];
-        while ($queue !== []) {
-            $parentPid = array_shift($queue);
-            foreach ($childrenByParent[$parentPid] ?? [] as $childPid) {
-                if (isset($visited[$childPid])) {
-                    continue;
-                }
-
-                $visited[$childPid] = true;
-                $descendants[] = $childPid;
-                $queue[] = $childPid;
-            }
-        }
-
-        return $descendants;
-    }
-
-    /** Sends a signal to an individual POSIX process without invoking a shell. */
-    private static function signalProcess(string $signal, int $processId): bool
-    {
-        $kill = self::findExecutable('kill');
-        if ($kill === null) {
-            return false;
-        }
-
-        $terminator = @proc_open(
-            [$kill, '-' . $signal, (string) $processId],
-            [
-                0 => ['file', '/dev/null', 'r'],
-                1 => ['file', '/dev/null', 'w'],
-                2 => ['file', '/dev/null', 'w'],
-            ],
-            $pipes,
-            null,
-            null,
-            ['bypass_shell' => true]
-        );
-
-        return is_resource($terminator) && proc_close($terminator) === 0;
-    }
-
-    /** Sends a signal to a POSIX process group using the kill executable. */
-    private static function signalProcessGroup(string $signal, int $processGroupId): bool
-    {
-        $kill = self::findExecutable('kill');
-        if ($kill === null) {
-            return false;
-        }
-
-        $terminator = @proc_open(
-            [$kill, '-' . $signal, '-' . $processGroupId],
-            [0 => ['file', '/dev/null', 'r'], 1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']],
-            $pipes,
-            null,
-            null,
-            ['bypass_shell' => true]
-        );
-
-        return is_resource($terminator) && proc_close($terminator) === 0;
-    }
 
     /**
      * Captures currently available pipe data without allowing either stream
@@ -471,94 +248,6 @@ final class ExecTask extends BaseTask
         return 'exec';
     }
 
-    /**
-     * Terminates the process and descendants without invoking a shell.
-     *
-     * Windows uses taskkill's process-tree switch. POSIX platforms use a
-     * dedicated process group when ext-posix or the setsid/kill utilities are available.
-     */
-    private function terminateProcessTree(
-        $process,
-        ?int $processPid,
-        bool $processGroupCreated,
-        ?int $launcherPid = null,
-        array $trackedDescendantPids = []
-    ): void {
-        if (PHP_OS_FAMILY === 'Windows') {
-            // The PowerShell launcher owns the Job Object. Terminating it
-            // closes the last Job handle, enforcing KILL_ON_JOB_CLOSE for the
-            // target and every descendant, including detached descendants.
-            proc_terminate($process, 15);
-            usleep(100000);
-            if (proc_get_status($process)['running'] ?? false) {
-                proc_terminate($process, 9);
-            }
-
-            return;
-        }
-
-        // The launcher creates the session, so the recorded launcher PID is
-        // the process-group ID. The configured command PID is only a member.
-        // Also signal tracked descendants individually: a descendant may have
-        // called setsid() and therefore no longer belong to this process group.
-        $processGroupId = $launcherPid ?? $processPid;
-        $groupTerminated = false;
-        if ($processGroupCreated && $processGroupId !== null) {
-            if (function_exists('posix_kill')) {
-                $groupTerminated = @posix_kill(-$processGroupId, 15);
-            } else {
-                $groupTerminated = self::signalProcessGroup('TERM', $processGroupId);
-            }
-        }
-
-        foreach ($trackedDescendantPids as $descendantPid) {
-            if (!is_int($descendantPid) || $descendantPid <= 0) {
-                continue;
-            }
-
-            if (function_exists('posix_kill')) {
-                @posix_kill($descendantPid, 15);
-            } else {
-                self::signalProcess('TERM', $descendantPid);
-            }
-        }
-
-        if ($groupTerminated || $trackedDescendantPids !== []) {
-            usleep(200000);
-            if ($processGroupCreated && $processGroupId !== null) {
-                if (function_exists('posix_kill')) {
-                    if (@posix_kill(-$processGroupId, 0)) {
-                        @posix_kill(-$processGroupId, 9);
-                    }
-                } else {
-                    self::signalProcessGroup('KILL', $processGroupId);
-                }
-            }
-
-            foreach ($trackedDescendantPids as $descendantPid) {
-                if (!is_int($descendantPid) || $descendantPid <= 0) {
-                    continue;
-                }
-
-                if (function_exists('posix_kill')) {
-                    if (@posix_kill($descendantPid, 0)) {
-                        @posix_kill($descendantPid, 9);
-                    }
-                } else {
-                    self::signalProcess('KILL', $descendantPid);
-                }
-            }
-
-            return;
-        }
-
-        // Best-effort fallback when process groups are unavailable.
-        proc_terminate($process, 15);
-        usleep(200000);
-        if (proc_get_status($process)['running']) {
-            proc_terminate($process, 9);
-        }
-    }
 
 
     /** Validates the command, argument list, and optional timeout. */
@@ -568,7 +257,7 @@ final class ExecTask extends BaseTask
             throw new \InvalidArgumentException("Exec task requires a non-empty string 'command'.");
         }
 
-        if (!self::hasBalancedQuotes($this->params['command'])) {
+        if (!CommandLineParser::hasBalancedQuotes($this->params['command'])) {
             throw new \InvalidArgumentException('Exec command contains an unbalanced quote.');
         }
 
@@ -584,62 +273,6 @@ final class ExecTask extends BaseTask
         )) {
             throw new \InvalidArgumentException("Exec task 'timeout' must be greater than 0 and at most 86400 seconds.");
         }
-    }
-
-    /** Checks that single and double quoted command segments are closed. */
-    private static function hasBalancedQuotes(string $command): bool
-    {
-        $quote = null;
-        $length = strlen($command);
-        for ($i = 0; $i < $length; ++$i) {
-            $character = $command[$i];
-            if ($quote !== null) {
-                if ($character === '\\' && $i + 1 < $length
-                    && ($command[$i + 1] === $quote || $command[$i + 1] === '\\')) {
-                    ++$i;
-                    continue;
-                }
-
-                if ($character === $quote) {
-                    $quote = null;
-                }
-
-                continue;
-            }
-
-            if ($character === '"' || $character === "'") {
-                $quote = $character;
-            }
-        }
-
-        return $quote === null;
-    }
-
-    /**
-     * Splits a command into argv tokens without interpreting Windows path separators as escapes.
-     *
-     * @return list<string>
-     */
-    private static function tokenizeCommand(string $command): array
-    {
-        preg_match_all('/"((?:\\\\.|[^"])*)"|\'((?:\\\\.|[^\'])*)\'|(\S+)/', $command, $matches, PREG_SET_ORDER);
-        $argv = [];
-
-        foreach ($matches as $match) {
-            if ($match[1] !== '') {
-                // Double-quoted tokens only escape a quote or a literal backslash.
-                $token = preg_replace('/\\\\(["\\\\])/', '$1', $match[1]);
-            } elseif ($match[2] !== '') {
-                // Single-quoted tokens only escape a quote or a literal backslash.
-                $token = preg_replace('/\\\\([\'\\\\])/', '$1', $match[2]);
-            } else {
-                $token = $match[3];
-            }
-
-            $argv[] = $token;
-        }
-
-        return $argv;
     }
 
 }

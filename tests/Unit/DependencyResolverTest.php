@@ -11,15 +11,6 @@ use PHPUnit\Framework\TestCase;
 /** Tests dependency ordering and invalid dependency handling. */
 final class DependencyResolverTest extends TestCase
 {
-
-
-
-    /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
     public function testDependencyOrder(): void
     {
         // Arrange
@@ -41,12 +32,6 @@ final class DependencyResolverTest extends TestCase
         $this->assertEquals(['target_a', 'target_b', 'target_c'], $order);
     }
 
-    /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
     public function testCircularDependency(): void
     {
         // Assert

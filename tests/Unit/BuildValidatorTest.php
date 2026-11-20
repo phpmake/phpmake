@@ -10,15 +10,6 @@ use PHPUnit\Framework\TestCase;
 /** Tests valid, invalid, and malformed build configurations. */
 final class BuildValidatorTest extends TestCase
 {
-
-
-
-    /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
     public function testValidConfig(): void
     {
         // Arrange
@@ -40,12 +31,6 @@ final class BuildValidatorTest extends TestCase
         $this->assertEmpty($errors);
     }
 
-    /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
     public function testMissingField(): void
     {
         // Arrange
@@ -61,12 +46,6 @@ final class BuildValidatorTest extends TestCase
         $this->assertContains('Missing required field: description.', $errors);
     }
 
-    /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
     public function testInvalidTask(): void
     {
         // Arrange
@@ -196,8 +175,6 @@ final class BuildValidatorTest extends TestCase
         }
     }
 
-
-
     /** Rejects unknown properties that the JSON schema disallows. */
     public function testRejectsUnknownTaskAndTargetProperties(): void
     {
@@ -236,7 +213,6 @@ final class BuildValidatorTest extends TestCase
         self::assertSame([], $errors);
     }
 
-
     /** Rejects null dependencies rather than treating them as an omitted list. */
     public function testNullDependenciesAreInvalid(): void
     {
@@ -253,7 +229,6 @@ final class BuildValidatorTest extends TestCase
         // Assert
         self::assertStringContainsString('dependencies must be an array', implode("\n", $errors));
     }
-
 
     /** Accepts numeric JSON object keys as target names after associative decoding. */
     public function testNumericTargetNameMatchesSchema(): void
@@ -273,8 +248,6 @@ final class BuildValidatorTest extends TestCase
         self::assertSame([], $errors);
     }
 
-
-
     /** Rejects task objects that omit the schema-required params property. */
     public function testRejectsMissingTaskParamsObject(): void
     {
@@ -293,5 +266,4 @@ final class BuildValidatorTest extends TestCase
         // Assert
         self::assertStringContainsString("has no valid 'params' object", implode("\n", $errors));
     }
-
 }

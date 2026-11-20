@@ -1,67 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PhpMake\Task;
 
-use PhpMake\Task\Types\DeleteTask;
-use PhpMake\Task\Types\CreateDirectoryTask;
-use PhpMake\Task\Types\CopyTask;
-use PhpMake\Task\Types\ExecTask;
-use PhpMake\Task\Types\EchoTask;
-use PhpMake\Task\Types\ZipTask;
 use PhpMake\Utilities\Logger;
 
-/**
- * TaskFactory Class
- *
- * Responsible for creating task instances based on provided configuration.
- * This factory ensures tasks are instantiated correctly with their parameters
- * and logger dependencies.
- *
- * @package    PHPMake
- * @subpackage Task
- */
+/** Creates task instances from the canonical task-definition registry. */
 final class TaskFactory
 {
-    /**
-     * Constructor
-     *
-     * Initializes TaskFactory with a logger instance.
-     *
-     * @param Logger $logger Logger instance.
-     */
+    /** Initializes the factory with the logger shared by created tasks. */
     public function __construct(private Logger $logger) {}
 
     /**
-     * Create a task instance.
+     * Creates a task instance for a validated or partially validated task config.
      *
-     * Instantiates a task based on provided configuration.
-     *
-     * @param array $taskConfig Configuration for task.
-     *
-     * @return BaseTask Instance of task.
-     *
-     * @throws \Exception If task type is unknown.
+     * @param array<string, mixed> $taskConfig
      */
     public function create(array $taskConfig): BaseTask
     {
-        $type = $taskConfig['type'] ?? null;
-        $params = $taskConfig['params'] ?? [];
-        if (!is_string($type) || $type === '') {
-            throw new \InvalidArgumentException("Task configuration requires a non-empty string 'type'.");
+        $configuration = TaskConfiguration::fromArray($taskConfig);
+        $definition = TaskDefinitionRegistry::find($configuration->getType());
+        if ($definition === null) {
+            throw new \InvalidArgumentException(sprintf(
+                "Unknown task type '%s' in build configuration.",
+                $configuration->getType()
+            ));
         }
 
-        if (!is_array($params)) {
-            throw new \InvalidArgumentException(sprintf("Parameters for task '%s' must be an array.", $type));
-        }
-
-        return match ($type) {
-            'delete' => new DeleteTask($params, $this->logger),
-            'create_directory' => new CreateDirectoryTask($params, $this->logger),
-            'copy' => new CopyTask($params, $this->logger),
-            'exec' => new ExecTask($params, $this->logger),
-            'echo' => new EchoTask($params, $this->logger),
-            'archive' => new ZipTask($params, $this->logger),
-            default => throw new \InvalidArgumentException(sprintf("Unknown task type '%s' in build configuration.", $type)),
-        };
+        $taskClass = $definition['class'];
+        return new $taskClass($configuration->getParams(), $this->logger);
     }
 }

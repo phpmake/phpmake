@@ -79,7 +79,7 @@
     "scripts": {
         "analyse": "phpstan analyse --configuration=phpstan.neon --no-progress",
         "benchmark": "php benchmarks/run.php",
-        "format-check": "php-cs-fixer check",
+        "format-check": "php-cs-fixer check --diff",
         "lint": "phplint",
         "refactor": "rector process",
         "refactor-check": "rector --dry-run",

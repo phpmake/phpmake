@@ -21,8 +21,13 @@ final class TaskFactoryTest extends TestCase
 
     private Logger $logger;
 
-
-
+    /** Initializes the logger and factory shared by task creation tests. */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->logger = new Logger(true, true, true);
+        $this->factory = new TaskFactory($this->logger);
+    }
 
     /**
      *

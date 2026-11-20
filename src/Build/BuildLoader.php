@@ -74,6 +74,15 @@ final class BuildLoader
             }
         }
 
+        /**
+         * @var array{
+         *     name:string,
+         *     description:string,
+         *     version:string,
+         *     targets:array<string, array{description?:string, depends?:list<string>, tasks:list<array{type:string, params:array<string, mixed>}>}>,
+         *     default_target:string
+         * } $config
+         */
         $config = json_decode($rawContents, true, 512, JSON_THROW_ON_ERROR);
         $errors = (new BuildValidator())->validate($config);
         if ($errors !== []) {
