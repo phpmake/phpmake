@@ -10,7 +10,7 @@ final class ConsoleOutput
     /** Writes a message to standard output. */
     public function stdout(string $message): void
     {
-        fwrite(STDOUT, $message);
+        echo $message;
     }
 
     /** Writes a message to standard error. */
