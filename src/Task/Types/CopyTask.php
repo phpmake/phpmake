@@ -126,8 +126,13 @@ final class CopyTask extends BaseTask
         $this->assertSafePath($source, 'copy source');
         $this->assertSafePath($dest, 'copy destination', false);
 
-        if (!FilesystemTree::copyDirectory($source, $dest)) {
-            $this->logger->error(sprintf("Unable to safely copy directory '%s' to '%s'.", $source, $dest));
+        try {
+            if (!FilesystemTree::copyDirectory($source, $dest)) {
+                $this->logger->error(sprintf("Unable to safely copy directory '%s' to '%s'.", $source, $dest));
+                return false;
+            }
+        } catch (\Throwable $throwable) {
+            $this->logger->error($throwable->getMessage());
             return false;
         }
 
