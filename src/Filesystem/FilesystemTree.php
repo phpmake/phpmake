@@ -218,7 +218,7 @@ final class FilesystemTree
         }
 
         $leaf = basename($path);
-        if ($leaf === '' || $leaf === '.' || $leaf === '..') {
+        if (in_array($leaf, ['', '.', '..'], true)) {
             return null;
         }
 
@@ -226,7 +226,7 @@ final class FilesystemTree
         $missing = [];
         while (!is_dir($parent) && !self::isLink($parent)) {
             $component = basename($parent);
-            if ($component === '' || $component === '.' || $component === '..') {
+            if (in_array($component, ['', '.', '..'], true)) {
                 return null;
             }
 
