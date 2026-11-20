@@ -129,4 +129,26 @@ final class AtomicDirectoryPublisherTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         AtomicDirectoryPublisher::publish($stagingAndDestination, $stagingAndDestination);
     }
+
+    /** Publishes correctly when the destination includes a trailing separator. */
+    public function testPublishHandlesTrailingDestinationSeparator(): void
+    {
+        // Arrange
+        $staging = $this->base . DIRECTORY_SEPARATOR . 'staging';
+        $destinationPath = $this->base . DIRECTORY_SEPARATOR . 'destination';
+        $destination = $destinationPath . DIRECTORY_SEPARATOR;
+        self::assertTrue(mkdir($staging));
+        self::assertTrue(mkdir($destinationPath));
+        self::assertSame(3, file_put_contents($staging . DIRECTORY_SEPARATOR . 'new.txt', 'new'));
+        self::assertSame(3, file_put_contents($destinationPath . DIRECTORY_SEPARATOR . 'old.txt', 'old'));
+
+        // Act
+        AtomicDirectoryPublisher::publish($staging, $destination);
+
+        // Assert
+        self::assertFileExists($destinationPath . DIRECTORY_SEPARATOR . 'new.txt');
+        self::assertFileDoesNotExist($destinationPath . DIRECTORY_SEPARATOR . 'old.txt');
+        self::assertDirectoryDoesNotExist($staging);
+        self::assertSame(['.', '..', 'destination'], scandir($this->base));
+    }
 }
