@@ -11,12 +11,6 @@ use PHPUnit\Framework\TestCase;
 final class BuildValidatorTest extends TestCase
 {
 
-    /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
     public function testValidConfig(): void
     {
         // Arrange
@@ -38,12 +32,6 @@ final class BuildValidatorTest extends TestCase
         $this->assertEmpty($errors);
     }
 
-    /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
     public function testMissingField(): void
     {
         // Arrange
@@ -59,12 +47,6 @@ final class BuildValidatorTest extends TestCase
         $this->assertContains('Missing required field: description.', $errors);
     }
 
-    /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
     public function testInvalidTask(): void
     {
         // Arrange
@@ -285,5 +267,4 @@ final class BuildValidatorTest extends TestCase
         // Assert
         self::assertStringContainsString("has no valid 'params' object", implode("\n", $errors));
     }
-
 }
