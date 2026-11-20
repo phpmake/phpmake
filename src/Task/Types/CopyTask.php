@@ -4,6 +4,7 @@ namespace PhpMake\Task\Types;
 
 use PhpMake\Filesystem\AtomicFilePublisher;
 use PhpMake\Filesystem\FilesystemIdentity;
+use PhpMake\Filesystem\FilesystemTree;
 use PhpMake\Task\BaseTask;
 
 /** Copies files and directory trees without following symbolic links. */
