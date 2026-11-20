@@ -40,6 +40,8 @@ use PhpMake\Build\BuildExecutor;
 use PhpMake\Task\TaskFactory;
 use PhpMake\Target\DependencyResolver;
 
+$output = new ConsoleOutput();
+
 try {
     $parser = new CliParser();
     $args = $parser->parse($argv);
@@ -146,6 +148,6 @@ try {
 
     exit($exitCode);
 } catch (\Throwable $throwable) {
-    fwrite(STDERR, $throwable->getMessage() . PHP_EOL);
+    $output->error($throwable->getMessage());
     exit(1);
 }
