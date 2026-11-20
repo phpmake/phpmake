@@ -10,7 +10,6 @@ use PHPUnit\Framework\TestCase;
 /** Tests parsing of command-line flags and target arguments. */
 final class CliParserTest extends TestCase
 {
-
     public function testParseVersionFlag(): void
     {
         // Arrange
