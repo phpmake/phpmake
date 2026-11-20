@@ -30,6 +30,14 @@ final class AtomicDirectoryPublisher
             throw new \InvalidArgumentException('Destination must not be a symbolic link or junction.');
         }
 
+        if (file_exists($destination) && !is_dir($destination)) {
+            throw new \InvalidArgumentException('Existing destination must be a directory.');
+        }
+
+        if (file_exists($destination) && FilesystemIdentity::sameFile($stagedDirectory, $destination)) {
+            throw new \InvalidArgumentException('Staging directory and destination must be different filesystem entries.');
+        }
+
         $hadDestination = file_exists($destination);
         $backup = $destination . '.phpmake-' . bin2hex(random_bytes(8)) . '.backup';
 
