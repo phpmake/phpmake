@@ -202,4 +202,32 @@ final class TaskFactoryTest extends TestCase
         // Action
         $this->factory->create($taskConfig);
     }
+
+    /** Rejects a missing task type before attempting task construction. */
+    public function testCreateRejectsMissingTaskType(): void
+    {
+        // Arrange
+        $taskConfig = ['params' => []];
+
+        // Assert
+        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectExceptionMessage("Task configuration requires a non-empty string 'type'.");
+
+        // Act
+        $this->factory->create($taskConfig);
+    }
+
+    /** Rejects malformed task parameters instead of passing them to a task. */
+    public function testCreateRejectsNonArrayParameters(): void
+    {
+        // Arrange
+        $taskConfig = ['type' => 'echo', 'params' => 'invalid'];
+
+        // Assert
+        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectExceptionMessage("Parameters for task 'echo' must be an array.");
+
+        // Act
+        $this->factory->create($taskConfig);
+    }
 }
