@@ -7,34 +7,41 @@ use PhpMake\Build\BuildConfiguration;
 /** Resolves target dependencies into a stable, duplicate-free execution order. */
 final class DependencyResolver
 {
-    /** @var array<string, true> Targets currently on the DFS recursion stack. */
-    private array $visiting = [];
-
-    /** @var array<string, true> Targets already appended to the execution order. */
-    private array $resolved = [];
-
-    /** @var list<string> Resolved targets in dependency-first order. */
-    private array $order = [];
-
-    /** Resolves dependencies for a target and resets state for every invocation. */
+    /**
+     * Resolves dependencies for a target and keeps traversal state local to this call.
+     *
+     * @return list<string>
+     */
     public function resolve(BuildConfiguration $config, string $target): array
     {
-        $this->visiting = [];
-        $this->resolved = [];
-        $this->order = [];
-        $this->visit($config, $target);
+        $visiting = [];
+        $resolved = [];
+        $order = [];
 
-        return $this->order;
+        $this->visit($config, $target, $visiting, $resolved, $order);
+
+        return $order;
     }
 
-    /** Performs depth-first traversal with O(1) membership checks. */
-    private function visit(BuildConfiguration $config, string $target): void
-    {
-        if (isset($this->resolved[$target])) {
+    /**
+     * Performs depth-first traversal with O(1) membership checks.
+     *
+     * @param array<string, true> $visiting
+     * @param array<string, true> $resolved
+     * @param list<string> $order
+     */
+    private function visit(
+        BuildConfiguration $config,
+        string $target,
+        array &$visiting,
+        array &$resolved,
+        array &$order
+    ): void {
+        if (isset($resolved[$target])) {
             return;
         }
 
-        if (isset($this->visiting[$target])) {
+        if (isset($visiting[$target])) {
             throw new \RuntimeException(sprintf("Circular dependency detected in target '%s'.", $target));
         }
 
@@ -48,18 +55,18 @@ final class DependencyResolver
             throw new \InvalidArgumentException(sprintf("Dependencies for target '%s' must be an array.", $target));
         }
 
-        $this->visiting[$target] = true;
+        $visiting[$target] = true;
         foreach ($dependencies as $dependency) {
             if (!is_string($dependency) || $dependency === '') {
                 throw new \InvalidArgumentException(sprintf("Target '%s' has an invalid dependency.", $target));
             }
 
-            $this->visit($config, $dependency);
+            $this->visit($config, $dependency, $visiting, $resolved, $order);
         }
 
-        unset($this->visiting[$target]);
+        unset($visiting[$target]);
 
-        $this->resolved[$target] = true;
-        $this->order[] = $target;
+        $resolved[$target] = true;
+        $order[] = $target;
     }
 }
