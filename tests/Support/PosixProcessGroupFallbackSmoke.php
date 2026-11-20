@@ -5,9 +5,14 @@ declare(strict_types=1);
 use PhpMake\Task\Types\ExecTask;
 use PhpMake\Utilities\Logger;
 
-require dirname(__DIR__, 2) . '/src/Task/TaskInterface.php';
+require dirname(__DIR__, 2) . '/src/Cli/ConsoleOutput.php';
 require dirname(__DIR__, 2) . '/src/Utilities/Logger.php';
+require dirname(__DIR__, 2) . '/src/Task/TaskInterface.php';
 require dirname(__DIR__, 2) . '/src/Task/BaseTask.php';
+require dirname(__DIR__, 2) . '/src/Process/CommandLineParser.php';
+require dirname(__DIR__, 2) . '/src/Process/PosixProcessLauncher.php';
+require dirname(__DIR__, 2) . '/src/Process/ProcessLauncher.php';
+require dirname(__DIR__, 2) . '/src/Process/ProcessSupervisor.php';
 require dirname(__DIR__, 2) . '/src/Task/Types/ExecTask.php';
 
 if (PHP_OS_FAMILY === 'Windows') {
