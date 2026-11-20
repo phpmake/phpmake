@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PhpMake\Cli;
 
 use PhpMake\Config;
@@ -109,22 +111,23 @@ final class CliParser
      */
     public static function showHelp(): void
     {
-        (new ConsoleOutput())->stdout(<<<HELP
-            Usage: phpmake [Options] [target]
+        $lines = [
+            'Usage: phpmake [Options] [target]',
+            '',
+            'Options:',
+            '-h, --help              Show this help.',
+            '-v, --version           Show version.',
+            '    --diagnostics       Show system diagnostics.',
+            '-vb, --validate-build   Validate build.json configuration.',
+            '-d, --debug             Enable debug logging.',
+            '-s, --silent            Suppress all output except errors.',
+            '-nl,--no-log            Disable file logging.',
+            '    --init              Create a sample build.json.',
+            '',
+            "[target]                 Target to execute (default: build.json's default)",
+        ];
 
-            Options:
-            -h, --help              Show this help.
-            -v, --version           Show version.
-                --diagnostics       Show system diagnostics.
-            -vb, --validate-build   Validate build.json configuration.
-            -d, --debug             Enable debug logging.
-            -s, --silent            Suppress all output except errors.
-            -nl,--no-log            Disable file logging.
-                --init              Create a sample build.json.
-
-            [target]                 Target to execute (default: build.json's default)
-            HELP
-        );
+        (new ConsoleOutput())->stdout(implode(PHP_EOL, $lines) . PHP_EOL);
     }
 
     /** Displays the PHPMake version. */
@@ -149,5 +152,4 @@ final class CliParser
 
         (new ConsoleOutput())->stdout(implode(PHP_EOL, $lines) . PHP_EOL);
     }
-
 }
