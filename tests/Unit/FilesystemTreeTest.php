@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PhpMake\\Tests\\Unit;
+namespace PhpMake\Tests\Unit;
 
-use PhpMake\\Filesystem\\FilesystemTree;
-use PhpMake\\Tests\\Support\\DirectoryLinkTestHelper;
-use PHPUnit\\Framework\\TestCase;
+use PhpMake\Filesystem\FilesystemTree;
+use PhpMake\Tests\Support\DirectoryLinkTestHelper;
+use PHPUnit\Framework\TestCase;
 
 /** Covers recursive filesystem copying and cleanup without link traversal. */
 final class FilesystemTreeTest extends TestCase
@@ -77,7 +77,7 @@ final class FilesystemTreeTest extends TestCase
         $target = $this->base . DIRECTORY_SEPARATOR . 'target';
         $link = $this->base . DIRECTORY_SEPARATOR . 'link';
         self::assertTrue(mkdir($target));
-        self::assertSame(6, file_put_contents($target . DIRECTORY_SEPARATOR . 'keep.txt', 'keep'));
+        self::assertSame(4, file_put_contents($target . DIRECTORY_SEPARATOR . 'keep.txt', 'keep'));
         $this->createDirectoryLink($target, $link);
 
         // Act
