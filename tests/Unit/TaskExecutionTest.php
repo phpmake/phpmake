@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PhpMake\Tests\Unit;
 
 use PhpMake\Task\Types\EchoTask;
@@ -13,52 +15,8 @@ final class TaskExecutionTest extends TestCase
 {
     private Logger $logger;
 
-    /**
-     * This method is called before the first test method in the test class is executed.
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    public static function setUpBeforeClass(): void {}
 
-    /**
-     * This method is called after the last test method in the test class has been executed.
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    public static function tearDownAfterClass(): void
-    {
-        gc_collect_cycles();
-    }
 
-    /**
-     * This method is called BEFORE each test method.
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->logger = new Logger(false, true, true);
-    }
-
-    /**
-     * This method is called AFTER each test method.
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    protected function tearDown(): void
-    {
-        // Methods finalization codes.
-        parent::tearDown();
-    }
 
     /**
      *
