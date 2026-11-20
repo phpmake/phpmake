@@ -34,7 +34,7 @@ final class BuildExecutorTest extends TestCase
         );
 
         // Assert
-        $this->expectException(\Exception::class);
+        $this->expectException(\OutOfBoundsException::class);
         $this->expectExceptionMessage("Target 'missing' not found.");
         // Act
         $executor->execute($config, 'missing', $logger);
