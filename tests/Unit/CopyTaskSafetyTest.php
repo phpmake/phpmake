@@ -13,17 +13,26 @@ final class CopyTaskSafetyTest extends TestCase
 {
     private string $root;
 
+    private string $originalWorkingDirectory;
+
     private Logger $logger;
 
     protected function setUp(): void
     {
-        $this->root = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-copy-safety-' . bin2hex(random_bytes(6));
+        // Use the system temp volume: the repository checkout may not support
+        // hardlinks (notably Windows CI). Make it the task's project root so
+        // BaseTask's project-directory safety boundary remains enforced.
+        $this->originalWorkingDirectory = (string) getcwd();
+        $this->root = sys_get_temp_dir() . DIRECTORY_SEPARATOR . '.phpmake-copy-safety-' . bin2hex(random_bytes(6));
         self::assertTrue(mkdir($this->root));
+        self::assertTrue(chdir($this->root));
         $this->logger = new Logger(false, true, true);
     }
 
     protected function tearDown(): void
     {
+        chdir($this->originalWorkingDirectory);
+
         foreach (glob($this->root . DIRECTORY_SEPARATOR . '*') ?: [] as $path) {
             if (is_file($path) || is_link($path)) {
                 @unlink($path);
@@ -39,16 +48,15 @@ final class CopyTaskSafetyTest extends TestCase
     public function testCopyToHardlinkAliasDoesNotTruncateSource(): void
     {
         // Arrange
-        if (!function_exists('link')) {
-            self::markTestSkipped('Hardlink creation is unavailable.');
-        }
+        self::assertTrue(function_exists('link'), 'Hardlink creation is unavailable in this PHP runtime.');
 
         $source = $this->root . DIRECTORY_SEPARATOR . 'source.txt';
         $destination = $this->root . DIRECTORY_SEPARATOR . 'destination.txt';
         self::assertSame(10, file_put_contents($source, 'preserved!'));
-        if (!@link($source, $destination)) {
-            self::markTestSkipped('The current filesystem does not support hardlinks.');
-        }
+        self::assertTrue(
+            @link($source, $destination),
+            'The system temporary filesystem must support hardlinks for this safety test.'
+        );
 
         $task = new CopyTask(['source' => $source, 'dest' => $destination], $this->logger);
 
