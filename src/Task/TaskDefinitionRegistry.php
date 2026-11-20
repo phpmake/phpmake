@@ -64,7 +64,11 @@ final class TaskDefinitionRegistry
         return self::DEFINITIONS;
     }
 
-    /** Returns the definition for a supported task, or null for an unknown type. */
+    /**
+     * Returns the definition for a supported task, or null for an unknown type.
+     *
+     * @return TaskDefinition|null
+     */
     public static function find(string $type): ?array
     {
         return self::DEFINITIONS[$type] ?? null;
