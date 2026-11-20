@@ -28,4 +28,23 @@ final class ConsoleOutputTest extends TestCase
         // Assert
         self::assertSame('Build started' . PHP_EOL, $actual);
     }
+
+    /** Writes successful task output to standard output with one line ending. */
+    public function testSuccessWritesOneOutputLine(): void
+    {
+        // Arrange
+        $output = new ConsoleOutput();
+        ob_start();
+
+        try {
+            // Act
+            $output->success('Task completed');
+            $actual = ob_get_contents();
+        } finally {
+            ob_end_clean();
+        }
+
+        // Assert
+        self::assertSame('Task completed' . PHP_EOL, $actual);
+    }
 }
