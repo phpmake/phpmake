@@ -56,7 +56,7 @@ final class BaseTaskTest extends TestCase
     public function testBaseTaskConvertsExecutionExceptionToFailure(): void
     {
         // Arrange
-        $task = new class (new Logger(false, true, true)) extends BaseTaskTestProbe {
+        $task = new class(new Logger(false, true, true)) extends BaseTaskTestProbe {
             protected function runTask(bool $debug, bool $silent): bool
             {
                 throw new \RuntimeException('Expected task failure');
