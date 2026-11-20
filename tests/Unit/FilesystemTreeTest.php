@@ -443,7 +443,7 @@ final class FilesystemTreeTest extends TestCase
         // Assert
         self::assertTrue($copied);
         self::assertSame('data', file_get_contents($destination . DIRECTORY_SEPARATOR . 'file.txt'));
-        self::assertSame([], glob(dirname(dirname($destination)) . DIRECTORY_SEPARATOR . '.phpmake-tree-*.staging') ?: []);
+        self::assertSame([], glob(dirname($destination) . DIRECTORY_SEPARATOR . '.phpmake-tree-*.staging') ?: []);
     }
 
 }
