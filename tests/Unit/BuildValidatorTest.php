@@ -10,7 +10,6 @@ use PHPUnit\Framework\TestCase;
 /** Tests valid, invalid, and malformed build configurations. */
 final class BuildValidatorTest extends TestCase
 {
-
     public function testValidConfig(): void
     {
         // Arrange
