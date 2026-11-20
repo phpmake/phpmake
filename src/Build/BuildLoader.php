@@ -74,6 +74,7 @@ final class BuildLoader
             }
         }
 
+        /** @var array<string, mixed> $config */
         $config = json_decode($rawContents, true, 512, JSON_THROW_ON_ERROR);
         $errors = (new BuildValidator())->validate($config);
         if ($errors !== []) {
