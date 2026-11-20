@@ -19,23 +19,16 @@ final class TaskFactory
      */
     public function create(array $taskConfig): BaseTask
     {
-        $type = $taskConfig['type'] ?? null;
-        $params = $taskConfig['params'] ?? [];
-
-        if (!is_string($type) || $type === '') {
-            throw new \InvalidArgumentException("Task configuration requires a non-empty string 'type'.");
-        }
-
-        if (!is_array($params)) {
-            throw new \InvalidArgumentException(sprintf("Parameters for task '%s' must be an array.", $type));
-        }
-
-        $definition = TaskDefinitionRegistry::find($type);
+        $configuration = TaskConfiguration::fromArray($taskConfig);
+        $definition = TaskDefinitionRegistry::find($configuration->getType());
         if ($definition === null) {
-            throw new \InvalidArgumentException(sprintf("Unknown task type '%s' in build configuration.", $type));
+            throw new \\InvalidArgumentException(sprintf(
+                "Unknown task type '%s' in build configuration.",
+                $configuration->getType()
+            ));
         }
 
         $taskClass = $definition['class'];
-        return new $taskClass($params, $this->logger);
+        return new $taskClass($configuration->getParams(), $this->logger);
     }
 }
