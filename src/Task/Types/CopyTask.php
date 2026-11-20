@@ -119,62 +119,15 @@ final class CopyTask extends BaseTask
 
 
     /** Recursively copies a directory and stops on the first failure. */
+    /** Copies a directory tree without following links or unsupported entries. */
     private function copyDirectory(string $source, string $dest): bool
     {
         $this->assertSafePath($source, 'copy source');
         $this->assertSafePath($dest, 'copy destination', false);
-        if ($this->isSymbolicLinkOrJunction($source)) {
-            $this->logger->error(sprintf("Refusing to traverse symlink directory '%s'.", $source));
+
+        if (!FilesystemTree::copyDirectory($source, $dest)) {
+            $this->logger->error(sprintf("Unable to safely copy directory '%s' to '%s'.", $source, $dest));
             return false;
-        }
-
-        if ($this->isSymbolicLinkOrJunction($dest)) {
-            $this->logger->error(sprintf("Refusing to copy through destination link '%s'.", $dest));
-            return false;
-        }
-
-        if ($this->destinationIsWithinSource($source, $dest)) {
-            $this->logger->error(sprintf(
-                "Refusing to copy directory '%s' into itself or one of its descendants.",
-                $source
-            ));
-            return false;
-        }
-
-        if (!is_dir($dest) && !@mkdir($dest, 0777, true) && !is_dir($dest)) {
-            $this->logger->error(sprintf("Unable to create destination directory '%s'.", $dest));
-            return false;
-        }
-
-        $items = @scandir($source);
-        if ($items === false) {
-            $this->logger->error(sprintf("Unable to read source directory '%s'.", $source));
-            return false;
-        }
-
-        foreach ($items as $item) {
-            if ($item === '.' || $item === '..') {
-                continue;
-            }
-
-            $src = $source . DIRECTORY_SEPARATOR . $item;
-            $target = $dest . DIRECTORY_SEPARATOR . $item;
-            if ($this->isSymbolicLinkOrJunction($src)) {
-                $this->logger->error(sprintf("Refusing to copy symlink '%s'.", $src));
-                return false;
-            }
-
-            if (!is_dir($src) && !is_file($src)) {
-                $this->logger->error(sprintf("Refusing to copy unsupported filesystem entry '%s'.", $src));
-                return false;
-            }
-
-            $ok = is_dir($src)
-                ? $this->copyDirectory($src, $target)
-                : $this->copyFile($src, $target);
-            if (!$ok) {
-                return false;
-            }
         }
 
         $this->logger->debug(sprintf("Copied directory '%s' → '%s'.", $source, $dest));
@@ -208,7 +161,7 @@ final class CopyTask extends BaseTask
         $backup = $base . $suffix . '.backup';
 
         if (is_dir($destination) && !$this->copyDirectory($destination, $staging)) {
-            if (!$this->removeCreatedTree($staging)) {
+            if (!FilesystemTree::remove($staging)) {
                 $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
             }
 
@@ -250,7 +203,7 @@ final class CopyTask extends BaseTask
             return false;
         }
 
-        if ($hadDestination && !$this->removeCreatedTree($backup)) {
+        if ($hadDestination && !FilesystemTree::remove($backup)) {
             $this->logger->error(sprintf(
                 "Copy completed at '%s', but the previous destination could not be removed. Recovery backup retained at '%s'.",
                 $destination,
@@ -260,45 +213,6 @@ final class CopyTask extends BaseTask
         }
 
         return true;
-    }
-
-    /** Removes a partial tree and reports whether every filesystem operation succeeded. */
-    private function removeCreatedTree(string $path): bool
-    {
-        if ($this->isSymbolicLinkOrJunction($path)) {
-            return $this->removeSymbolicLinkOrJunction($path);
-        }
-
-        if (!is_dir($path)) {
-            return !file_exists($path) || @unlink($path);
-        }
-
-        $items = @scandir($path);
-        if ($items === false) {
-            return false;
-        }
-
-        $success = true;
-        foreach ($items as $item) {
-            if ($item === '.' || $item === '..') {
-                continue;
-            }
-
-            $child = $path . DIRECTORY_SEPARATOR . $item;
-            if ($this->isSymbolicLinkOrJunction($child)) {
-                $removed = $this->removeSymbolicLinkOrJunction($child);
-            } elseif (!is_dir($child)) {
-                $removed = !file_exists($child) || @unlink($child);
-            } else {
-                $removed = $this->removeCreatedTree($child);
-            }
-
-            if (!$removed) {
-                return false;
-            }
-        }
-
-        return @rmdir($path);
     }
 
     /** Rejects destination paths that resolve to the source or one of its descendants. */
