@@ -9,19 +9,24 @@ final class Logger
 
     private const MAX_FILES = 5;
 
+    private ConsoleOutput $output;
+
     /** Configures debug output, console silence, file logging, and an optional log path. */
     public function __construct(
         private bool $debug,
         private bool $silent,
         private bool $noLog,
-        private string $logFile = 'build.log'
-    ) {}
+        private string $logFile = 'build.log',
+        ?ConsoleOutput $output = null
+    ) {
+        $this->output = $output ?? new ConsoleOutput();
+    }
 
     /** Writes an informational message. */
     public function info(string $message): void
     {
         if (!$this->silent) {
-            echo $message . PHP_EOL;
+            $this->output->info($message);
         }
 
         $this->writeLog('INFO: ' . $message);
@@ -31,7 +36,7 @@ final class Logger
     public function debug(string $message): void
     {
         if ($this->debug && !$this->silent) {
-            echo 'DEBUG: ' . $message . PHP_EOL;
+            $this->output->info('DEBUG: ' . $message);
         }
 
         $this->writeLog('DEBUG: ' . $message);
@@ -40,7 +45,7 @@ final class Logger
     /** Writes an error message to standard error. */
     public function error(string $message): void
     {
-        fwrite(STDERR, 'Error: ' . $message . PHP_EOL);
+        $this->output->error('Error: ' . $message);
         $this->writeLog('ERROR: ' . $message);
     }
 
