@@ -11,8 +11,6 @@ use PHPUnit\Framework\TestCase;
 final class CliParserTest extends TestCase
 {
 
-
-
     /**
      *
      *
@@ -140,7 +138,6 @@ final class CliParserTest extends TestCase
         self::assertStringContainsString('OS:', $output);
         self::assertStringContainsString('Loaded extensions:', $output);
     }
-
 
     /** Rejects empty arguments rather than indexing an empty string. */
     public function testRejectsEmptyArgument(): void
