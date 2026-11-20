@@ -385,4 +385,69 @@ final class PathSafetyTest extends TestCase
     }
 
 
+
+
+    /** Deletes a hardlink name without deleting or truncating its shared inode. */
+    public function testDeleteHardlinkPreservesOriginalFile(): void
+    {
+        // Arrange
+        $originalCwd = getcwd();
+        $project = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-delete-hardlink-' . bin2hex(random_bytes(6));
+        self::assertTrue(mkdir($project));
+        $source = $project . DIRECTORY_SEPARATOR . 'source.txt';
+        $alias = $project . DIRECTORY_SEPARATOR . 'alias.txt';
+        self::assertSame(9, file_put_contents($source, 'preserved'));
+        if (!@link($source, $alias)) {
+            @unlink($source);
+            @rmdir($project);
+            self::markTestSkipped('Hardlink creation is unavailable in this environment.');
+        }
+
+        try {
+            self::assertTrue(chdir($project));
+            $task = new DeleteTask(['path' => 'alias.txt'], $this->logger);
+
+            // Act
+            $deleted = $task->execute(false, true);
+
+            // Assert
+            self::assertTrue($deleted);
+            self::assertFileDoesNotExist($alias);
+            self::assertSame('preserved', file_get_contents($source));
+        } finally {
+            chdir($originalCwd);
+            if (is_file($alias)) {
+                unlink($alias);
+            }
+
+            if (is_file($source)) {
+                unlink($source);
+            }
+
+            if (is_dir($project)) {
+                rmdir($project);
+            }
+        }
+    }
+
+    /** Rejects extended-length drive paths outside the project on Windows. */
+    public function testRejectsExtendedLengthDrivePathOnWindows(): void
+    {
+        if (PHP_OS_FAMILY !== 'Windows') {
+            self::assertTrue(true, 'Extended-length drive paths are Windows-specific.');
+            return;
+        }
+
+        // Arrange
+        $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-extended-path-' . bin2hex(random_bytes(6));
+        $extendedPath = '\\\\\\\\?\\\\' . $outside;
+
+        // Assert
+        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Safety Violation');
+
+        // Act
+        new DeleteTask(['path' => $extendedPath], $this->logger);
+    }
+
 }
