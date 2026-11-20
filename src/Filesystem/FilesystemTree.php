@@ -59,6 +59,19 @@ final class FilesystemTree
     /** Removes a file or directory tree without traversing symbolic links or junctions. */
     public static function remove(string $path): bool
     {
+        if ($path === '' || str_contains($path, "\0")) {
+            return false;
+        }
+
+        $resolvedPath = realpath($path);
+        $currentDirectory = realpath(getcwd());
+        if ($resolvedPath !== false && (
+            dirname($resolvedPath) === $resolvedPath
+            || ($currentDirectory !== false && FilesystemIdentity::sameFile($resolvedPath, $currentDirectory))
+        )) {
+            return false;
+        }
+
         if (self::isLink($path)) {
             return self::removeLink($path);
         }
