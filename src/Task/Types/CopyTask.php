@@ -120,7 +120,6 @@ final class CopyTask extends BaseTask
     }
 
 
-    /** Recursively copies a directory and stops on the first failure. */
     /** Copies a directory tree without following links or unsupported entries. */
     private function copyDirectory(string $source, string $dest): bool
     {
@@ -178,7 +177,7 @@ final class CopyTask extends BaseTask
 
         try {
             AtomicDirectoryPublisher::publish($staging, $destination);
-        } catch (\\Throwable $exception) {
+        } catch (\Throwable $exception) {
             $this->logger->error($exception->getMessage());
             if (!FilesystemTree::remove($staging)) {
                 $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
@@ -200,8 +199,8 @@ final class CopyTask extends BaseTask
             return true;
         }
 
-        $sourcePath = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $sourceReal), DIRECTORY_SEPARATOR);
-        $destinationPath = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $destinationReal), DIRECTORY_SEPARATOR);
+        $sourcePath = rtrim(str_replace(['/', '\'], DIRECTORY_SEPARATOR, $sourceReal), DIRECTORY_SEPARATOR);
+        $destinationPath = rtrim(str_replace(['/', '\'], DIRECTORY_SEPARATOR, $destinationReal), DIRECTORY_SEPARATOR);
         // Both paths have canonical existing prefixes. Preserve their case:
         // case-insensitive comparison is wrong for case-sensitive Windows volumes.
         return $destinationPath === $sourcePath
