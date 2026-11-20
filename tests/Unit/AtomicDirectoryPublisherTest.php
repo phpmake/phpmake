@@ -80,7 +80,7 @@ final class AtomicDirectoryPublisherTest extends TestCase
         $destination = $destinationParent . DIRECTORY_SEPARATOR . 'destination';
 
         // Act / Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         AtomicDirectoryPublisher::publish($staging, $destination);
     }
 }
