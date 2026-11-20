@@ -358,4 +358,39 @@ final class FilesystemTreeTest extends TestCase
         self::assertSame([], glob($this->base . DIRECTORY_SEPARATOR . '.phpmake-tree-*.staging') ?: []);
     }
 
+
+
+    /** Detects and removes a dangling directory link without touching its former target. */
+    public function testRemoveDetectsDanglingDirectoryLinks(): void
+    {
+        // Arrange
+        $target = $this->base . DIRECTORY_SEPARATOR . 'target';
+        $movedTarget = $this->base . DIRECTORY_SEPARATOR . 'moved-target';
+        $link = $this->base . DIRECTORY_SEPARATOR . 'dangling-link';
+        self::assertTrue(mkdir($target));
+        self::assertSame(4, file_put_contents($target . DIRECTORY_SEPARATOR . 'keep.txt', 'keep'));
+        $this->createDirectoryLink($target, $link);
+        self::assertTrue(rename($target, $movedTarget));
+
+        try {
+            // Act
+            $isLink = FilesystemTree::isLink($link);
+            $removed = FilesystemTree::remove($link);
+
+            // Assert
+            self::assertTrue($isLink);
+            self::assertTrue($removed);
+            self::assertDirectoryExists($movedTarget);
+            self::assertSame('keep', file_get_contents($movedTarget . DIRECTORY_SEPARATOR . 'keep.txt'));
+            self::assertFalse(file_exists($link));
+            self::assertFalse(is_link($link));
+        } finally {
+            if (PHP_OS_FAMILY === 'Windows') {
+                $this->removeDirectoryLink($link);
+            } elseif (is_link($link)) {
+                unlink($link);
+            }
+        }
+    }
+
 }
