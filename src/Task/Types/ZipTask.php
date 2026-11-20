@@ -2,6 +2,7 @@
 
 namespace PhpMake\Task\Types;
 
+use PhpMake\Filesystem\AtomicFilePublisher;
 use PhpMake\Filesystem\FilesystemIdentity;
 use PhpMake\Task\BaseTask;
 use ZipArchive;
@@ -116,59 +117,7 @@ final class ZipTask extends BaseTask
     /** Publishes the completed archive and restores the previous output on failure. */
     private function publishArchive(string $temporaryArchive, string $output): void
     {
-        if (!file_exists($output)) {
-            if (!@rename($temporaryArchive, $output)) {
-                @unlink($temporaryArchive);
-                throw new \RuntimeException(sprintf("Unable to publish archive '%s'.", $output));
-            }
-
-            return;
-        }
-
-        $backup = @tempnam(dirname($output), '.phpmake-backup-');
-        if ($backup === false || dirname($backup) !== dirname($output)) {
-            if (is_string($backup)) {
-                @unlink($backup);
-            }
-
-            @unlink($temporaryArchive);
-            throw new \RuntimeException(sprintf("Unable to create archive recovery path beside '%s'.", $output));
-        }
-
-        if (!@unlink($backup)) {
-            @unlink($temporaryArchive);
-            throw new \RuntimeException(sprintf("Unable to prepare archive recovery path '%s'.", $backup));
-        }
-
-        if (!@rename($output, $backup)) {
-            @unlink($temporaryArchive);
-            throw new \RuntimeException(sprintf("Unable to preserve existing archive '%s'.", $output));
-        }
-
-        if (!@rename($temporaryArchive, $output)) {
-            if (!@rename($backup, $output)) {
-                if (!@unlink($temporaryArchive)) {
-                    $this->logger->error(sprintf("Unable to remove incomplete temporary archive '%s'.", $temporaryArchive));
-                }
-
-                throw new \RuntimeException(sprintf(
-                    "CRITICAL: Archive publication and rollback failed. The previous archive is preserved at '%s'; restore it manually to '%s'.",
-                    $backup,
-                    $output
-                ));
-            }
-
-            @unlink($temporaryArchive);
-            throw new \RuntimeException(sprintf("Unable to publish archive '%s'; the previous archive was restored.", $output));
-        }
-
-        if (!@unlink($backup)) {
-            throw new \RuntimeException(sprintf(
-                "Archive created at '%s', but the previous archive could not be removed. Recovery backup retained at '%s'.",
-                $output,
-                $backup
-            ));
-        }
+        AtomicFilePublisher::publish($temporaryArchive, $output);
     }
 
     /** Adds source files to the archive using paths relative to its root. */
