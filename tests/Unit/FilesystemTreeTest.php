@@ -309,4 +309,53 @@ final class FilesystemTreeTest extends TestCase
         }
     }
 
+
+
+    /** Rejects a destination reached through a symlinked ancestor of the source. */
+    public function testCopyDirectoryRejectsSymlinkedDestinationAncestorAlias(): void
+    {
+        // Arrange
+        $source = $this->base . DIRECTORY_SEPARATOR . 'source';
+        $sourceAlias = $this->base . DIRECTORY_SEPARATOR . 'source-alias';
+        $destination = $sourceAlias . DIRECTORY_SEPARATOR . 'copy';
+        self::assertTrue(mkdir($source));
+        self::assertSame(4, file_put_contents($source . DIRECTORY_SEPARATOR . 'file.txt', 'data'));
+        $this->createDirectoryLink($source, $sourceAlias);
+
+        try {
+            // Act
+            $copied = FilesystemTree::copyDirectory($source, $destination);
+
+            // Assert
+            self::assertFalse($copied);
+            self::assertDirectoryDoesNotExist($source . DIRECTORY_SEPARATOR . 'copy');
+            self::assertSame('data', file_get_contents($source . DIRECTORY_SEPARATOR . 'file.txt'));
+        } finally {
+            if (is_link($sourceAlias) || $this->isDirectoryJunction($sourceAlias)) {
+                $this->removeDirectoryLink($sourceAlias);
+            }
+        }
+    }
+
+    /** Preserves an existing file when a source directory collides with it. */
+    public function testCopyDirectoryRejectsDirectoryFileCollisionWithoutChanges(): void
+    {
+        // Arrange
+        $source = $this->base . DIRECTORY_SEPARATOR . 'source';
+        $destination = $this->base . DIRECTORY_SEPARATOR . 'destination';
+        self::assertTrue(mkdir($source . DIRECTORY_SEPARATOR . 'collision', 0777, true));
+        self::assertSame(4, file_put_contents($source . DIRECTORY_SEPARATOR . 'collision' . DIRECTORY_SEPARATOR . 'new.txt', 'data'));
+        self::assertTrue(mkdir($destination));
+        self::assertSame(8, file_put_contents($destination . DIRECTORY_SEPARATOR . 'collision', 'original'));
+
+        // Act
+        $copied = FilesystemTree::copyDirectory($source, $destination);
+
+        // Assert
+        self::assertFalse($copied);
+        self::assertSame('original', file_get_contents($destination . DIRECTORY_SEPARATOR . 'collision'));
+        self::assertFileDoesNotExist($destination . DIRECTORY_SEPARATOR . 'collision' . DIRECTORY_SEPARATOR . 'new.txt');
+        self::assertSame([], glob($this->base . DIRECTORY_SEPARATOR . '.phpmake-tree-*.staging') ?: []);
+    }
+
 }
