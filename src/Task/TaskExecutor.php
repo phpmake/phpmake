@@ -68,7 +68,7 @@ final class TaskExecutor
                 if (!$task->execute($debug, $silent)) {
                     $this->output->error(sprintf("Error: Task '%s' failed.", $taskType));
                     if (!$silent) {
-                        $this->output->error('  ✗ Task failed.');
+                        $this->output->info('  ✗ Task failed.');
                     }
 
                     return 1;
