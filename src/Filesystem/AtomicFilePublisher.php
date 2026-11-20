@@ -15,6 +15,22 @@ final class AtomicFilePublisher
     /** Publishes the staged file and restores an existing destination on failure. */
     public static function publish(string $stagedFile, string $destination): void
     {
+        if (FilesystemTree::isLink($stagedFile) || !is_file($stagedFile)) {
+            throw new \InvalidArgumentException('Staged path must be a regular file and must not be a symbolic link.');
+        }
+
+        if (FilesystemTree::isLink($destination)) {
+            throw new \InvalidArgumentException('Destination must not be a symbolic link or junction.');
+        }
+
+        if (file_exists($destination) && !is_file($destination)) {
+            throw new \InvalidArgumentException('Existing destination must be a regular file.');
+        }
+
+        if (FilesystemIdentity::sameFile($stagedFile, $destination)) {
+            throw new \InvalidArgumentException('Staged file and destination must be different filesystem entries.');
+        }
+
         $directory = dirname($destination);
         if (!FilesystemIdentity::sameFile(dirname($stagedFile), $directory)) {
             throw new \InvalidArgumentException('Staged file and destination must share a directory.');
