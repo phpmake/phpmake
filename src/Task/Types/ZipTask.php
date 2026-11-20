@@ -348,6 +348,7 @@ final class ZipTask extends BaseTask
                 $output = null;
                 throw new \RuntimeException(sprintf("Unable to close archive snapshot for '%s'.", $source));
             }
+
             $output = null;
 
             if (!$zip->addFile($snapshot, $archivePath)) {
