@@ -2,6 +2,7 @@
 
 namespace PhpMake\Task\Types;
 
+use PhpMake\Filesystem\AtomicFilePublisher;
 use PhpMake\Filesystem\FilesystemIdentity;
 use PhpMake\Task\BaseTask;
 
@@ -105,63 +106,11 @@ final class CopyTask extends BaseTask
             @chmod($temporary, $sourcePermissions & 0777);
         }
 
-        if (!file_exists($destPath)) {
-            if (!@rename($temporary, $destPath)) {
-                @unlink($temporary);
-                $this->logger->error(sprintf("Unable to publish copied file '%s'.", $destPath));
-                return false;
-            }
-        } else {
-            $backup = @tempnam($resolvedDestDir, '.phpmake-copy-backup-');
-            if ($backup === false || dirname($backup) !== $resolvedDestDir) {
-                if (is_string($backup)) {
-                    @unlink($backup);
-                }
-
-                @unlink($temporary);
-                $this->logger->error(sprintf("Unable to create recovery path beside '%s'.", $destPath));
-                return false;
-            }
-
-            if (!@unlink($backup)) {
-                @unlink($temporary);
-                $this->logger->error(sprintf("Unable to prepare recovery path '%s'.", $backup));
-                return false;
-            }
-
-            if (!@rename($destPath, $backup)) {
-                @unlink($temporary);
-                $this->logger->error(sprintf("Unable to preserve existing destination '%s'.", $destPath));
-                return false;
-            }
-
-            if (!@rename($temporary, $destPath)) {
-                if (!@rename($backup, $destPath)) {
-                    if (!@unlink($temporary)) {
-                        $this->logger->error(sprintf("Unable to remove incomplete staged copy '%s'.", $temporary));
-                    }
-
-                    $this->logger->error(sprintf(
-                        "CRITICAL: File copy publication and rollback failed. The original file is preserved at '%s'; restore it manually to '%s'.",
-                        $backup,
-                        $destPath
-                    ));
-                    return false;
-                }
-
-                @unlink($temporary);
-                $this->logger->error(sprintf("Unable to publish copied file '%s'; the original was restored.", $destPath));
-                return false;
-            }
-
-            if (!@unlink($backup)) {
-                $this->logger->error(sprintf(
-                    "File copied to '%s', but the previous destination could not be removed. Recovery backup retained at '%s'.",
-                    $destPath,
-                    $backup
-                ));
-                return false;
-            }
+        try {
+            AtomicFilePublisher::publish($temporary, $destPath);
+        } catch (\\Throwable $exception) {
+            $this->logger->error($exception->getMessage());
+            return false;
         }
 
         $this->logger->debug(sprintf("Copied file '%s' → '%s'.", $source, $destPath));
