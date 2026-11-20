@@ -86,7 +86,7 @@ final class FilesystemTree
     }
 
     /** Detects POSIX symbolic links and Windows directory junctions. */
-    private static function isLink(string $path): bool
+    public static function isLink(string $path): bool
     {
         clearstatcache(true, $path);
         if (PHP_OS_FAMILY !== 'Windows') {
