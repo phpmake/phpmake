@@ -110,8 +110,8 @@ final class CopyTask extends BaseTask
 
         try {
             AtomicFilePublisher::publish($temporary, $destPath);
-        } catch (\Throwable $exception) {
-            $this->logger->error($exception->getMessage());
+        } catch (\Throwable $throwable) {
+            $this->logger->error($throwable->getMessage());
             return false;
         }
 
@@ -177,8 +177,8 @@ final class CopyTask extends BaseTask
 
         try {
             AtomicDirectoryPublisher::publish($staging, $destination);
-        } catch (\Throwable $exception) {
-            $this->logger->error($exception->getMessage());
+        } catch (\Throwable $throwable) {
+            $this->logger->error($throwable->getMessage());
             if (!FilesystemTree::remove($staging)) {
                 $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
             }
@@ -199,8 +199,8 @@ final class CopyTask extends BaseTask
             return true;
         }
 
-        $sourcePath = rtrim(str_replace(['/', '\'], DIRECTORY_SEPARATOR, $sourceReal), DIRECTORY_SEPARATOR);
-        $destinationPath = rtrim(str_replace(['/', '\'], DIRECTORY_SEPARATOR, $destinationReal), DIRECTORY_SEPARATOR);
+        $sourcePath = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $sourceReal), DIRECTORY_SEPARATOR);
+        $destinationPath = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $destinationReal), DIRECTORY_SEPARATOR);
         // Both paths have canonical existing prefixes. Preserve their case:
         // case-insensitive comparison is wrong for case-sensitive Windows volumes.
         return $destinationPath === $sourcePath

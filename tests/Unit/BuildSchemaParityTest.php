@@ -105,4 +105,17 @@ final class BuildSchemaParityTest extends TestCase
             'default_target' => 'build',
         ];
     }
+
+    /** Returns every registered task identifier in canonical registry order. */
+    public function testTypesReturnsRegisteredTaskIdentifiers(): void
+    {
+        // Arrange
+        $definitions = TaskDefinitionRegistry::all();
+
+        // Act
+        $types = TaskDefinitionRegistry::types();
+
+        // Assert
+        self::assertSame(array_keys($definitions), $types);
+    }
 }
