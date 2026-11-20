@@ -7,7 +7,12 @@ use PhpMake\Task\TaskDefinitionRegistry;
 /** Validates build configuration fields, targets, dependencies, and task parameters. */
 final class BuildValidator
 {
-    /** Returns validation errors found in a build configuration. */
+    /**
+     * Returns validation errors found in a build configuration.
+     *
+     * @param array<string, mixed> $config
+     * @return list<string>
+     */
     public function validate(array $config): array
     {
         $errors = [];
