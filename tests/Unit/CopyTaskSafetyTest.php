@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PhpMake\\Tests\\Unit;
+namespace PhpMake\Tests\Unit;
 
-use PhpMake\\Task\\Types\\CopyTask;
-use PhpMake\\Utilities\\Logger;
-use PHPUnit\\Framework\\TestCase;
+use PhpMake\Task\Types\CopyTask;
+use PhpMake\Utilities\Logger;
+use PHPUnit\Framework\TestCase;
 
 /** Tests transactional file-copy behavior and filesystem alias protection. */
 final class CopyTaskSafetyTest extends TestCase
