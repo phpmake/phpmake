@@ -2,8 +2,10 @@
 
 namespace PhpMake\Task\Types;
 
+use PhpMake\Filesystem\AtomicDirectoryPublisher;
 use PhpMake\Filesystem\AtomicFilePublisher;
 use PhpMake\Filesystem\FilesystemIdentity;
+use PhpMake\Filesystem\FilesystemTree;
 use PhpMake\Task\BaseTask;
 
 /** Copies files and directory trees without following symbolic links. */
@@ -118,70 +120,22 @@ final class CopyTask extends BaseTask
     }
 
 
-    /** Recursively copies a directory and stops on the first failure. */
+    /** Copies a directory tree without following links or unsupported entries. */
     private function copyDirectory(string $source, string $dest): bool
     {
         $this->assertSafePath($source, 'copy source');
         $this->assertSafePath($dest, 'copy destination', false);
-        if ($this->isSymbolicLinkOrJunction($source)) {
-            $this->logger->error(sprintf("Refusing to traverse symlink directory '%s'.", $source));
+
+        if (!FilesystemTree::copyDirectory($source, $dest)) {
+            $this->logger->error(sprintf("Unable to safely copy directory '%s' to '%s'.", $source, $dest));
             return false;
-        }
-
-        if ($this->isSymbolicLinkOrJunction($dest)) {
-            $this->logger->error(sprintf("Refusing to copy through destination link '%s'.", $dest));
-            return false;
-        }
-
-        if ($this->destinationIsWithinSource($source, $dest)) {
-            $this->logger->error(sprintf(
-                "Refusing to copy directory '%s' into itself or one of its descendants.",
-                $source
-            ));
-            return false;
-        }
-
-        if (!is_dir($dest) && !@mkdir($dest, 0777, true) && !is_dir($dest)) {
-            $this->logger->error(sprintf("Unable to create destination directory '%s'.", $dest));
-            return false;
-        }
-
-        $items = @scandir($source);
-        if ($items === false) {
-            $this->logger->error(sprintf("Unable to read source directory '%s'.", $source));
-            return false;
-        }
-
-        foreach ($items as $item) {
-            if ($item === '.' || $item === '..') {
-                continue;
-            }
-
-            $src = $source . DIRECTORY_SEPARATOR . $item;
-            $target = $dest . DIRECTORY_SEPARATOR . $item;
-            if ($this->isSymbolicLinkOrJunction($src)) {
-                $this->logger->error(sprintf("Refusing to copy symlink '%s'.", $src));
-                return false;
-            }
-
-            if (!is_dir($src) && !is_file($src)) {
-                $this->logger->error(sprintf("Refusing to copy unsupported filesystem entry '%s'.", $src));
-                return false;
-            }
-
-            $ok = is_dir($src)
-                ? $this->copyDirectory($src, $target)
-                : $this->copyFile($src, $target);
-            if (!$ok) {
-                return false;
-            }
         }
 
         $this->logger->debug(sprintf("Copied directory '%s' → '%s'.", $source, $dest));
         return true;
     }
 
-    /** Copies into a staging tree and swaps it into place only after success. */
+    /** Copies into a staging tree and publishes it with rollback on failure. */
     private function copyDirectoryTransactionally(string $source, string $destination): bool
     {
         if ($this->destinationIsWithinSource($source, $destination)) {
@@ -202,13 +156,11 @@ final class CopyTask extends BaseTask
             return false;
         }
 
-        $base = rtrim($destination, DIRECTORY_SEPARATOR);
-        $suffix = '.phpmake-' . bin2hex(random_bytes(8));
-        $staging = $base . $suffix . '.staging';
-        $backup = $base . $suffix . '.backup';
+        $staging = rtrim($destination, DIRECTORY_SEPARATOR)
+            . '.phpmake-' . bin2hex(random_bytes(8)) . '.staging';
 
         if (is_dir($destination) && !$this->copyDirectory($destination, $staging)) {
-            if (!$this->removeCreatedTree($staging)) {
+            if (!FilesystemTree::remove($staging)) {
                 $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
             }
 
@@ -216,89 +168,25 @@ final class CopyTask extends BaseTask
         }
 
         if (!$this->copyDirectory($source, $staging)) {
-            if (!$this->removeCreatedTree($staging)) {
+            if (!FilesystemTree::remove($staging)) {
                 $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
             }
 
             return false;
         }
 
-        $hadDestination = file_exists($destination);
-        if ($hadDestination && !@rename($destination, $backup)) {
-            $this->logger->error(sprintf("Unable to stage existing destination '%s'.", $destination));
-            if (!$this->removeCreatedTree($staging)) {
+        try {
+            AtomicDirectoryPublisher::publish($staging, $destination);
+        } catch (\Throwable $exception) {
+            $this->logger->error($exception->getMessage());
+            if (!FilesystemTree::remove($staging)) {
                 $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
             }
 
-            return false;
-        }
-
-        if (!@rename($staging, $destination)) {
-            $this->logger->error(sprintf("Unable to publish copied directory '%s'.", $destination));
-            if ($hadDestination && !@rename($backup, $destination)) {
-                $this->logger->error(sprintf(
-                    "CRITICAL: Copy rollback failed. The original destination is preserved at backup path '%s'; restore it manually to '%s'.",
-                    $backup,
-                    $destination
-                ));
-            }
-
-            if (!$this->removeCreatedTree($staging)) {
-                $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
-            }
-
-            return false;
-        }
-
-        if ($hadDestination && !$this->removeCreatedTree($backup)) {
-            $this->logger->error(sprintf(
-                "Copy completed at '%s', but the previous destination could not be removed. Recovery backup retained at '%s'.",
-                $destination,
-                $backup
-            ));
             return false;
         }
 
         return true;
-    }
-
-    /** Removes a partial tree and reports whether every filesystem operation succeeded. */
-    private function removeCreatedTree(string $path): bool
-    {
-        if ($this->isSymbolicLinkOrJunction($path)) {
-            return $this->removeSymbolicLinkOrJunction($path);
-        }
-
-        if (!is_dir($path)) {
-            return !file_exists($path) || @unlink($path);
-        }
-
-        $items = @scandir($path);
-        if ($items === false) {
-            return false;
-        }
-
-        $success = true;
-        foreach ($items as $item) {
-            if ($item === '.' || $item === '..') {
-                continue;
-            }
-
-            $child = $path . DIRECTORY_SEPARATOR . $item;
-            if ($this->isSymbolicLinkOrJunction($child)) {
-                $removed = $this->removeSymbolicLinkOrJunction($child);
-            } elseif (!is_dir($child)) {
-                $removed = !file_exists($child) || @unlink($child);
-            } else {
-                $removed = $this->removeCreatedTree($child);
-            }
-
-            if (!$removed) {
-                return false;
-            }
-        }
-
-        return @rmdir($path);
     }
 
     /** Rejects destination paths that resolve to the source or one of its descendants. */
@@ -311,8 +199,8 @@ final class CopyTask extends BaseTask
             return true;
         }
 
-        $sourcePath = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $sourceReal), DIRECTORY_SEPARATOR);
-        $destinationPath = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $destinationReal), DIRECTORY_SEPARATOR);
+        $sourcePath = rtrim(str_replace(['/', '\'], DIRECTORY_SEPARATOR, $sourceReal), DIRECTORY_SEPARATOR);
+        $destinationPath = rtrim(str_replace(['/', '\'], DIRECTORY_SEPARATOR, $destinationReal), DIRECTORY_SEPARATOR);
         // Both paths have canonical existing prefixes. Preserve their case:
         // case-insensitive comparison is wrong for case-sensitive Windows volumes.
         return $destinationPath === $sourcePath
