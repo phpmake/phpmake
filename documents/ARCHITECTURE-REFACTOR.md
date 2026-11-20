@@ -14,8 +14,10 @@ The JSON Schema remains a published static artifact. The parity test intentional
 ## 2. Shared filesystem primitives
 
 - `FilesystemIdentity` centralizes device/inode comparisons used by copy and archive operations, with the archive task retaining its Windows case-insensitive fallback.
+- `FilesystemTree` centralizes recursive directory copying, link/junction detection, and cleanup without traversing links. Project-root containment and source/destination relationship checks remain with the task that owns those policies.
 - `AtomicFilePublisher` centralizes same-directory staged-file publication, backup preservation, rollback, and recovery-path reporting.
-- Directory-tree staging and cleanup remain in `CopyTask`; archive traversal and ZIP limits remain in `ZipTask`. Those algorithms have different invariants and are not forced into one abstraction.
+- `AtomicDirectoryPublisher` centralizes same-parent directory publication, backup preservation, rollback, and recovery-path reporting.
+- `CopyTask` coordinates staging and merges source content into the staged copy of an existing destination. Archive traversal and ZIP limits remain in `ZipTask` because those algorithms have different invariants.
 
 ## 3. Process execution boundaries
 
