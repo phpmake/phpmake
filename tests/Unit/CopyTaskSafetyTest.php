@@ -13,19 +13,26 @@ final class CopyTaskSafetyTest extends TestCase
 {
     private string $root;
 
+    private string $originalWorkingDirectory;
+
     private Logger $logger;
 
     protected function setUp(): void
     {
-        // Use the system temp volume: the repository checkout may be on a
-        // filesystem that does not support hardlinks (notably Windows CI).
+        // Use the system temp volume: the repository checkout may not support
+        // hardlinks (notably Windows CI). Make it the task's project root so
+        // BaseTask's project-directory safety boundary remains enforced.
+        $this->originalWorkingDirectory = (string) getcwd();
         $this->root = sys_get_temp_dir() . DIRECTORY_SEPARATOR . '.phpmake-copy-safety-' . bin2hex(random_bytes(6));
         self::assertTrue(mkdir($this->root));
+        self::assertTrue(chdir($this->root));
         $this->logger = new Logger(false, true, true);
     }
 
     protected function tearDown(): void
     {
+        chdir($this->originalWorkingDirectory);
+
         foreach (glob($this->root . DIRECTORY_SEPARATOR . '*') ?: [] as $path) {
             if (is_file($path) || is_link($path)) {
                 @unlink($path);
