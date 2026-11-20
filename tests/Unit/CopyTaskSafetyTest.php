@@ -89,4 +89,27 @@ final class CopyTaskSafetyTest extends TestCase
         self::assertSame([], glob($this->root . DIRECTORY_SEPARATOR . '.phpmake-copy-*') ?: []);
         self::assertSame([], glob($this->root . DIRECTORY_SEPARATOR . '.phpmake-copy-backup-*') ?: []);
     }
+
+
+    /** Rejects a destination that contains the source tree. */
+    public function testCopyDirectoryRejectsDestinationAncestorOfSource(): void
+    {
+        // Arrange
+        $destination = $this->root . DIRECTORY_SEPARATOR . 'destination';
+        $source = $destination . DIRECTORY_SEPARATOR . 'source';
+        self::assertTrue(mkdir($source, 0777, true));
+        self::assertSame(4, file_put_contents($source . DIRECTORY_SEPARATOR . 'keep.txt', 'keep'));
+
+        $task = new CopyTask(['source' => $source, 'dest' => $destination], $this->logger);
+
+        // Act
+        $result = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($result);
+        self::assertSame('keep', file_get_contents($source . DIRECTORY_SEPARATOR . 'keep.txt'));
+        self::assertFileDoesNotExist($destination . DIRECTORY_SEPARATOR . 'keep.txt');
+        self::assertSame([], glob($this->root . DIRECTORY_SEPARATOR . '*.staging') ?: []);
+    }
+
 }
