@@ -2,6 +2,7 @@
 
 namespace PhpMake\Task\Types;
 
+use PhpMake\Filesystem\FilesystemIdentity;
 use PhpMake\Task\BaseTask;
 use ZipArchive;
 
@@ -66,7 +67,7 @@ final class ZipTask extends BaseTask
             throw new \RuntimeException(sprintf("Archive output '%s' is a directory.", $outputReal));
         }
 
-        if ($this->pathsReferToSameFile($sourceReal, $outputReal)) {
+        if (FilesystemIdentity::sameFile($sourceReal, $outputReal, true)) {
             throw new \RuntimeException('Archive output must not overwrite its source.');
         }
 
@@ -186,7 +187,7 @@ final class ZipTask extends BaseTask
         $this->assertSafePath($source, 'archive input');
         if (is_file($source)) {
             foreach ($excludedPaths as $excludedPath) {
-                if ($this->pathsReferToSameFile($source, $excludedPath)) {
+                if (FilesystemIdentity::sameFile($source, $excludedPath, true)) {
                     throw new \RuntimeException('Archive output must not overwrite its source.');
                 }
             }
@@ -224,7 +225,7 @@ final class ZipTask extends BaseTask
             $real = $file->getRealPath();
             $excluded = false;
             foreach ($excludedPaths as $excludedPath) {
-                if ($real !== false && $this->pathsReferToSameFile($real, $excludedPath)) {
+                if ($real !== false && FilesystemIdentity::sameFile($real, $excludedPath, true)) {
                     $excluded = true;
                     break;
                 }
@@ -285,19 +286,6 @@ final class ZipTask extends BaseTask
         $totalBytes += $size;
     }
 
-    /** Compares filesystem identity so case behavior follows the mounted volume. */
-    private function pathsReferToSameFile(string $left, string $right): bool
-    {
-        clearstatcache(true, $left);
-        clearstatcache(true, $right);
-        $leftStat = @stat($left);
-        $rightStat = @stat($right);
-        if (is_array($leftStat) && is_array($rightStat)) {
-            return $leftStat['dev'] === $rightStat['dev'] && $leftStat['ino'] === $rightStat['ino'];
-        }
-
-        return PHP_OS_FAMILY === 'Windows' ? strcasecmp($left, $right) === 0 : $left === $right;
-    }
 
     /** Returns the archive task identifier. */
     public function getType(): string
