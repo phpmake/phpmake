@@ -166,9 +166,6 @@ final class ZipTask extends BaseTask
                 $snapshotDirectory,
                 $excludedPaths,
                 $snapshots,
-                $snapshotDirectory,
-                $excludedPaths,
-                $snapshots,
                 $fileCount,
                 $totalBytes
             );
@@ -218,6 +215,9 @@ final class ZipTask extends BaseTask
                 $zip,
                 $real,
                 str_replace(DIRECTORY_SEPARATOR, '/', $relative),
+                $snapshotDirectory,
+                $excludedPaths,
+                $snapshots,
                 $fileCount,
                 $totalBytes
             );
