@@ -38,8 +38,18 @@ final class AtomicDirectoryPublisher
             throw new \InvalidArgumentException('Staging directory and destination must be different filesystem entries.');
         }
 
+        $resolvedDestination = realpath($destination);
+        if ($resolvedDestination !== false && dirname($resolvedDestination) === $resolvedDestination) {
+            throw new \\InvalidArgumentException('Destination must not be a filesystem root.');
+        }
+
+        $destinationBase = rtrim($destination, "/\\\\");
+        if ($destinationBase === '') {
+            $destinationBase = DIRECTORY_SEPARATOR;
+        }
+
         $hadDestination = file_exists($destination);
-        $backup = $destination . '.phpmake-' . bin2hex(random_bytes(8)) . '.backup';
+        $backup = $destinationBase . '.phpmake-' . bin2hex(random_bytes(8)) . '.backup';
 
         if ($hadDestination && !@rename($destination, $backup)) {
             throw new \RuntimeException(sprintf("Unable to preserve existing destination '%s'.", $destination));
