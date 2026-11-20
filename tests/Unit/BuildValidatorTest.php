@@ -11,8 +11,6 @@ use PHPUnit\Framework\TestCase;
 final class BuildValidatorTest extends TestCase
 {
 
-
-
     /**
      *
      *
@@ -196,8 +194,6 @@ final class BuildValidatorTest extends TestCase
         }
     }
 
-
-
     /** Rejects unknown properties that the JSON schema disallows. */
     public function testRejectsUnknownTaskAndTargetProperties(): void
     {
@@ -236,7 +232,6 @@ final class BuildValidatorTest extends TestCase
         self::assertSame([], $errors);
     }
 
-
     /** Rejects null dependencies rather than treating them as an omitted list. */
     public function testNullDependenciesAreInvalid(): void
     {
@@ -253,7 +248,6 @@ final class BuildValidatorTest extends TestCase
         // Assert
         self::assertStringContainsString('dependencies must be an array', implode("\n", $errors));
     }
-
 
     /** Accepts numeric JSON object keys as target names after associative decoding. */
     public function testNumericTargetNameMatchesSchema(): void
@@ -272,8 +266,6 @@ final class BuildValidatorTest extends TestCase
         // Assert
         self::assertSame([], $errors);
     }
-
-
 
     /** Rejects task objects that omit the schema-required params property. */
     public function testRejectsMissingTaskParamsObject(): void
