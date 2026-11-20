@@ -138,7 +138,7 @@ final class CopyTask extends BaseTask
     /** Copies into a staging tree and publishes it with rollback on failure. */
     private function copyDirectoryTransactionally(string $source, string $destination): bool
     {
-        if ($this->destinationIsWithinSource($source, $destination)) {
+        if ($this->sourceAndDestinationOverlap($source, $destination)) {
             $this->logger->error(sprintf(
                 "Refusing to copy directory '%s' into itself or one of its descendants.",
                 $source
@@ -190,7 +190,7 @@ final class CopyTask extends BaseTask
     }
 
     /** Rejects source and destination paths that overlap in either direction. */
-    private function destinationIsWithinSource(string $source, string $destination): bool
+    private function sourceAndDestinationOverlap(string $source, string $destination): bool
     {
         $sourceReal = realpath($source);
         $destinationReal = $this->resolvePathForComparison($destination);
