@@ -40,10 +40,10 @@ final class AtomicDirectoryPublisher
 
         $resolvedDestination = realpath($destination);
         if ($resolvedDestination !== false && dirname($resolvedDestination) === $resolvedDestination) {
-            throw new \\InvalidArgumentException('Destination must not be a filesystem root.');
+            throw new \InvalidArgumentException('Destination must not be a filesystem root.');
         }
 
-        $destinationBase = rtrim($destination, "/\\\\");
+        $destinationBase = rtrim($destination, "/\\");
         if ($destinationBase === '') {
             $destinationBase = DIRECTORY_SEPARATOR;
         }
