@@ -213,4 +213,49 @@ final class ZipTaskTest extends TestCase
         }
     }
 
+
+
+    /** Archives immutable input snapshots and removes them after publication. */
+    public function testArchiveSnapshotsInputsAndCleansTemporaryFiles(): void
+    {
+        // Arrange
+        self::assertTrue(class_exists(\ZipArchive::class), 'ext-zip is a required runtime dependency.');
+
+        $root = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-snapshot-' . bin2hex(random_bytes(6));
+        self::assertTrue(mkdir($root));
+        $source = $root . DIRECTORY_SEPARATOR . 'input.txt';
+        $output = $root . DIRECTORY_SEPARATOR . 'archive.zip';
+        self::assertSame(13, file_put_contents($source, 'stable content'));
+
+        try {
+            // Act
+            $task = new ZipTask(['source' => dirname($source), 'output' => $output], new Logger(false, true, true));
+            self::assertTrue($task->execute(false, true));
+
+            // Assert
+            $zip = new \ZipArchive();
+            self::assertTrue($zip->open($output));
+            self::assertSame(1, $zip->numFiles);
+            self::assertSame('stable content', $zip->getFromName('input.txt'));
+            self::assertTrue($zip->close());
+            self::assertSame([], glob($root . DIRECTORY_SEPARATOR . '.phpmake-archive-input-*') ?: []);
+        } finally {
+            foreach (glob($root . DIRECTORY_SEPARATOR . '.phpmake-archive-input-*') ?: [] as $snapshot) {
+                @unlink($snapshot);
+            }
+
+            if (is_file($output)) {
+                unlink($output);
+            }
+
+            if (is_file($source)) {
+                unlink($source);
+            }
+
+            if (is_dir($root)) {
+                rmdir($root);
+            }
+        }
+    }
+
 }
