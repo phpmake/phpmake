@@ -425,4 +425,25 @@ final class FilesystemTreeTest extends TestCase
         }
     }
 
+
+
+    /** Creates missing destination parents and publishes the completed tree. */
+    public function testCopyDirectoryCreatesMissingParentsOnSuccess(): void
+    {
+        // Arrange
+        $source = $this->base . DIRECTORY_SEPARATOR . 'source';
+        $destination = $this->base . DIRECTORY_SEPARATOR . 'new-parent'
+            . DIRECTORY_SEPARATOR . 'nested' . DIRECTORY_SEPARATOR . 'destination';
+        self::assertTrue(mkdir($source));
+        self::assertSame(4, file_put_contents($source . DIRECTORY_SEPARATOR . 'file.txt', 'data'));
+
+        // Act
+        $copied = FilesystemTree::copyDirectory($source, $destination);
+
+        // Assert
+        self::assertTrue($copied);
+        self::assertSame('data', file_get_contents($destination . DIRECTORY_SEPARATOR . 'file.txt'));
+        self::assertSame([], glob(dirname(dirname($destination)) . DIRECTORY_SEPARATOR . '.phpmake-tree-*.staging') ?: []);
+    }
+
 }
