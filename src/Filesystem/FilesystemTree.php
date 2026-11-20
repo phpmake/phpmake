@@ -58,17 +58,28 @@ final class FilesystemTree
         }
 
         if (!$copied) {
-            self::remove($staging);
+            if (!self::remove($staging)) {
+                self::removeCreatedParents($createdParents);
+                throw new \RuntimeException(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
+            }
+
             self::removeCreatedParents($createdParents);
             return false;
         }
 
         try {
             AtomicDirectoryPublisher::publish($staging, $destinationPath);
-        } catch (\Throwable) {
-            self::remove($staging);
+        } catch (\Throwable $throwable) {
+            if ((file_exists($staging) || is_link($staging)) && !self::remove($staging)) {
+                throw new \RuntimeException(
+                    sprintf("Unable to remove incomplete staging tree '%s'.", $staging),
+                    0,
+                    $throwable
+                );
+            }
+
             self::removeCreatedParents($createdParents);
-            return false;
+            throw $throwable;
         }
 
         return true;
