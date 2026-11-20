@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PhpMake\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use PhpMake\Task\Types\ZipTask;
-use PhpMake\Task\BaseTask;
 use PhpMake\Tests\Support\DirectoryLinkTestHelper;
 use PhpMake\Utilities\Logger;
 
@@ -13,52 +14,9 @@ final class ZipTaskTest extends TestCase
 {
     use DirectoryLinkTestHelper;
 
-    /**
-     * This method is called before the first test method in the test class is executed.
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    public static function setUpBeforeClass(): void {}
 
-    /**
-     * This method is called after the last test method in the test class has been executed.
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    public static function tearDownAfterClass(): void
-    {
-        gc_collect_cycles();
-    }
 
-    /**
-     * This method is called BEFORE each test method.
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    protected function setUp(): void
-    {
-        parent::setUp();
-        // Methods initialization codes.
-    }
 
-    /**
-     * This method is called AFTER each test method.
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    protected function tearDown(): void
-    {
-        // Methods finalization codes.
-        parent::tearDown();
-    }
 
     /** Ensures an archive created inside its source directory does not include itself. */
     public function testArchiveDoesNotIncludeItselfWhenOutputIsInsideSource(): void
