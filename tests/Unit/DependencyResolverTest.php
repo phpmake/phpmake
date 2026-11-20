@@ -12,8 +12,6 @@ use PHPUnit\Framework\TestCase;
 final class DependencyResolverTest extends TestCase
 {
 
-
-
     /**
      *
      *
