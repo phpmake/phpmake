@@ -11,7 +11,6 @@ use PHPUnit\Framework\TestCase;
 /** Tests dependency ordering and invalid dependency handling. */
 final class DependencyResolverTest extends TestCase
 {
-
     public function testDependencyOrder(): void
     {
         // Arrange
