@@ -194,4 +194,119 @@ final class FilesystemTreeTest extends TestCase
         self::assertFalse($copied);
         self::assertDirectoryDoesNotExist($destination);
     }
+
+
+    /** Rejects a destination nested inside its source before creating anything. */
+    public function testCopyDirectoryRejectsDestinationInsideSource(): void
+    {
+        // Arrange
+        $source = $this->base . DIRECTORY_SEPARATOR . 'source';
+        $destination = $source . DIRECTORY_SEPARATOR . 'nested-copy';
+        self::assertTrue(mkdir($source));
+        self::assertSame(4, file_put_contents($source . DIRECTORY_SEPARATOR . 'file.txt', 'data'));
+
+        // Act
+        $copied = FilesystemTree::copyDirectory($source, $destination);
+
+        // Assert
+        self::assertFalse($copied);
+        self::assertDirectoryDoesNotExist($destination);
+        self::assertSame('data', file_get_contents($source . DIRECTORY_SEPARATOR . 'file.txt'));
+        self::assertSame([], glob($this->base . DIRECTORY_SEPARATOR . '.phpmake-tree-*.staging') ?: []);
+    }
+
+    /** Rejects identical source and destination directories. */
+    public function testCopyDirectoryRejectsSameSourceAndDestination(): void
+    {
+        // Arrange
+        $source = $this->base . DIRECTORY_SEPARATOR . 'source';
+        self::assertTrue(mkdir($source));
+        self::assertSame(4, file_put_contents($source . DIRECTORY_SEPARATOR . 'file.txt', 'data'));
+
+        // Act
+        $copied = FilesystemTree::copyDirectory($source, $source);
+
+        // Assert
+        self::assertFalse($copied);
+        self::assertSame('data', file_get_contents($source . DIRECTORY_SEPARATOR . 'file.txt'));
+    }
+
+    /** Rejects a destination that is an ancestor of the source. */
+    public function testCopyDirectoryRejectsDestinationAncestorOfSource(): void
+    {
+        // Arrange
+        $destination = $this->base . DIRECTORY_SEPARATOR . 'destination';
+        $source = $destination . DIRECTORY_SEPARATOR . 'source';
+        self::assertTrue(mkdir($source, 0777, true));
+        self::assertSame(4, file_put_contents($source . DIRECTORY_SEPARATOR . 'file.txt', 'data'));
+
+        // Act
+        $copied = FilesystemTree::copyDirectory($source, $destination);
+
+        // Assert
+        self::assertFalse($copied);
+        self::assertSame('data', file_get_contents($source . DIRECTORY_SEPARATOR . 'file.txt'));
+        self::assertFileDoesNotExist($destination . DIRECTORY_SEPARATOR . 'file.txt');
+    }
+
+    /** Preserves an existing destination and removes staging after a partial-copy failure. */
+    public function testCopyDirectoryRollsBackPartialCopyFailure(): void
+    {
+        // Arrange
+        $source = $this->base . DIRECTORY_SEPARATOR . 'source';
+        $destination = $this->base . DIRECTORY_SEPARATOR . 'destination';
+        $outside = $this->base . DIRECTORY_SEPARATOR . 'outside';
+        self::assertTrue(mkdir($source));
+        self::assertTrue(mkdir($destination));
+        self::assertTrue(mkdir($outside));
+        self::assertSame(8, file_put_contents($destination . DIRECTORY_SEPARATOR . 'keep.txt', 'original'));
+        self::assertSame(3, file_put_contents($source . DIRECTORY_SEPARATOR . 'a-first.txt', 'new'));
+        self::assertSame(6, file_put_contents($outside . DIRECTORY_SEPARATOR . 'secret.txt', 'secret'));
+        $this->createDirectoryLink($outside, $source . DIRECTORY_SEPARATOR . 'z-link');
+
+        try {
+            // Act
+            $copied = FilesystemTree::copyDirectory($source, $destination);
+
+            // Assert
+            self::assertFalse($copied);
+            self::assertSame('original', file_get_contents($destination . DIRECTORY_SEPARATOR . 'keep.txt'));
+            self::assertFileDoesNotExist($destination . DIRECTORY_SEPARATOR . 'a-first.txt');
+            self::assertSame('secret', file_get_contents($outside . DIRECTORY_SEPARATOR . 'secret.txt'));
+            self::assertSame([], glob($this->base . DIRECTORY_SEPARATOR . '.phpmake-tree-*.staging') ?: []);
+        } finally {
+            if (is_link($source . DIRECTORY_SEPARATOR . 'z-link') || $this->isDirectoryJunction($source . DIRECTORY_SEPARATOR . 'z-link')) {
+                $this->removeDirectoryLink($source . DIRECTORY_SEPARATOR . 'z-link');
+            }
+        }
+    }
+
+    /** Removes newly-created destination parents when copying fails. */
+    public function testCopyDirectoryCleansCreatedParentsAfterFailure(): void
+    {
+        // Arrange
+        $source = $this->base . DIRECTORY_SEPARATOR . 'source';
+        $destination = $this->base . DIRECTORY_SEPARATOR . 'new-parent'
+            . DIRECTORY_SEPARATOR . 'destination';
+        $outside = $this->base . DIRECTORY_SEPARATOR . 'outside';
+        self::assertTrue(mkdir($source));
+        self::assertTrue(mkdir($outside));
+        self::assertSame(6, file_put_contents($outside . DIRECTORY_SEPARATOR . 'secret.txt', 'secret'));
+        $this->createDirectoryLink($outside, $source . DIRECTORY_SEPARATOR . 'linked');
+
+        try {
+            // Act
+            $copied = FilesystemTree::copyDirectory($source, $destination);
+
+            // Assert
+            self::assertFalse($copied);
+            self::assertDirectoryDoesNotExist(dirname($destination));
+            self::assertSame('secret', file_get_contents($outside . DIRECTORY_SEPARATOR . 'secret.txt'));
+        } finally {
+            if (is_link($source . DIRECTORY_SEPARATOR . 'linked') || $this->isDirectoryJunction($source . DIRECTORY_SEPARATOR . 'linked')) {
+                $this->removeDirectoryLink($source . DIRECTORY_SEPARATOR . 'linked');
+            }
+        }
+    }
+
 }
