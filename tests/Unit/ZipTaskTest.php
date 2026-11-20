@@ -146,6 +146,7 @@ final class ZipTaskTest extends TestCase
             self::assertSame('original archive', $preserved->getFromName('preserve.txt'));
             self::assertTrue($preserved->close());
             self::assertSame([], glob($root . DIRECTORY_SEPARATOR . '.phpmake-archive-*') ?: []);
+            self::assertSame([], glob($root . DIRECTORY_SEPARATOR . '.phpmake-archive-input-*') ?: []);
         } finally {
             if (is_string($originalCwd)) {
                 chdir($originalCwd);
