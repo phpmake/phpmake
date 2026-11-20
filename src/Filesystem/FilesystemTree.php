@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PhpMake\\Filesystem;
+namespace PhpMake\Filesystem;
 
 /**
  * Performs recursive directory copying and cleanup without following links.
