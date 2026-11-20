@@ -210,7 +210,7 @@ final class TaskFactoryTest extends TestCase
         $taskConfig = ['params' => []];
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Task configuration requires a non-empty string 'type'.");
 
         // Act
@@ -224,7 +224,7 @@ final class TaskFactoryTest extends TestCase
         $taskConfig = ['type' => 'echo', 'params' => 'invalid'];
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Parameters for task 'echo' must be an array.");
 
         // Act
