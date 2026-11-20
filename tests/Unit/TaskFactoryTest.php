@@ -21,53 +21,8 @@ final class TaskFactoryTest extends TestCase
 
     private Logger $logger;
 
-    /**
-     * This method is called before the first test method in the test class is executed.
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    public static function setUpBeforeClass(): void {}
 
-    /**
-     * This method is called after the last test method in the test class has been executed.
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    public static function tearDownAfterClass(): void
-    {
-        gc_collect_cycles();
-    }
 
-    /**
-     * This method is called BEFORE each test method.
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->logger = new Logger(true, true, true);
-        $this->factory = new TaskFactory($this->logger);
-    }
-
-    /**
-     * This method is called AFTER each test method.
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    protected function tearDown(): void
-    {
-        // Methods finalization codes.
-        parent::tearDown();
-    }
 
     /**
      *

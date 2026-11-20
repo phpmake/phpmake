@@ -1,0 +1,38 @@
+# Test Suite Audit
+
+**Baseline:** `main` at `ef95755743dbbb78e1eb8d2233aff53c2d7e551b`  
+**Branch:** `quality/test-suite-audit`  
+**Scope:** PHPUnit unit, integration, system, and smoke tests.  
+**Compatibility:** PHP 8.0–8.5; Windows and Linux.  
+**Constraints:** PHPUnit retained; no mocks introduced; production source unchanged.
+
+## Changes in this pass
+
+- Removed `BuildSmokeTest`, which duplicated build validation, dependency resolution, and build execution tests already owned by focused test classes.
+- Moved its only distinct contract coverage (all `BuildConfiguration` getters) into `BuildConfigurationTest`.
+- Removed `LoggerTest`, whose logger assertions are covered more thoroughly by `LoggerPersistenceTest`, while its task behavior cases are covered by dedicated task/filesystem tests.
+- Added `EchoTaskOutputTest` to retain explicit coverage that a non-silent echo task writes the configured message.
+- Removed obsolete no-op PHPUnit lifecycle hooks and redundant `DoesNotPerformAssertions`/legacy test attributes from the focused test classes updated in this pass.
+- Added strict-types declarations to the updated legacy test files where missing.
+- Removed ZIP-extension skip guards. `ext-zip` is a required Composer runtime dependency, so absence must fail the test environment rather than silently skip archive tests.
+
+## Audit observations requiring follow-up
+
+- AAA markers and ordering remain inconsistent in several legacy test classes. In particular, exception expectation setup is frequently placed before Arrange comments, some methods combine multiple scenarios, and several fixture assertions are interleaved with behavior assertions.
+- Test names remain generic in older classes (for example, `testValidConfig`, `testParseTarget`, and `testExecTask`).
+- Filesystem fixtures are still duplicated across older path-safety tests; consolidation should follow a focused review of cleanup semantics and platform-specific junction behavior.
+- Some process-tree tests are platform/extension conditional. These are not ZIP dependency skips and need platform-aware CI validation.
+- No production implementation changes are included in this test-only pass.
+
+## Validation
+
+The repository-connected editing environment does not provide a local PHP runtime or Composer installation. Run the complete PHPUnit suite and formatter/linter on the branch, including the PHP 8.0–8.5 Windows/Linux matrix, before treating this audit as complete. Do not infer a passing test result from the edits alone.
+
+## Completion criteria
+
+- [ ] Every test method follows a clear Arrange / Act / Assert structure.
+- [ ] Every test name describes the behavior and expected outcome.
+- [ ] Duplicate coverage is removed without losing unique behavior coverage.
+- [ ] Fixtures are isolated and reliably cleaned up on success and failure.
+- [ ] No mocks and no skipped tests.
+- [ ] Full PHPUnit, formatting, lint, and supported-platform matrix pass.

@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PhpMake\Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
 use PhpMake\Task\Types\ZipTask;
-use PhpMake\Task\BaseTask;
 use PhpMake\Tests\Support\DirectoryLinkTestHelper;
 use PhpMake\Utilities\Logger;
 
@@ -13,61 +14,15 @@ final class ZipTaskTest extends TestCase
 {
     use DirectoryLinkTestHelper;
 
-    /**
-     * This method is called before the first test method in the test class is executed.
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    public static function setUpBeforeClass(): void {}
 
-    /**
-     * This method is called after the last test method in the test class has been executed.
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    public static function tearDownAfterClass(): void
-    {
-        gc_collect_cycles();
-    }
 
-    /**
-     * This method is called BEFORE each test method.
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    protected function setUp(): void
-    {
-        parent::setUp();
-        // Methods initialization codes.
-    }
 
-    /**
-     * This method is called AFTER each test method.
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\DoesNotPerformAssertions]
-    protected function tearDown(): void
-    {
-        // Methods finalization codes.
-        parent::tearDown();
-    }
 
     /** Ensures an archive created inside its source directory does not include itself. */
     public function testArchiveDoesNotIncludeItselfWhenOutputIsInsideSource(): void
     {
         // Arrange
-        if (!class_exists(\ZipArchive::class)) {
-            // Assert
-            $this->markTestSkipped('ext-zip is not available.');
-        }
+        self::assertTrue(class_exists(\ZipArchive::class), 'ext-zip is a required runtime dependency.');
 
         $root = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-self-' . uniqid('', true);
         mkdir($root);
@@ -101,9 +56,7 @@ final class ZipTaskTest extends TestCase
     public function testArchiveExcludesOutputWhenPathCaseAliasesIt(): void
     {
         // Arrange
-        if (!class_exists(\ZipArchive::class)) {
-            self::markTestSkipped('ext-zip is not available.');
-        }
+        self::assertTrue(class_exists(\ZipArchive::class), 'ext-zip is a required runtime dependency.');
 
         if (!in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true)) {
             self::assertTrue(true, 'Case-variant filesystem test is not applicable on this platform.');
@@ -160,9 +113,7 @@ final class ZipTaskTest extends TestCase
     public function testArchiveFailurePreservesExistingOutput(): void
     {
         // Arrange
-        if (!class_exists(\ZipArchive::class)) {
-            self::markTestSkipped('ext-zip is not available.');
-        }
+        self::assertTrue(class_exists(\ZipArchive::class), 'ext-zip is a required runtime dependency.');
 
         // Use the system temporary volume rather than the repository volume.
         // Some Windows workspaces are mounted on filesystems that cannot host
@@ -226,9 +177,7 @@ final class ZipTaskTest extends TestCase
     public function testArchiveInputLimitPreservesExistingOutput(): void
     {
         // Arrange
-        if (!class_exists(\ZipArchive::class)) {
-            self::markTestSkipped('ext-zip is not available.');
-        }
+        self::assertTrue(class_exists(\ZipArchive::class), 'ext-zip is a required runtime dependency.');
 
         $suffix = bin2hex(random_bytes(8));
         $source = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-oversized-' . $suffix;
