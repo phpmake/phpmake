@@ -48,7 +48,7 @@ final class BuildExecutor
         $target ??= $defaultTarget;
 
         if (!array_key_exists($target, $config->getTargets())) {
-            throw new \Exception(sprintf("Target '%s' not found.", $target));
+            throw new \OutOfBoundsException(sprintf("Target '%s' not found.", $target));
         }
 
         $executionOrder = $this->dependencyResolver->resolve($config, $target);

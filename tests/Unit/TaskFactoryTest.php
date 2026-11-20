@@ -192,7 +192,7 @@ final class TaskFactoryTest extends TestCase
     public function testUnknownTaskTypeThrowsException(): void
     {
         // Assert
-        $this->expectException(\Exception::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Unknown task type 'invalid' in build configuration.");
         // Arrange
         $taskConfig = [

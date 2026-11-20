@@ -92,7 +92,7 @@ final class DependencyResolverTest extends TestCase
     public function testCircularDependency(): void
     {
         // Assert
-        $this->expectException(\Exception::class);
+        $this->expectException(\RuntimeException::class);
         // Arrange
         $config = new BuildConfiguration(
             'Test',
