@@ -58,6 +58,16 @@ final class CliParser
             'init' => false,
         ];
 
+        $selectedAction = null;
+        foreach ($argv as $index => $arg) {
+            if (!is_string($arg)) {
+                throw new \\InvalidArgumentException('Command-line arguments must be strings.');
+            }
+
+            if ($index === 0) {
+                continue;
+            }
+
             if (isset(self::FLAG_OPTIONS[$arg])) {
                 $option = self::FLAG_OPTIONS[$arg];
                 $action = $option['action'];
@@ -74,19 +84,19 @@ final class CliParser
             }
 
             if ($arg === '') {
-                throw new \InvalidArgumentException('Empty command-line argument is not valid.');
+                throw new \\InvalidArgumentException('Empty command-line argument is not valid.');
             }
 
             if ($arg[0] !== '-') {
                 if ($result['target'] !== null) {
-                    throw new \InvalidArgumentException(sprintf("Error: Extra argument detected: '%s'.", $arg));
+                    throw new \\InvalidArgumentException(sprintf("Error: Extra argument detected: '%s'.", $arg));
                 }
 
                 $result['target'] = $arg;
                 continue;
             }
 
-            throw new \InvalidArgumentException(sprintf("Unknown option: '%s'.", $arg));
+            throw new \\InvalidArgumentException(sprintf("Unknown option: '%s'.", $arg));
         }
 
         return $result;
