@@ -226,7 +226,7 @@ final class ZipTaskTest extends TestCase
         self::assertTrue(mkdir($root));
         $source = $root . DIRECTORY_SEPARATOR . 'input.txt';
         $output = $root . DIRECTORY_SEPARATOR . 'archive.zip';
-        self::assertSame(13, file_put_contents($source, 'stable content'));
+        self::assertSame(14, file_put_contents($source, 'stable content'));
 
         try {
             // Act
