@@ -65,6 +65,7 @@ final class TaskFactoryTest extends TestCase
         $task = $this->factory->create($taskConfig);
         // Assert
         $this->assertInstanceOf(CreateDirectoryTask::class, $task);
+        $this->assertSame('create_directory', $task->getType());
     }
 
     /**
