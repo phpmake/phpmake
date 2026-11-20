@@ -164,19 +164,27 @@ final class ZipTaskTest extends TestCase
             self::markTestSkipped('ext-zip is not available.');
         }
 
-        $root = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-transaction-' . bin2hex(random_bytes(6));
-        $outside = dirname($root) . DIRECTORY_SEPARATOR . '.phpmake-zip-outside-' . bin2hex(random_bytes(6));
+        // Use the system temporary volume rather than the repository volume.
+        // Some Windows workspaces are mounted on filesystems that cannot host
+        // NTFS junctions, while the system temporary volume supports them.
+        $originalCwd = getcwd();
+        $base = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-zip-transaction-' . bin2hex(random_bytes(6));
+        $root = $base . DIRECTORY_SEPARATOR . 'project';
+        $outside = $base . DIRECTORY_SEPARATOR . 'outside';
+        self::assertTrue(mkdir($base));
         self::assertTrue(mkdir($root));
         self::assertTrue(mkdir($outside));
         $output = $root . DIRECTORY_SEPARATOR . 'archive.zip';
         $link = $root . DIRECTORY_SEPARATOR . 'linked-directory';
-        $original = new \ZipArchive();
-        self::assertTrue($original->open($output, \ZipArchive::CREATE | \ZipArchive::OVERWRITE));
-        self::assertTrue($original->addFromString('preserve.txt', 'original archive'));
-        self::assertTrue($original->close());
-        $this->createDirectoryLink($outside, $link);
 
         try {
+            $original = new \ZipArchive();
+            self::assertTrue($original->open($output, \ZipArchive::CREATE | \ZipArchive::OVERWRITE));
+            self::assertTrue($original->addFromString('preserve.txt', 'original archive'));
+            self::assertTrue($original->close());
+            $this->createDirectoryLink($outside, $link);
+            self::assertTrue(chdir($base));
+
             // Act
             $task = new ZipTask(['source' => $root, 'output' => $output], new Logger(false, true, true));
             self::assertFalse($task->execute(false, true));
@@ -188,6 +196,10 @@ final class ZipTaskTest extends TestCase
             self::assertTrue($preserved->close());
             self::assertSame([], glob($root . DIRECTORY_SEPARATOR . '.phpmake-archive-*') ?: []);
         } finally {
+            if (is_string($originalCwd)) {
+                chdir($originalCwd);
+            }
+
             if (is_link($link) || $this->isDirectoryJunction($link)) {
                 $this->removeDirectoryLink($link);
             }
@@ -202,6 +214,10 @@ final class ZipTaskTest extends TestCase
 
             if (is_dir($outside)) {
                 rmdir($outside);
+            }
+
+            if (is_dir($base)) {
+                rmdir($base);
             }
         }
     }
