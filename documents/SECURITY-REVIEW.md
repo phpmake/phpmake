@@ -38,7 +38,7 @@ The test suite exercises the following security-sensitive behavior:
 - Exercising POSIX descendant cleanup, including descendants that create a new session.
 - Exercising concurrent and partial logger writes.
 
-CI runs Windows process/filesystem tests on PHP 8.3 and 8.5. macOS CI creates a dedicated case-sensitive APFS volume and runs the filesystem suite on PHP 8.3, 8.4, and 8.5. These jobs provide repeatable dynamic regression evidence; results must be checked on the pull request before the changes are considered validated.
+CI runs PHP compatibility tests on Linux and process/filesystem tests on Windows across PHP 8.0–8.5. These jobs provide repeatable dynamic regression evidence; results must be checked on the pull request before the changes are considered validated.
 
 ## Residual risks and recommendations
 
@@ -50,4 +50,4 @@ CI runs Windows process/filesystem tests on PHP 8.3 and 8.5. macOS CI creates a 
 
 ## Validation status
 
-The Windows Job Object and case-sensitive APFS changes are covered by new/expanded automated tests and CI jobs. A successful CI run is required before claiming the dynamic validation is complete. No external penetration test is claimed by this review.
+The Windows Job Object changes are covered by automated regression tests and Windows CI jobs. A successful CI run is required before claiming the dynamic validation is complete. No external penetration test is claimed by this review.

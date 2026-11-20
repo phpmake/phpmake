@@ -25,6 +25,6 @@ return RectorConfig::configure()
     ->withCodeQualityLevel(10)
     ->withCodingStyleLevel(10)
     // Force Rector to use PHP x.x features only.
-    ->withPhpVersion(PhpVersion::PHP_83)
+    ->withPhpVersion(PhpVersion::PHP_80)
     // Import Rector sets relevant for PHP x.x.
-    ->withPhpSets(php83: true);
+    ->withPhpSets(php80: true);

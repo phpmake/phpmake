@@ -15,6 +15,7 @@
         "callable",
         "void",
         "object",
+        "random_bytes",
         "posix_kill",
         "posix_setsid",
         "pcntl_async_signals",

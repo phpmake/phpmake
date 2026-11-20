@@ -20,7 +20,7 @@ use PhpMake\Utilities\Logger;
  * @package    PHPMake
  * @subpackage Task
  */
-final readonly class TaskFactory
+final class TaskFactory
 {
     /**
      * Constructor

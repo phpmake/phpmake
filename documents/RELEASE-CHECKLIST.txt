@@ -5,7 +5,7 @@
 * Update /src/Config.php file.
 * Check/Update composer.json file.
 * Check/Update .github/workflows/default.yml
-* Verify Linux, Windows, and macOS CI jobs.
+* Verify Linux and Windows CI jobs.
 * Verify process-tree timeout tests on Windows and POSIX CI runners.
 * Verify UNC, junction-ancestor, and case-sensitive path-boundary tests.
 * Verify logger partial-write and concurrent-process tests.

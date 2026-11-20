@@ -5,7 +5,7 @@ A: Install via Composer:
 composer require --dev phpmake/phpmake
 
 Q: What runtime requirements does PHPMake have?
-A: PHP 8.3+, Composer 2+, and the `ctype`, `json`, `random`, and `zip` PHP extensions.
+A: PHP 8.0+, Composer 2+, and the `ctype`, `json`, and `zip` PHP extensions.
 
 Q: How do I create a sample build.json?
 A:
@@ -65,7 +65,7 @@ Q: How do I handle circular dependencies?
 A: The tool detects cycles and throws an error.
 
 Q: Which operating systems are supported?
-A: Windows, GNU/Linux, and macOS. Filesystem case handling follows the host filesystem; Windows paths are compared case-insensitively, while macOS volumes may be case-sensitive or case-insensitive.
+A: Windows and GNU/Linux. Filesystem case handling follows the host filesystem; Windows paths are compared case-insensitively, while Linux paths are case-sensitive.
 
 Q: How do I create a custom task?
 A:
@@ -79,7 +79,7 @@ Q: What does silent mode hide?
 A: `--silent` suppresses normal console output. Errors remain visible on standard error (STDERR).
 
 Q: What happens when an external process times out?
-A: PHPMake attempts to terminate the process tree. Windows uses `taskkill /T`; POSIX uses a dedicated process group through ext-posix or the `setsid` and `kill` utilities. If neither POSIX mechanism is available, only the direct process can be terminated. Descendants that deliberately create a new session can escape the original POSIX process group. Windows cleanup also cannot guarantee termination of detached descendants.
+A: PHPMake attempts to terminate the process tree. Windows uses a kill-on-close Job Object; Linux uses a dedicated process group through ext-posix or the `setsid` and `kill` utilities. If neither POSIX mechanism is available, only the direct process can be terminated. Descendants that deliberately create a new session can escape the original POSIX process group. Windows cleanup also cannot guarantee termination of detached descendants.
 
 Q: Where are logs stored?
 A: By default, logs are in the project's root in `build.log`, unless `--no-log` is used. Writes and rotation are protected by a persistent `build.log.lock` file. Logs rotate at 10 MiB and keep up to 5 rotated files (`build.log.1` through `build.log.5`).

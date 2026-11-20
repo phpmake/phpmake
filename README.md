@@ -3,7 +3,7 @@
 A PHP build automation tool using JSON configuration file.
 
 [![current version](https://img.shields.io/packagist/v/phpmake/phpmake.svg)](https://packagist.org/packages/phpmake/phpmake) [![Build and Test](https://github.com/phpmake/phpmake/actions/workflows/default.yml/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/default.yml) [![CodeQL](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql)
-[![PHP](https://img.shields.io/badge/PHP-8.3-617CBE)](https://php.net/) [![issues](https://img.shields.io/github/issues/phpmake/phpmake)](https://github.com/phpmake/phpmake/issues) ![repo size](https://img.shields.io/github/repo-size/phpmake/phpmake) [![GitHub license](https://img.shields.io/github/license/phpmake/phpmake)](LICENSE) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](documents/CONTRIBUTING.txt)
+[![PHP](https://img.shields.io/badge/PHP-8.0%2B-617CBE)](https://php.net/) [![issues](https://img.shields.io/github/issues/phpmake/phpmake)](https://github.com/phpmake/phpmake/issues) ![repo size](https://img.shields.io/github/repo-size/phpmake/phpmake) [![GitHub license](https://img.shields.io/github/license/phpmake/phpmake)](LICENSE) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](documents/CONTRIBUTING.txt)
 
 ![Logo](resources/images/logo.png)
 
@@ -27,7 +27,7 @@ A PHP build automation tool using JSON configuration file.
 
 ## Overview
 
-A lightweight PHP build automation tool inspired by GNU Make and Apache Ant, using JSON configuration files. It supports common tasks like file operations, command execution, and dependency management with cross-platform compatibility. (Windows/Linux/macOS)
+A lightweight PHP build automation tool inspired by GNU Make and Apache Ant, using JSON configuration files. It supports common tasks like file operations, command execution, and dependency management with cross-platform compatibility. (Windows/Linux)
 
 PHPMake provides a modular task architecture, dependency-aware targets, filesystem safeguards, and a command-line interface for repeatable build workflows.
 
@@ -36,7 +36,7 @@ PHPMake provides a modular task architecture, dependency-aware targets, filesyst
 * No third-party PHP package dependencies at runtime; Composer is used for installation and PHP extensions are required.
 * Define build processes in human-readable JSON
 * Specify execution order with dependencies
-* Works on Microsoft Windows, GNU+Linux, and Apple macOS
+* Works on Microsoft Windows and GNU+Linux
 * Built-in tasks:
   * `create_directory` (create directories)
   * `delete` (remove files/directories)
@@ -53,20 +53,20 @@ PHPMake provides a modular task architecture, dependency-aware targets, filesyst
 * `--diagnostics` to show environment info
 * `--init` to create a sample `build.json`
 * CI/CD pipeline integration
-* PHP 8.3+ (active)
+* PHP 8.0+ (active)
 
 ## Requirements
 
-1. PHP >= 8.3
+1. PHP >= 8.0
 2. Composer >= 2
-3. PHP extensions: `ctype`, `json`, `random`, and `zip`
+3. PHP extensions: `ctype`, `json`, and `zip`
 
 ### Versions
 
 | Package version | Branch        | PHP version | Status         |
 |-----------------|---------------|-------------|----------------|
-| dev-main        | `main`        | 8.3+ (CI: 8.3–8.5) | Active         |
-| 2.*             | `main`        | 8.3+ (CI: 8.3–8.5) | Active         |
+| dev-main        | `main`        | 8.0+ (CI: 8.0–8.5) | Active         |
+| 2.*             | `main`        | 8.0+ (CI: 8.0–8.5) | Active         |
 
 * **Active**: Full support
 * **Maintenance**: Bug/Security fixes only
@@ -203,7 +203,7 @@ vendor/bin/phpunit tests/
 | `echo`             | `message` (string)                           | Output message         |
 | `archive`          | `source` (string), `output` (string)         | Archive a file/directory to ZIP |
 
-`exec` passes an argument vector directly to the process (no shell expansion or pipelines). Its default timeout is 300 seconds (maximum 86400); each output stream is capped at 1 MiB. On timeout or output overflow, PHPMake terminates the process tree using Windows `taskkill /T` or a POSIX process group (using the POSIX extension, or the `setsid` and `kill` utilities when available). If neither POSIX mechanism is available, only the direct process can be terminated. On POSIX CLI runtimes with `pcntl`, `SIGINT` and `SIGTERM` request cooperative cancellation and trigger child-process cleanup. Host-process termination on Windows or runtimes without `pcntl` cannot guarantee descendant cleanup. ZIP creation is limited to 10,000 files, 20,000 filesystem entries, a directory depth of 256, 512 MiB per input file, and 2 GiB total uncompressed input. Build configuration files are limited to 2 MiB. Filesystem task paths are normalized and must resolve inside the project working directory. Symlink/junction ancestors that escape the project are rejected. UNC and drive-relative Windows paths are rejected. Destructive tasks reject the project root; `..` is permitted only when the normalized result remains inside CWD.
+`exec` passes an argument vector directly to the process (no shell expansion or pipelines). Its default timeout is 300 seconds (maximum 86400); each output stream is capped at 1 MiB. On Windows, PHPMake uses a kill-on-close Job Object to terminate the target process and remaining descendants. On Linux, it uses a POSIX process group (using the POSIX extension, or the `setsid` and `kill` utilities when available). If neither POSIX mechanism is available, only the direct process can be terminated. On POSIX CLI runtimes with `pcntl`, `SIGINT` and `SIGTERM` request cooperative cancellation and trigger child-process cleanup. Host-process termination on Windows or runtimes without `pcntl` cannot guarantee descendant cleanup. ZIP creation is limited to 10,000 files, 20,000 filesystem entries, a directory depth of 256, 512 MiB per input file, and 2 GiB total uncompressed input. Build configuration files are limited to 2 MiB. Filesystem task paths are normalized and must resolve inside the project working directory. Symlink/junction ancestors that escape the project are rejected. UNC and drive-relative Windows paths are rejected. Destructive tasks reject the project root; `..` is permitted only when the normalized result remains inside CWD.
 
 ## Security considerations
 

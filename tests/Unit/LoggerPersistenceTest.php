@@ -21,7 +21,7 @@ final class LoggerPersistenceTest extends TestCase
         $this->previousDirectory = getcwd();
         $this->temporaryDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR
             . 'phpmake-logger-' . bin2hex(random_bytes(8));
-        self::assertTrue(mkdir($this->temporaryDirectory, 0o777, true));
+        self::assertTrue(mkdir($this->temporaryDirectory, 0777, true));
         self::assertTrue(chdir($this->temporaryDirectory));
     }
 
@@ -248,7 +248,7 @@ final class LockFailureStreamWrapper
     /** Returns wrapper stream metadata. */
     public function stream_stat(): array
     {
-        return ['mode' => 0o100666, 'size' => 0];
+        return ['mode' => 0100666, 'size' => 0];
     }
 }
 
@@ -314,9 +314,9 @@ final class RenameFailureLogStreamWrapper
     private function stat(int $size): array
     {
         return [
-            2 => 0o100666,
+            2 => 0100666,
             7 => $size,
-            'mode' => 0o100666,
+            'mode' => 0100666,
             'size' => $size,
         ];
     }
@@ -343,9 +343,9 @@ final class WriteFailureLogStreamWrapper
     public function url_stat(string $path, int $flags): array
     {
         return [
-            2 => 0o100666,
+            2 => 0100666,
             7 => 0,
-            'mode' => 0o100666,
+            'mode' => 0100666,
             'size' => 0,
         ];
     }
@@ -401,7 +401,7 @@ final class PartialWriteLogStreamWrapper
     /** Returns metadata for an opened virtual stream. */
     public function stream_stat(): array
     {
-        return ['mode' => 0o100666, 'size' => strlen(self::$contents)];
+        return ['mode' => 0100666, 'size' => strlen(self::$contents)];
     }
 
     /** Confirms buffered writes are accepted. */

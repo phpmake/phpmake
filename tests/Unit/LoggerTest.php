@@ -67,7 +67,7 @@ final class LoggerTest extends TestCase
     private function makeTestDir(string $prefix): string
     {
         $dir = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-test-' . $prefix . '-' . uniqid('', true);
-        mkdir($dir, 0o777, true);
+        mkdir($dir, 0777, true);
 
         return $dir;
     }

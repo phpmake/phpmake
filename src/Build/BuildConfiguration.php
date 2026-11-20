@@ -11,7 +11,7 @@ namespace PhpMake\Build;
  * @package    PHPMake
  * @subpackage Build
  */
-final readonly class BuildConfiguration
+final class BuildConfiguration
 {
     /**
      * Constructor

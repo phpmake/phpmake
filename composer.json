@@ -26,10 +26,9 @@
         "source": "https://github.com/phpmake/phpmake"
     },
     "require": {
-        "php": "^8.3",
+        "php": "^8.0",
         "ext-ctype": "*",
         "ext-json": "*",
-        "ext-random": "*",
         "ext-zip": "*"
     },
     "require-dev": {
@@ -39,7 +38,7 @@
         "maglnet/composer-require-checker": "^4.0",
         "overtrue/phplint": "^9.0",
         "phpstan/phpstan": "^2.1",
-        "phpunit/phpunit": "^12.0",
+        "phpunit/phpunit": "^9.6",
         "rector/rector": "^2.0"
     },
     "minimum-stability": "dev",

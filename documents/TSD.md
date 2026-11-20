@@ -9,12 +9,12 @@
 
 | Component | Technology |
 | --- | --- |
-| Programming language | PHP 8.3+ |
+| Programming language | PHP 8.0+ |
 | Dependency management and installation | Composer 2+ |
 | Configuration | JSON |
-| Required PHP extensions | ctype, json, random, zip |
+| Required PHP extensions | ctype, json, zip |
 | Archive support | PHP ZipArchive |
-| Testing | PHPUnit 12 |
+| Testing | PHPUnit 9.6 |
 | Execution interface | CLI |
 | Distribution | Composer / Packagist |
 | CI/CD | GitHub Actions |
@@ -88,12 +88,12 @@ Unknown properties are rejected. The runtime validator and `schema/build-schema.
 
 ## 5. Platform Compatibility
 
-- Supported runtime: PHP 8.3+ with Composer 2+.
-- Required extensions: `ctype`, `json`, `random`, and `zip`.
-- Supported operating systems: Microsoft Windows, GNU/Linux, and macOS.
-- Path comparisons follow host filesystem semantics: Windows is treated as case-insensitive; macOS volumes may be case-sensitive or case-insensitive.
+- Supported runtime: PHP 8.0+ with Composer 2+.
+- Required extensions: `ctype`, `json`, and `zip`.
+- Supported operating systems: Microsoft Windows and GNU/Linux.
+- Path comparisons follow host filesystem semantics: Windows is treated as case-insensitive; Linux paths are case-sensitive.
 - Windows junctions and POSIX symbolic links are treated as path redirection boundaries.
-- Filesystem and process behavior is exercised in Linux, Windows, and macOS CI jobs.
+- Filesystem and process behavior is exercised in Linux and Windows CI jobs.
 
 ## 6. Security and Reliability
 
@@ -117,4 +117,4 @@ Unknown properties are rejected. The runtime validator and `schema/build-schema.
 - Runtime/schema parity tests for all built-in task parameter definitions.
 - PHP syntax, YAML, XML, and JSON validation.
 - Composer manifest, dependency, requirement, normalization, and security checks.
-- CI-based build and test execution on Linux, Windows, and macOS.
+- CI-based build and test execution on Linux and Windows.

@@ -22,7 +22,7 @@ namespace PhpMake\Tests\Smoke {
             ];
 
             // Act
-            $loaded = array_map(class_exists(...), $classes);
+            $loaded = array_map('class_exists', $classes);
 
             // Assert
             self::assertNotContains(false, $loaded);
