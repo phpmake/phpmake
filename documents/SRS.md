@@ -60,10 +60,10 @@ This document specifies the functional and non-functional requirements of PHPMak
 
 ### 3.4 Compatibility
 
-- Active development version must support PHP 8.3 or later.
+- Active development version must support PHP 8.0 or later.
 - Composer 2 or later must be supported.
-- The `ctype`, `json`, `random`, and `zip` PHP extensions must be available.
-- The product targets Windows, Linux, and macOS environments.
+- The `ctype`, `json`, and `zip` PHP extensions must be available.
+- The product targets Microsoft Windows and GNU/Linux environments.
 
 ### 3.5 Maintainability
 

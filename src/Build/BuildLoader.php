@@ -5,7 +5,7 @@ namespace PhpMake\Build;
 /** Loads, validates, and creates typed build configuration objects. */
 final class BuildLoader
 {
-    private const int MAX_BUILD_FILE_BYTES = 2097152;
+    private const MAX_BUILD_FILE_BYTES = 2097152;
 
     /** Reads a build file, validates it, and creates its typed configuration object. */
     public function load(string $buildFile = 'build.json'): BuildConfiguration

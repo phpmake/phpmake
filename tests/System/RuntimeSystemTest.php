@@ -28,7 +28,7 @@ final class RuntimeSystemTest extends TestCase
             . 'phpmake-system-' . bin2hex(random_bytes(8));
 
         self::assertFileExists($this->cliPath);
-        self::assertTrue(mkdir($this->temporaryDirectory, 0o777, true));
+        self::assertTrue(mkdir($this->temporaryDirectory, 0777, true));
     }
 
     /** Removes the isolated workspace after each system test. */

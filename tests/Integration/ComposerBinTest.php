@@ -20,7 +20,7 @@ final class ComposerBinTest extends TestCase
 
         // Assert
         // Act
-        self::assertTrue(mkdir($packageBinDirectory, 0o777, true));
+        self::assertTrue(mkdir($packageBinDirectory, 0777, true));
 
         $autoload = <<<'PHP'
             <?php

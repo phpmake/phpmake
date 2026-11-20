@@ -44,7 +44,6 @@ final class EchoTask extends BaseTask
      *
      * @return string The task type ('echo').
      */
-    #[\Override]
     public function getType(): string
     {
         return 'echo';

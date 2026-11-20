@@ -13,15 +13,15 @@ namespace PhpMake\Tests\System {
         public function testProjectRequiredPhpVersion(): void
         {
             self::assertTrue(
-                version_compare(PHP_VERSION, '8.3.0', '>='),
-                sprintf('PHP 8.3.0 or newer is required; %s is running.', PHP_VERSION)
+                version_compare(PHP_VERSION, '8.0.0', '>='),
+                sprintf('PHP 8.0.0 or newer is required; %s is running.', PHP_VERSION)
             );
         }
 
         /** Checks that required PHP extensions are loaded. */
         public function testProjectRequiredPhpExtensions(): void
         {
-            foreach (['json', 'zip'] as $extension) {
+            foreach (['ctype', 'json', 'zip'] as $extension) {
                 self::assertTrue(extension_loaded($extension), sprintf('Required extension "%s" is not loaded.', $extension));
             }
         }

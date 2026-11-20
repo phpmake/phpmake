@@ -23,7 +23,7 @@ final class CreateDirectoryTask extends BaseTask
         }
 
         error_clear_last();
-        if (@mkdir($dirName, 0o777, true) || is_dir($dirName)) {
+        if (@mkdir($dirName, 0777, true) || is_dir($dirName)) {
             $this->logger->debug(sprintf("Created directory '%s'.", $dirName));
             return true;
         }
@@ -45,7 +45,6 @@ final class CreateDirectoryTask extends BaseTask
     }
 
     /** Returns the create_directory task identifier. */
-    #[\Override]
     public function getType(): string
     {
         return 'create_directory';

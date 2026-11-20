@@ -7,7 +7,7 @@ use PhpMake\Task\BaseTask;
 /** Runs an external process without invoking a command shell. */
 final class ExecTask extends BaseTask
 {
-    private const int MAX_CAPTURE_BYTES = 1048576;
+    private const MAX_CAPTURE_BYTES = 1048576;
 
     /** Starts the configured process, captures output, and enforces its timeout. */
     protected function runTask(bool $debug, bool $silent): bool
@@ -30,7 +30,7 @@ final class ExecTask extends BaseTask
 
         $argv = array_merge($argv, array_map(static fn($arg): string => (string) $arg, $args));
         if ($this->logger->isDebugEnabled()) {
-            $this->logger->debug('Executing process: ' . implode(' ', array_map(escapeshellarg(...), $argv)));
+            $this->logger->debug('Executing process: ' . implode(' ', array_map('escapeshellarg', $argv)));
         }
 
         $processOptions = ['bypass_shell' => true];
@@ -465,7 +465,6 @@ final class ExecTask extends BaseTask
         return false;
     }
 
-    #[\Override]
     /** Returns the exec task identifier. */
     public function getType(): string
     {

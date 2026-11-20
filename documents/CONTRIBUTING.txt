@@ -16,5 +16,4 @@ All kinds of contributions are welcome. If you feel like contributing, fork the 
 * Ensure contributions work across:
   * Microsoft Windows
   * GNU/Linux
-  * Apple macOS (Intel/Apple Silicon)
 * Use UTF-8 for all text assets.

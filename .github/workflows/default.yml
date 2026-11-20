@@ -163,7 +163,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-version: ['8.3', '8.4', '8.5']
+        php-version: ['8.0', '8.1', '8.2', '8.3', '8.4', '8.5']
 
     steps:
       - name: Checkout project
@@ -198,7 +198,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-version: ['8.3', '8.5']
+        php-version: ['8.0', '8.1', '8.2', '8.3', '8.4', '8.5']
 
     steps:
       - name: Checkout project
@@ -219,68 +219,3 @@ jobs:
 
       - name: Run PHPUnit tests
         run: composer test
-
-  macos-tests:
-    name: macOS APFS Filesystem Tests (PHP ${{ matrix.php-version }})
-    runs-on: macos-latest
-    continue-on-error: false
-    strategy:
-      fail-fast: false
-      matrix:
-        php-version: ['8.3', '8.4', '8.5']
-
-    steps:
-      - name: Checkout project
-        uses: actions/checkout@v7
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php-version }}
-          extensions: zip
-          tools: composer:v2
-          ini-values: >-
-            memory_limit=256M, zend.assertions=1,
-            error_reporting=-1, display_errors=On
-
-      - name: Create case-sensitive APFS test volume
-        shell: bash
-        run: |
-          set -euo pipefail
-          volume="$RUNNER_TEMP/phpmake-case-sensitive.sparsebundle"
-          mount="$RUNNER_TEMP/phpmake-case-sensitive"
-          mkdir -p "$mount"
-          hdiutil create -type SPARSEBUNDLE -fs "Case-sensitive APFS" -size 2g \
-            -volname PHPMakeCaseSensitive "$volume"
-          hdiutil attach -nobrowse -mountpoint "$mount" "$volume"
-          echo "PHPMAKE_APFS_MOUNT=$mount" >> "$GITHUB_ENV"
-          echo "PHPMAKE_APFS_VOLUME=$volume" >> "$GITHUB_ENV"
-
-      - name: Install and test on case-sensitive APFS
-        shell: bash
-        run: |
-          set -euo pipefail
-          project="$PHPMAKE_APFS_MOUNT/PHPMake"
-          mkdir -p "$project"
-          ditto "$GITHUB_WORKSPACE" "$project"
-          cd "$project"
-
-          touch "$PHPMAKE_APFS_MOUNT/.phpmake-case-probe"
-          if [ -e "$PHPMAKE_APFS_MOUNT/.PHPMAKE-CASE-PROBE" ]; then
-            echo "The APFS test volume is not case-sensitive." >&2
-            exit 1
-          fi
-          rm "$PHPMAKE_APFS_MOUNT/.phpmake-case-probe"
-
-          composer install --no-interaction --no-progress --prefer-dist
-          PHPMAKE_TEST_ROOT="$project/.phpmake-test-tmp" composer test
-
-      - name: Detach case-sensitive APFS test volume
-        if: always()
-        shell: bash
-        run: |
-          if [ -n "${PHPMAKE_APFS_MOUNT:-}" ]; then
-            hdiutil detach "$PHPMAKE_APFS_MOUNT" -quiet || true
-          fi
-          rm -rf "$RUNNER_TEMP/phpmake-case-sensitive" \
-            "$RUNNER_TEMP/phpmake-case-sensitive.sparsebundle"

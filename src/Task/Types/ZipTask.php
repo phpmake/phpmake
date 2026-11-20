@@ -8,15 +8,15 @@ use ZipArchive;
 /** Creates ZIP archives transactionally while rejecting symbolic links. */
 final class ZipTask extends BaseTask
 {
-    private const int MAX_ARCHIVE_FILES = 10000;
+    private const MAX_ARCHIVE_FILES = 10000;
 
-    private const int MAX_ARCHIVE_ENTRIES = 20000;
+    private const MAX_ARCHIVE_ENTRIES = 20000;
 
-    private const int MAX_ARCHIVE_DEPTH = 256;
+    private const MAX_ARCHIVE_DEPTH = 256;
 
-    private const int MAX_ARCHIVE_FILE_BYTES = 536870912;
+    private const MAX_ARCHIVE_FILE_BYTES = 536870912;
 
-    private const int MAX_ARCHIVE_TOTAL_BYTES = 2147483648;
+    private const MAX_ARCHIVE_TOTAL_BYTES = 2147483648;
 
     /** Creates the configured archive and preserves an existing output on failure. */
     protected function runTask(bool $debug, bool $silent): bool
@@ -38,7 +38,7 @@ final class ZipTask extends BaseTask
         }
 
         $outputDir = dirname($output);
-        if (!is_dir($outputDir) && !@mkdir($outputDir, 0o777, true) && !is_dir($outputDir)) {
+        if (!is_dir($outputDir) && !@mkdir($outputDir, 0777, true) && !is_dir($outputDir)) {
             throw new \RuntimeException(sprintf("Unable to create archive directory '%s'.", $outputDir));
         }
 
@@ -299,7 +299,6 @@ final class ZipTask extends BaseTask
         return PHP_OS_FAMILY === 'Windows' ? strcasecmp($left, $right) === 0 : $left === $right;
     }
 
-    #[\Override]
     /** Returns the archive task identifier. */
     public function getType(): string
     {

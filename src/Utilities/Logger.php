@@ -3,11 +3,11 @@
 namespace PhpMake\Utilities;
 
 /** Writes console messages and optionally persists them to a rotating log. */
-final readonly class Logger
+final class Logger
 {
-    private const int MAX_SIZE = 10 * 1024 * 1024;
+    private const MAX_SIZE = 10 * 1024 * 1024;
 
-    private const int MAX_FILES = 5;
+    private const MAX_FILES = 5;
 
     /** Configures debug output, console silence, file logging, and an optional log path. */
     public function __construct(

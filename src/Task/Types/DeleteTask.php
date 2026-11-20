@@ -115,7 +115,6 @@ final class DeleteTask extends BaseTask
         $this->assertSafePath($path, 'delete path', false);
     }
 
-    #[\Override]
     /** Returns the delete task identifier. */
     public function getType(): string
     {

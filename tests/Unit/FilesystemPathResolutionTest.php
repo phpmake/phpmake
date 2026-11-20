@@ -38,8 +38,8 @@ final class FilesystemPathResolutionTest extends TestCase
         $this->base = $testRoot . DIRECTORY_SEPARATOR . 'phpmake-path-resolution-' . bin2hex(random_bytes(8));
         $this->root = $this->base . DIRECTORY_SEPARATOR . 'project';
         $this->outside = $this->base . DIRECTORY_SEPARATOR . 'outside';
-        self::assertTrue(mkdir($this->root, 0o777, true));
-        self::assertTrue(mkdir($this->outside . DIRECTORY_SEPARATOR . 'subdir', 0o777, true));
+        self::assertTrue(mkdir($this->root, 0777, true));
+        self::assertTrue(mkdir($this->outside . DIRECTORY_SEPARATOR . 'subdir', 0777, true));
         self::assertTrue(chdir($this->root));
 
         $link = $this->root . DIRECTORY_SEPARATOR . 'link';
@@ -88,7 +88,7 @@ final class FilesystemPathResolutionTest extends TestCase
         self::assertFileDoesNotExist($this->outside . DIRECTORY_SEPARATOR . 'archive.zip');
     }
 
-    /** Uses canonical filesystem spelling instead of assuming macOS is case-insensitive. */
+    /** Uses canonical filesystem spelling to follow the mounted volume's case semantics. */
     public function testAbsolutePathCaseHandlingFollowsMountedVolume(): void
     {
         // Arrange

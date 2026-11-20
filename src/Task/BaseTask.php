@@ -195,8 +195,8 @@ abstract class BaseTask implements TaskInterface
         $cwd = rtrim($cwd, DIRECTORY_SEPARATOR);
         $prefix = ($cwd === '' ? DIRECTORY_SEPARATOR : $cwd . DIRECTORY_SEPARATOR);
         // Existing components have already been canonicalized by realpath().
-        // A case-sensitive comparison is therefore correct on both sensitive
-        // and insensitive Windows/macOS volumes.
+        // Canonical paths and filesystem identity avoid assuming a platform-wide
+        // case policy across Windows and Linux filesystems.
         $matches = str_starts_with($path, $prefix);
         if (!$this->pathsEqual($path, $cwd) && !$matches) {
             throw new \InvalidArgumentException(sprintf("Safety Violation: Path for %s escapes project directory: '%s'.", $label, $path));

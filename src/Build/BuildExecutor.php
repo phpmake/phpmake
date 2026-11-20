@@ -16,7 +16,7 @@ use PhpMake\Task\TaskExecutor;
  * @package    PHPMake
  * @subpackage Build
  */
-final readonly class BuildExecutor
+final class BuildExecutor
 {
     /**
      * Constructor
