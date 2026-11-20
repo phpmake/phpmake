@@ -108,7 +108,7 @@ final class CopyTask extends BaseTask
 
         try {
             AtomicFilePublisher::publish($temporary, $destPath);
-        } catch (\\Throwable $exception) {
+        } catch (\Throwable $exception) {
             $this->logger->error($exception->getMessage());
             return false;
         }
