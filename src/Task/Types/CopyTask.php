@@ -169,7 +169,7 @@ final class CopyTask extends BaseTask
         }
 
         if (!$this->copyDirectory($source, $staging)) {
-            if (!$this->removeCreatedTree($staging)) {
+            if (!FilesystemTree::remove($staging)) {
                 $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
             }
 
@@ -179,7 +179,7 @@ final class CopyTask extends BaseTask
         $hadDestination = file_exists($destination);
         if ($hadDestination && !@rename($destination, $backup)) {
             $this->logger->error(sprintf("Unable to stage existing destination '%s'.", $destination));
-            if (!$this->removeCreatedTree($staging)) {
+            if (!FilesystemTree::remove($staging)) {
                 $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
             }
 
@@ -196,7 +196,7 @@ final class CopyTask extends BaseTask
                 ));
             }
 
-            if (!$this->removeCreatedTree($staging)) {
+            if (!FilesystemTree::remove($staging)) {
                 $this->logger->error(sprintf("Unable to remove incomplete staging tree '%s'.", $staging));
             }
 
