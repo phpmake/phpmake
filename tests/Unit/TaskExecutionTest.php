@@ -13,6 +13,13 @@ use PHPUnit\Framework\TestCase;
 /** Tests execution results for built-in task types. */
 final class TaskExecutionTest extends TestCase
 {
+    /** Initializes the logger shared by task execution tests. */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->logger = new Logger(false, true, true);
+    }
+
     private Logger $logger;
 
 
