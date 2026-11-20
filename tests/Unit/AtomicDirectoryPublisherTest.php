@@ -107,7 +107,7 @@ final class AtomicDirectoryPublisherTest extends TestCase
         // Arrange
         $staging = $this->base . DIRECTORY_SEPARATOR . 'staging';
         $target = $this->base . DIRECTORY_SEPARATOR . 'target';
-        $destination = $this->base . DIRECTORY_SEPARATOR . 'destination-link';
+        $destination = $this->base . DIRECTORY_SEPARATOR . 'destination-link' . DIRECTORY_SEPARATOR;
         self::assertTrue(mkdir($staging));
         self::assertTrue(mkdir($target));
         self::assertSame(4, file_put_contents($target . DIRECTORY_SEPARATOR . 'keep.txt', 'keep'));
