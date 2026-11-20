@@ -61,7 +61,7 @@ final class TaskFactory
             'exec' => new ExecTask($params, $this->logger),
             'echo' => new EchoTask($params, $this->logger),
             'archive' => new ZipTask($params, $this->logger),
-            default => throw new \Exception(sprintf("Unknown task type '%s' in build configuration.", $type)),
+            default => throw new \InvalidArgumentException(sprintf("Unknown task type '%s' in build configuration.", $type)),
         };
     }
 }
