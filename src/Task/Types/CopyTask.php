@@ -189,22 +189,22 @@ final class CopyTask extends BaseTask
         return true;
     }
 
-    /** Rejects destination paths that resolve to the source or one of its descendants. */
+    /** Rejects source and destination paths that overlap in either direction. */
     private function destinationIsWithinSource(string $source, string $destination): bool
     {
         $sourceReal = realpath($source);
         $destinationReal = $this->resolvePathForComparison($destination);
         if ($sourceReal === false || $destinationReal === null) {
-            // Refuse uncertain paths rather than risk an unbounded recursive copy.
+            // Refuse uncertain paths rather than risk recursive or ambiguous copies.
             return true;
         }
 
         $sourcePath = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $sourceReal), DIRECTORY_SEPARATOR);
         $destinationPath = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $destinationReal), DIRECTORY_SEPARATOR);
-        // Both paths have canonical existing prefixes. Preserve their case:
-        // case-insensitive comparison is wrong for case-sensitive Windows volumes.
+
         return $destinationPath === $sourcePath
-            || str_starts_with($destinationPath, $sourcePath . DIRECTORY_SEPARATOR);
+            || str_starts_with($destinationPath, $sourcePath . DIRECTORY_SEPARATOR)
+            || str_starts_with($sourcePath, $destinationPath . DIRECTORY_SEPARATOR);
     }
 
     /** Resolves a destination using the same symlink-aware rules as task validation. */
