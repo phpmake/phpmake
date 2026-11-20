@@ -187,7 +187,5 @@ class BaseTaskTestProbe extends BaseTask
         return true;
     }
 
-    protected function validateParams(): void
-    {
-    }
+    protected function validateParams(): void {}
 }
