@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace PhpMake\\Tests\\Unit;
+namespace PhpMake\Tests\Unit;
 
-use PhpMake\\Task\\Types\\EchoTask;
-use PhpMake\\Utilities\\Logger;
-use PHPUnit\\Framework\\TestCase;
+use PhpMake\Task\Types\EchoTask;
+use PhpMake\Utilities\Logger;
+use PHPUnit\Framework\TestCase;
 
 /** Tests the echo task's user-visible output contract. */
 final class EchoTaskOutputTest extends TestCase
