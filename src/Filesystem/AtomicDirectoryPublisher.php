@@ -26,7 +26,11 @@ final class AtomicDirectoryPublisher
             throw new \InvalidArgumentException('Staging path must be a directory and must not be a symbolic link.');
         }
 
-        if (FilesystemTree::isLink($destination)) {\n            throw new \InvalidArgumentException('Destination must not be a symbolic link or junction.');\n        }\n\n        $hadDestination = file_exists($destination);
+        if (FilesystemTree::isLink($destination)) {
+            throw new \InvalidArgumentException('Destination must not be a symbolic link or junction.');
+        }
+
+        $hadDestination = file_exists($destination);
         $backup = $destination . '.phpmake-' . bin2hex(random_bytes(8)) . '.backup';
 
         if ($hadDestination && !@rename($destination, $backup)) {
