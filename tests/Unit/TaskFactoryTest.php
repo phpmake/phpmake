@@ -29,13 +29,6 @@ final class TaskFactoryTest extends TestCase
         $this->factory = new TaskFactory($this->logger);
     }
 
-    private TaskFactory $factory;
-
-    private Logger $logger;
-
-
-
-
     /**
      *
      *
