@@ -22,7 +22,7 @@ final class TaskFactory
         $configuration = TaskConfiguration::fromArray($taskConfig);
         $definition = TaskDefinitionRegistry::find($configuration->getType());
         if ($definition === null) {
-            throw new \\InvalidArgumentException(sprintf(
+            throw new \InvalidArgumentException(sprintf(
                 "Unknown task type '%s' in build configuration.",
                 $configuration->getType()
             ));
