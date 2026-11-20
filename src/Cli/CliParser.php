@@ -109,7 +109,7 @@ final class CliParser
      */
     public static function showHelp(): void
     {
-        echo <<<HELP
+        (new ConsoleOutput())->stdout(<<<HELP
             Usage: phpmake [Options] [target]
 
             Options:
@@ -123,33 +123,31 @@ final class CliParser
                 --init              Create a sample build.json.
 
             [target]                 Target to execute (default: build.json's default)
-            HELP;
+            HELP
+        );
     }
 
-    /**
-     * Show tool version.
-     *
-     * Displays version number of PHPMake.
-     */
+    /** Displays the PHPMake version. */
     public static function showVersion(): void
     {
-        echo Config::TOOL_VERSION . PHP_EOL;
+        (new ConsoleOutput())->stdout(Config::TOOL_VERSION . PHP_EOL);
     }
 
-    /**
-     * Show system diagnostics.
-     *
-     * Displays diagnostic information such as PHP version, OS, and loaded extensions.
-     */
+    /** Displays runtime and extension diagnostics. */
     public static function showDiagnostics(): void
     {
-        echo "Diagnostics information:\n";
-        echo " PHP: " . phpversion() . " " . (PHP_INT_SIZE * 8) . "-bit\n";
-        echo " OS: " . PHP_OS . "\n";
-        echo " Loaded extensions:\n";
+        $lines = [
+            'Diagnostics information:',
+            ' PHP: ' . phpversion() . ' ' . (PHP_INT_SIZE * 8) . '-bit',
+            ' OS: ' . PHP_OS,
+            ' Loaded extensions:',
+        ];
 
-        foreach (get_loaded_extensions() as $ext) {
-            echo sprintf('  - %s%s', $ext, PHP_EOL);
+        foreach (get_loaded_extensions() as $extension) {
+            $lines[] = '  - ' . $extension;
         }
+
+        (new ConsoleOutput())->stdout(implode(PHP_EOL, $lines) . PHP_EOL);
     }
+
 }
