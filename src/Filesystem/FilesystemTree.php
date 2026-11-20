@@ -63,6 +63,10 @@ final class FilesystemTree
             return false;
         }
 
+        if (self::isLink($path)) {
+            return self::removeLink($path);
+        }
+
         $resolvedPath = realpath($path);
         $currentDirectory = realpath(getcwd());
         if ($resolvedPath !== false && (
@@ -70,10 +74,6 @@ final class FilesystemTree
             || ($currentDirectory !== false && FilesystemIdentity::sameFile($resolvedPath, $currentDirectory))
         )) {
             return false;
-        }
-
-        if (self::isLink($path)) {
-            return self::removeLink($path);
         }
 
         if (!is_dir($path)) {
