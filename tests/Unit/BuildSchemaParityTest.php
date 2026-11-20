@@ -21,6 +21,22 @@ final class BuildSchemaParityTest extends TestCase
         $definitions = $schema['definitions'];
         $taskTypeEnum = $schema['properties']['targets']['patternProperties']
             ['^(?=.*\\S).+$']['properties']['tasks']['items']['properties']['type']['enum'];
+        $registry = TaskDefinitionRegistry::all();
+        self::assertEqualsCanonicalizing(array_keys($definitions), array_keys($registry));
+
+        foreach ($definitions as $taskType => $definition) {
+            self::assertEqualsCanonicalizing(
+                $definition['required'],
+                $registry[$taskType]['required'],
+                sprintf('%s required parameters must match the JSON Schema.', $taskType)
+            );
+            self::assertEqualsCanonicalizing(
+                array_keys($definition['properties']),
+                $registry[$taskType]['allowed'],
+                sprintf('%s allowed parameters must match the JSON Schema.', $taskType)
+            );
+        }
+
         $validator = new BuildValidator();
 
         // Assert
