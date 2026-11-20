@@ -2,6 +2,8 @@
 
 namespace PhpMake\Utilities;
 
+use PhpMake\Cli\ConsoleOutput;
+
 /** Writes console messages and optionally persists them to a rotating log. */
 final class Logger
 {
