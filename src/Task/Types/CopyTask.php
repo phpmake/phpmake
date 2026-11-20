@@ -2,6 +2,7 @@
 
 namespace PhpMake\Task\Types;
 
+use PhpMake\Filesystem\FilesystemIdentity;
 use PhpMake\Task\BaseTask;
 
 /** Copies files and directory trees without following symbolic links. */
@@ -50,7 +51,7 @@ final class CopyTask extends BaseTask
             return false;
         }
 
-        if ($this->pathsReferToSameFile($source, $dest)) {
+        if (FilesystemIdentity::sameFile($source, $dest)) {
             $this->logger->error(sprintf("Refusing to copy '%s' onto the same filesystem entry '%s'.", $source, $dest));
             return false;
         }
@@ -167,18 +168,6 @@ final class CopyTask extends BaseTask
         return true;
     }
 
-    /** Compares existing filesystem entries by device and inode. */
-    private function pathsReferToSameFile(string $left, string $right): bool
-    {
-        clearstatcache(true, $left);
-        clearstatcache(true, $right);
-        $leftStat = @stat($left);
-        $rightStat = @stat($right);
-        return is_array($leftStat)
-            && is_array($rightStat)
-            && $leftStat['dev'] === $rightStat['dev']
-            && $leftStat['ino'] === $rightStat['ino'];
-    }
 
     /** Recursively copies a directory and stops on the first failure. */
     private function copyDirectory(string $source, string $dest): bool
