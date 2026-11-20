@@ -450,4 +450,48 @@ final class PathSafetyTest extends TestCase
         new DeleteTask(['path' => $extendedPath], $this->logger);
     }
 
+
+
+    /** Rejects a dangling directory junction used as a path ancestor. */
+    public function testRejectsDanglingDirectoryLinkAncestor(): void
+    {
+        // Arrange
+        $project = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-dangling-link-' . bin2hex(random_bytes(6));
+        $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-dangling-target-' . bin2hex(random_bytes(6));
+        $movedOutside = $outside . '-moved';
+        $link = $project . DIRECTORY_SEPARATOR . 'linked';
+        self::assertTrue(mkdir($project));
+        self::assertTrue(mkdir($outside));
+        self::assertSame(6, file_put_contents($outside . DIRECTORY_SEPARATOR . 'secret.txt', 'secret'));
+        $this->createDirectoryLink($outside, $link);
+        self::assertTrue(rename($outside, $movedOutside));
+
+        try {
+            // Assert
+            $this->expectException(\InvalidArgumentException::class);
+            $this->expectExceptionMessage('Safety Violation');
+
+            // Act
+            new DeleteTask(['path' => $link . DIRECTORY_SEPARATOR . 'secret.txt'], $this->logger);
+        } finally {
+            if (PHP_OS_FAMILY === 'Windows') {
+                $this->removeDirectoryLink($link);
+            } elseif (is_link($link)) {
+                unlink($link);
+            }
+
+            if (is_file($movedOutside . DIRECTORY_SEPARATOR . 'secret.txt')) {
+                unlink($movedOutside . DIRECTORY_SEPARATOR . 'secret.txt');
+            }
+
+            if (is_dir($movedOutside)) {
+                rmdir($movedOutside);
+            }
+
+            if (is_dir($project)) {
+                rmdir($project);
+            }
+        }
+    }
+
 }
