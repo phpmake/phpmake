@@ -91,11 +91,22 @@ final class ZipTask extends BaseTask
             throw new \RuntimeException(sprintf("Failed to create temporary ZIP file '%s' (code %s).", $temporaryArchive, (string) $opened));
         }
 
+        $snapshots = [];
         try {
             $fileCount = 0;
             $entryCount = 0;
             $totalBytes = 0;
-            $this->addFilesToZip($zip, $sourceReal, [$outputReal, $temporaryArchive], $fileCount, $entryCount, $totalBytes);
+            $excludedPaths = [$outputReal, $temporaryArchive];
+            $this->addFilesToZip(
+                $zip,
+                $sourceReal,
+                $excludedPaths,
+                $outputParent,
+                $snapshots,
+                $fileCount,
+                $entryCount,
+                $totalBytes
+            );
             if (!$zip->close()) {
                 throw new \RuntimeException(sprintf("Failed to finalize ZIP file '%s'.", $temporaryArchive));
             }
@@ -103,6 +114,10 @@ final class ZipTask extends BaseTask
             $zip->close();
             @unlink($temporaryArchive);
             throw $throwable;
+        } finally {
+            foreach ($snapshots as $snapshot) {
+                @unlink($snapshot);
+            }
         }
 
         $this->publishArchive($temporaryArchive, $outputReal);
@@ -124,7 +139,9 @@ final class ZipTask extends BaseTask
     private function addFilesToZip(
         ZipArchive $zip,
         string $source,
-        array $excludedPaths,
+        array &$excludedPaths,
+        string $snapshotDirectory,
+        array &$snapshots,
         int &$fileCount,
         int &$entryCount,
         int &$totalBytes
@@ -142,7 +159,16 @@ final class ZipTask extends BaseTask
             }
 
             ++$entryCount;
-            $this->addArchiveFile($zip, $source, basename($source), $fileCount, $totalBytes);
+            $this->addArchiveFile(
+                $zip,
+                $source,
+                basename($source),
+                $snapshotDirectory,
+                $excludedPaths,
+                $snapshots,
+                $fileCount,
+                $totalBytes
+            );
             return;
         }
 
@@ -189,6 +215,9 @@ final class ZipTask extends BaseTask
                 $zip,
                 $real,
                 str_replace(DIRECTORY_SEPARATOR, '/', $relative),
+                $snapshotDirectory,
+                $excludedPaths,
+                $snapshots,
                 $fileCount,
                 $totalBytes
             );
@@ -200,39 +229,147 @@ final class ZipTask extends BaseTask
         ZipArchive $zip,
         string $source,
         string $archivePath,
+        string $snapshotDirectory,
+        array &$excludedPaths,
+        array &$snapshots,
         int &$fileCount,
         int &$totalBytes
     ): void {
-        $size = @filesize($source);
-        if ($size === false) {
-            throw new \RuntimeException(sprintf("Unable to determine size of archive input '%s'.", $source));
+        if ($this->isSymbolicLinkOrJunction($source)) {
+            throw new \RuntimeException(sprintf("Refusing to archive symlink '%s'.", $source));
         }
 
-        if ($size > self::MAX_ARCHIVE_FILE_BYTES) {
-            throw new \RuntimeException(sprintf(
-                "Archive input '%s' exceeds the per-file limit of %d bytes.",
-                $source,
-                self::MAX_ARCHIVE_FILE_BYTES
-            ));
+        $sourceStat = @lstat($source);
+        if (!is_array($sourceStat) || !is_file($source)) {
+            throw new \RuntimeException(sprintf("Archive input '%s' is not a regular file.", $source));
         }
 
-        if ($fileCount >= self::MAX_ARCHIVE_FILES) {
-            throw new \RuntimeException(sprintf('Archive exceeds the maximum of %d files.', self::MAX_ARCHIVE_FILES));
+        $input = @fopen($source, 'rb');
+        if (!is_resource($input)) {
+            throw new \RuntimeException(sprintf("Unable to open archive input '%s'.", $source));
         }
 
-        if ($size > self::MAX_ARCHIVE_TOTAL_BYTES - $totalBytes) {
-            throw new \RuntimeException(sprintf(
-                'Archive exceeds the maximum uncompressed size of %d bytes.',
-                self::MAX_ARCHIVE_TOTAL_BYTES
-            ));
-        }
+        $snapshot = null;
+        $output = null;
+        try {
+            $openedStat = @fstat($input);
+            if (!is_array($openedStat)
+                || !isset($sourceStat['dev'], $sourceStat['ino'], $openedStat['dev'], $openedStat['ino'])
+                || $sourceStat['dev'] !== $openedStat['dev']
+                || $sourceStat['ino'] !== $openedStat['ino']) {
+                throw new \RuntimeException(sprintf("Archive input '%s' changed while it was being opened.", $source));
+            }
 
-        if (!$zip->addFile($source, $archivePath)) {
-            throw new \RuntimeException(sprintf("Unable to add '%s' to archive.", $source));
-        }
+            $size = $openedStat['size'];
+            if (!is_int($size) || $size < 0) {
+                throw new \RuntimeException(sprintf("Unable to determine size of archive input '%s'.", $source));
+            }
 
-        ++$fileCount;
-        $totalBytes += $size;
+            if ($size > self::MAX_ARCHIVE_FILE_BYTES) {
+                throw new \RuntimeException(sprintf(
+                    "Archive input '%s' exceeds the per-file limit of %d bytes.",
+                    $source,
+                    self::MAX_ARCHIVE_FILE_BYTES
+                ));
+            }
+
+            if ($fileCount >= self::MAX_ARCHIVE_FILES) {
+                throw new \RuntimeException(sprintf('Archive exceeds the maximum of %d files.', self::MAX_ARCHIVE_FILES));
+            }
+
+            $remainingBytes = self::MAX_ARCHIVE_TOTAL_BYTES - $totalBytes;
+            if ($size > $remainingBytes) {
+                throw new \RuntimeException(sprintf(
+                    'Archive exceeds the maximum uncompressed size of %d bytes.',
+                    self::MAX_ARCHIVE_TOTAL_BYTES
+                ));
+            }
+
+            $snapshot = @tempnam($snapshotDirectory, '.phpmake-archive-input-');
+            if ($snapshot === false || dirname($snapshot) !== $snapshotDirectory) {
+                if (is_string($snapshot)) {
+                    @unlink($snapshot);
+                }
+
+                throw new \RuntimeException(sprintf("Unable to create archive snapshot for '%s'.", $source));
+            }
+
+            $output = @fopen($snapshot, 'wb');
+            if (!is_resource($output)) {
+                throw new \RuntimeException(sprintf("Unable to write archive snapshot for '%s'.", $source));
+            }
+
+            $limit = min(self::MAX_ARCHIVE_FILE_BYTES, $remainingBytes);
+            $copied = 0;
+            while (!feof($input)) {
+                $readLength = min(1048576, $limit - $copied + 1);
+                $chunk = @fread($input, $readLength);
+                if ($chunk === false) {
+                    throw new \RuntimeException(sprintf("Unable to read archive input '%s'.", $source));
+                }
+
+                if ($chunk === '') {
+                    break;
+                }
+
+                $chunkLength = strlen($chunk);
+                if ($chunkLength > $limit - $copied) {
+                    throw new \RuntimeException(sprintf("Archive input '%s' changed beyond its configured size limit.", $source));
+                }
+
+                $offset = 0;
+                while ($offset < $chunkLength) {
+                    $written = @fwrite($output, substr($chunk, $offset));
+                    if ($written === false || $written === 0) {
+                        throw new \RuntimeException(sprintf("Unable to write archive snapshot for '%s'.", $source));
+                    }
+
+                    $offset += $written;
+                }
+
+                $copied += $chunkLength;
+            }
+
+            $afterStat = @fstat($input);
+            $currentPathStat = @lstat($source);
+            if (!is_array($afterStat) || !is_array($currentPathStat)
+                || !isset($currentPathStat['dev'], $currentPathStat['ino'])
+                || $copied !== $size
+                || $afterStat['size'] !== $openedStat['size']
+                || $afterStat['mtime'] !== $openedStat['mtime']
+                || $afterStat['ctime'] !== $openedStat['ctime']
+                || $currentPathStat['dev'] !== $openedStat['dev']
+                || $currentPathStat['ino'] !== $openedStat['ino']
+                || $this->isSymbolicLinkOrJunction($source)) {
+                throw new \RuntimeException(sprintf("Archive input '%s' changed while it was being snapshotted.", $source));
+            }
+
+            if (!fclose($output)) {
+                $output = null;
+                throw new \RuntimeException(sprintf("Unable to close archive snapshot for '%s'.", $source));
+            }
+
+            $output = null;
+
+            if (!$zip->addFile($snapshot, $archivePath)) {
+                throw new \RuntimeException(sprintf("Unable to add '%s' to archive.", $source));
+            }
+
+            $snapshots[] = $snapshot;
+            $excludedPaths[] = $snapshot;
+            $snapshot = null;
+            ++$fileCount;
+            $totalBytes += $copied;
+        } finally {
+            if (is_resource($output)) {
+                fclose($output);
+            }
+
+            fclose($input);
+            if (is_string($snapshot)) {
+                @unlink($snapshot);
+            }
+        }
     }
 
 

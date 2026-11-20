@@ -126,8 +126,13 @@ final class CopyTask extends BaseTask
         $this->assertSafePath($source, 'copy source');
         $this->assertSafePath($dest, 'copy destination', false);
 
-        if (!FilesystemTree::copyDirectory($source, $dest)) {
-            $this->logger->error(sprintf("Unable to safely copy directory '%s' to '%s'.", $source, $dest));
+        try {
+            if (!FilesystemTree::copyDirectory($source, $dest)) {
+                $this->logger->error(sprintf("Unable to safely copy directory '%s' to '%s'.", $source, $dest));
+                return false;
+            }
+        } catch (\Throwable $throwable) {
+            $this->logger->error($throwable->getMessage());
             return false;
         }
 
@@ -138,7 +143,7 @@ final class CopyTask extends BaseTask
     /** Copies into a staging tree and publishes it with rollback on failure. */
     private function copyDirectoryTransactionally(string $source, string $destination): bool
     {
-        if ($this->destinationIsWithinSource($source, $destination)) {
+        if ($this->sourceAndDestinationOverlap($source, $destination)) {
             $this->logger->error(sprintf(
                 "Refusing to copy directory '%s' into itself or one of its descendants.",
                 $source
@@ -189,22 +194,22 @@ final class CopyTask extends BaseTask
         return true;
     }
 
-    /** Rejects destination paths that resolve to the source or one of its descendants. */
-    private function destinationIsWithinSource(string $source, string $destination): bool
+    /** Rejects source and destination paths that overlap in either direction. */
+    private function sourceAndDestinationOverlap(string $source, string $destination): bool
     {
         $sourceReal = realpath($source);
         $destinationReal = $this->resolvePathForComparison($destination);
         if ($sourceReal === false || $destinationReal === null) {
-            // Refuse uncertain paths rather than risk an unbounded recursive copy.
+            // Refuse uncertain paths rather than risk recursive or ambiguous copies.
             return true;
         }
 
         $sourcePath = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $sourceReal), DIRECTORY_SEPARATOR);
         $destinationPath = rtrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $destinationReal), DIRECTORY_SEPARATOR);
-        // Both paths have canonical existing prefixes. Preserve their case:
-        // case-insensitive comparison is wrong for case-sensitive Windows volumes.
+
         return $destinationPath === $sourcePath
-            || str_starts_with($destinationPath, $sourcePath . DIRECTORY_SEPARATOR);
+            || str_starts_with($destinationPath, $sourcePath . DIRECTORY_SEPARATOR)
+            || str_starts_with($sourcePath, $destinationPath . DIRECTORY_SEPARATOR);
     }
 
     /** Resolves a destination using the same symlink-aware rules as task validation. */

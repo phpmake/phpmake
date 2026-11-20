@@ -47,7 +47,14 @@ abstract class BaseTask implements TaskInterface
         // Check is_dir() before is_link() to preserve Windows reparse-point
         // metadata for lstat(), matching PHP's junction detection semantics.
         if (!is_dir($path)) {
-            return is_link($path);
+            if (is_link($path)) {
+                return true;
+            }
+
+            // A dangling Windows junction is no longer a directory, but its
+            // reparse-point mode remains visible through lstat().
+            $stat = @lstat($path);
+            return is_array($stat) && (($stat['mode'] & 0xF000) !== 0x8000);
         }
 
         if (is_link($path)) {

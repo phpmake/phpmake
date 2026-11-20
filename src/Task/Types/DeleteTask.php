@@ -71,7 +71,7 @@ final class DeleteTask extends BaseTask
             }
 
             $path = $dir . DIRECTORY_SEPARATOR . $item;
-            $this->assertSafePath($dir, 'delete directory', false);
+            $this->assertSafeDeletePath($path);
             $ok = $this->isSymbolicLinkOrJunction($path) ? $this->removeLink($path) : (!is_dir($path) ? $this->deleteFile($path) : $this->deleteDirectory($path));
             if (!$ok) {
                 return false;
