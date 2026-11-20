@@ -64,10 +64,7 @@ final class ZipTaskTest extends TestCase
     public function testArchiveDoesNotIncludeItselfWhenOutputIsInsideSource(): void
     {
         // Arrange
-        if (!class_exists(\ZipArchive::class)) {
-            // Assert
-            $this->markTestSkipped('ext-zip is not available.');
-        }
+        self::assertTrue(class_exists(\ZipArchive::class), 'ext-zip is a required runtime dependency.');
 
         $root = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-self-' . uniqid('', true);
         mkdir($root);
@@ -101,9 +98,7 @@ final class ZipTaskTest extends TestCase
     public function testArchiveExcludesOutputWhenPathCaseAliasesIt(): void
     {
         // Arrange
-        if (!class_exists(\ZipArchive::class)) {
-            self::markTestSkipped('ext-zip is not available.');
-        }
+        self::assertTrue(class_exists(\ZipArchive::class), 'ext-zip is a required runtime dependency.');
 
         if (!in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true)) {
             self::assertTrue(true, 'Case-variant filesystem test is not applicable on this platform.');
@@ -160,9 +155,7 @@ final class ZipTaskTest extends TestCase
     public function testArchiveFailurePreservesExistingOutput(): void
     {
         // Arrange
-        if (!class_exists(\ZipArchive::class)) {
-            self::markTestSkipped('ext-zip is not available.');
-        }
+        self::assertTrue(class_exists(\ZipArchive::class), 'ext-zip is a required runtime dependency.');
 
         // Use the system temporary volume rather than the repository volume.
         // Some Windows workspaces are mounted on filesystems that cannot host
@@ -226,9 +219,7 @@ final class ZipTaskTest extends TestCase
     public function testArchiveInputLimitPreservesExistingOutput(): void
     {
         // Arrange
-        if (!class_exists(\ZipArchive::class)) {
-            self::markTestSkipped('ext-zip is not available.');
-        }
+        self::assertTrue(class_exists(\ZipArchive::class), 'ext-zip is a required runtime dependency.');
 
         $suffix = bin2hex(random_bytes(8));
         $source = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-oversized-' . $suffix;
