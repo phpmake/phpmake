@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpMake\Tests\Unit;
 
 use PhpMake\Build\BuildValidator;
+use PhpMake\Task\TaskDefinitionRegistry;
 use PHPUnit\Framework\TestCase;
 
 /** Keeps runtime task validation aligned with the published JSON Schema. */
