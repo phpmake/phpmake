@@ -103,7 +103,7 @@ final class DependencyResolverTest extends TestCase
         );
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Dependencies for target');
 
         // Act
@@ -123,7 +123,7 @@ final class DependencyResolverTest extends TestCase
         );
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('invalid dependency');
 
         // Act
