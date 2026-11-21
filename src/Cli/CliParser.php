@@ -115,6 +115,14 @@ final class CliParser
 
         $lines[] = '';
         $lines[] = "[target]                 Target to execute (default: build.json's default)";
+        $lines[] = '';
+        $lines[] = 'Build file: build.json in the current working directory.';
+        $lines[] = 'Examples:';
+        $lines[] = '  phpmake --init';
+        $lines[] = '  phpmake --validate-build';
+        $lines[] = '  phpmake';
+        $lines[] = '  phpmake build --debug';
+        $lines[] = '  phpmake --diagnostics';
 
         (new ConsoleOutput())->stdout(implode(PHP_EOL, $lines) . PHP_EOL);
     }
