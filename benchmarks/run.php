@@ -91,9 +91,30 @@ try {
         $workers[] = $worker;
     }
 
-    foreach ($workers as $worker) {
-        if (proc_close($worker) !== 0) {
-            throw new RuntimeException('A concurrent benchmark worker failed.');
+    try {
+        foreach ($workers as $index => $worker) {
+            $exitCode = proc_close($worker);
+            $workers[$index] = null;
+            if ($exitCode !== 0) {
+                throw new RuntimeException('A concurrent benchmark worker failed.');
+            }
+        }
+    } finally {
+        foreach ($workers as $worker) {
+            if (!is_resource($worker)) {
+                continue;
+            }
+
+            $status = proc_get_status($worker);
+            if ($status['running']) {
+                proc_terminate($worker, 15);
+                usleep(100000);
+                if (proc_get_status($worker)['running']) {
+                    proc_terminate($worker, 9);
+                }
+            }
+
+            proc_close($worker);
         }
     }
 
