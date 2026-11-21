@@ -71,27 +71,27 @@ try {
     $workers = [];
     $concurrency = 4;
     $concurrencyStart = hrtime(true);
-    for ($index = 0; $index < $concurrency; ++$index) {
-        $worker = proc_open(
-            [PHP_BINARY, '-r', $workerCode, $autoload],
-            [
-                0 => ['file', $nullDevice, 'r'],
-                1 => ['file', $nullDevice, 'w'],
-                2 => ['file', $nullDevice, 'w'],
-            ],
-            $pipes,
-            $root,
-            null,
-            ['bypass_shell' => true]
-        );
-        if (!is_resource($worker)) {
-            throw new RuntimeException('Unable to start concurrent benchmark worker.');
+    try {
+        for ($index = 0; $index < $concurrency; ++$index) {
+            $worker = proc_open(
+                [PHP_BINARY, '-r', $workerCode, $autoload],
+                [
+                    0 => ['file', $nullDevice, 'r'],
+                    1 => ['file', $nullDevice, 'w'],
+                    2 => ['file', $nullDevice, 'w'],
+                ],
+                $pipes,
+                $root,
+                null,
+                ['bypass_shell' => true]
+            );
+            if (!is_resource($worker)) {
+                throw new RuntimeException('Unable to start concurrent benchmark worker.');
+            }
+
+            $workers[] = $worker;
         }
 
-        $workers[] = $worker;
-    }
-
-    try {
         foreach ($workers as $index => $worker) {
             $exitCode = proc_close($worker);
             $workers[$index] = null;
