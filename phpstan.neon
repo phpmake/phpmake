@@ -1,5 +1,6 @@
 parameters:
-    level: 2
+    # Keep analysis compatible with the minimum supported runtime.
+    level: 3
     phpVersion: 80000
     paths:
         - src
