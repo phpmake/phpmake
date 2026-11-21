@@ -110,4 +110,26 @@ final class ProcessSupervisorTest extends TestCase
             proc_close($process);
         }
     }
+    /** Returns an empty descendant list when process-table tools are unavailable. */
+    public function testGetDescendantProcessIdsReturnsEmptyWhenPsIsUnavailable(): void
+    {
+        // Arrange
+        $originalPath = getenv('PATH');
+        putenv('PATH=');
+
+        try {
+            // Act
+            $descendants = ProcessSupervisor::getDescendantProcessIds(12345);
+
+            // Assert
+            self::assertSame([], $descendants);
+        } finally {
+            if (is_string($originalPath)) {
+                putenv('PATH=' . $originalPath);
+            } else {
+                putenv('PATH');
+            }
+        }
+    }
+
 }
