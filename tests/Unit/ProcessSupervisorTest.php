@@ -66,7 +66,7 @@ final class ProcessSupervisorTest extends TestCase
             proc_close($process);
             if (is_file($pidFile)) {
                 $childPid = (int) file_get_contents($pidFile);
-                if ($childPid > 0) {
+                if ($childPid > 0 && function_exists('posix_kill')) {
                     @posix_kill($childPid, 9);
                 }
                 unlink($pidFile);
