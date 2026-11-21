@@ -58,10 +58,10 @@ final class WindowsConsoleSignalHandler
     private function dispatch(int $event): bool
     {
         $ctrlC = defined('PHP_WINDOWS_EVENT_CTRL_C')
-            ? (int) constant('PHP_WINDOWS_EVENT_CTRL_C')
+            ? constant('PHP_WINDOWS_EVENT_CTRL_C')
             : self::CTRL_C_EVENT;
         $ctrlBreak = defined('PHP_WINDOWS_EVENT_CTRL_BREAK')
-            ? (int) constant('PHP_WINDOWS_EVENT_CTRL_BREAK')
+            ? constant('PHP_WINDOWS_EVENT_CTRL_BREAK')
             : self::CTRL_BREAK_EVENT;
 
         if ($event === $ctrlC) {
