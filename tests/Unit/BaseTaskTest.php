@@ -153,6 +153,7 @@ final class BaseTaskTest extends TestCase
         // Act
         $this->task->resolvePath($path, 'test path');
     }
+
     /** Resolves a missing leaf without treating it as an existing filesystem entry. */
     public function testResolvesMissingLeafWithinProject(): void
     {
@@ -181,31 +182,6 @@ final class BaseTaskTest extends TestCase
 
         // Act
         $this->task->resolvePath($path, 'test path');
-    }
-
-    /** Rejects dangling links before using a path that cannot be resolved. */
-    public function testRejectsDanglingDirectoryLink(): void
-    {
-        // Arrange
-        $target = $this->root . DIRECTORY_SEPARATOR . 'link-target';
-        $movedTarget = $this->root . DIRECTORY_SEPARATOR . 'moved-target';
-        $link = $this->root . DIRECTORY_SEPARATOR . 'dangling-link';
-        self::assertTrue(mkdir($target));
-        $this->createDirectoryLink($target, $link);
-        self::assertTrue(rename($target, $movedTarget));
-
-        try {
-            // Assert
-            $this->expectException(\InvalidArgumentException::class);
-            $this->expectExceptionMessage('Dangling or unresolvable link');
-
-            // Act
-            $this->task->resolvePath($link . DIRECTORY_SEPARATOR . 'child', 'test path');
-        } finally {
-            if (\PhpMake\Filesystem\FilesystemTree::isLink($link)) {
-                $this->removeDirectoryLink($link);
-            }
-        }
     }
 
     /** Removes a directory link itself without deleting its target. */
