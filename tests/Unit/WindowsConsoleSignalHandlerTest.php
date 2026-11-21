@@ -65,8 +65,7 @@ final class WindowsConsoleSignalHandlerTest extends TestCase
     public function testRegisterAndUnregisterMatchesPlatformCapabilities(): void
     {
         // Arrange
-        $handler = new WindowsConsoleSignalHandler(static function (string $event): void {
-        });
+        $handler = new WindowsConsoleSignalHandler(static function (string $event): void {});
 
         // Act
         $registered = $handler->register();
