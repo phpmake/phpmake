@@ -266,6 +266,7 @@ final class BuildValidatorTest extends TestCase
         // Assert
         self::assertStringContainsString("has no valid 'params' object", implode("\n", $errors));
     }
+
     /** Rejects malformed target metadata, task entries, task types, and exec arguments. */
     public function testRejectsMalformedPropertiesAndTaskEntries(): void
     {
