@@ -115,7 +115,7 @@ final class ExecTask extends BaseTask
 
         try {
             if (PHP_OS_FAMILY === 'Windows' && PHP_SAPI === 'cli') {
-                $windowsControlHandler = new \\PhpMake\\Process\\WindowsConsoleSignalHandler(
+                $windowsControlHandler = new \PhpMake\\Process\\WindowsConsoleSignalHandler(
                     static function (string $event) use (&$cancelledSignal): void {
                         $cancelledSignal = $event;
                     }
@@ -185,7 +185,7 @@ final class ExecTask extends BaseTask
                 pcntl_async_signals($previousAsyncSignals);
             }
 
-            if ($windowsControlHandler instanceof \\PhpMake\\Process\\WindowsConsoleSignalHandler) {
+            if ($windowsControlHandler instanceof \PhpMake\\Process\\WindowsConsoleSignalHandler) {
                 $windowsControlHandler->unregister();
             }
         }
