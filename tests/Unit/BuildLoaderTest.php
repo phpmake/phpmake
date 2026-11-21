@@ -204,7 +204,7 @@ final class BuildLoaderTest extends TestCase
         self::assertFileDoesNotExist($this->buildFile);
 
         // Assert
-        $this->expectException(\\RuntimeException::class);
+        $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('not found or unreadable');
 
         // Act
