@@ -137,11 +137,12 @@ final class CliParserTest extends TestCase
         // Act
         (new CliParser())->parse(['script.php', '--help', '--version']);
     }
+
     /** Rejects non-string command-line arguments. */
     public function testRejectsNonStringArgument(): void
     {
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('arguments must be strings');
 
         // Act
@@ -152,7 +153,7 @@ final class CliParserTest extends TestCase
     public function testRejectsUnknownOption(): void
     {
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Unknown option');
 
         // Act
