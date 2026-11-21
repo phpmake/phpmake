@@ -14,7 +14,6 @@ use PHPUnit\Framework\TestCase;
 final class AtomicPublisherValidationTest extends TestCase
 {
     use DirectoryLinkTestHelper;
-    use DirectoryLinkTestHelper;
 
     private string $base;
 
