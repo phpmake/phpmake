@@ -664,7 +664,7 @@ final class TaskExecutionTest extends TestCase
     public function testTaskExecutorOutputsSuccessfulTaskLifecycle(): void
     {
         // Arrange
-        $config = new \\PhpMake\\Build\\BuildConfiguration(
+        $config = new \PhpMake\Build\\BuildConfiguration(
             'VisibleTest',
             'Visible output contract',
             '1.0.0',
@@ -674,8 +674,8 @@ final class TaskExecutionTest extends TestCase
             ]]]],
             'build'
         );
-        $executor = new \\PhpMake\\Task\\TaskExecutor();
-        $factory = new \\PhpMake\\Task\\TaskFactory($this->logger);
+        $executor = new \PhpMake\Task\\TaskExecutor();
+        $factory = new \PhpMake\Task\\TaskFactory($this->logger);
 
         ob_start();
 
@@ -695,7 +695,7 @@ final class TaskExecutionTest extends TestCase
     public function testTaskExecutorOutputsTaskFailureWhenNotSilent(): void
     {
         // Arrange
-        $config = new \\PhpMake\\Build\\BuildConfiguration(
+        $config = new \PhpMake\Build\\BuildConfiguration(
             'VisibleFailure',
             'Visible failure output',
             '1.0.0',
@@ -705,8 +705,8 @@ final class TaskExecutionTest extends TestCase
             ]]]],
             'build'
         );
-        $executor = new \\PhpMake\\Task\\TaskExecutor();
-        $factory = new \\PhpMake\\Task\\TaskFactory($this->logger);
+        $executor = new \PhpMake\Task\\TaskExecutor();
+        $factory = new \PhpMake\Task\\TaskFactory($this->logger);
 
         ob_start();
 
