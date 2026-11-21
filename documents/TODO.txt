@@ -1,4 +1,4 @@
-* POSIX timeout cleanup now samples the process tree and kills tracked descendants even after they create a new session; the 50 ms sampling interval still leaves a narrow fork-and-exit race.
-* Define Windows host-cancellation behavior; cooperative SIGINT/SIGTERM cancellation is currently supported only on POSIX CLI runtimes with `pcntl`.
-* Resolve the remaining PHP-CS-Fixer and Rector baseline debt, then make both CI checks blocking; they currently continue on error.
-* Collect and retain performance baselines across Windows/Linux and supported PHP versions; the repeatable benchmark currently runs on Linux CI.
+* POSIX timeout cleanup samples descendants every 50 ms and terminates tracked PIDs, including descendants that create a new session. A narrow fork-and-exit race remains; eliminating it portably requires OS-native process containment (for example, a subreaper or cgroup).
+* Windows CLI execution now handles Ctrl+C and Ctrl+Break cooperatively and terminates the launched Job Object process tree. Non-CLI hosts do not receive this console-event integration.
+* CI retains JSON performance baselines for Windows and Linux across PHP 8.0–8.5 for 90 days. Establish regression thresholds only after collecting enough runs to account for shared-runner variance.
+* Consider stronger OS-native process containment for workloads that require guarantees beyond best-effort portable process supervision.
