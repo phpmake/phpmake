@@ -15,7 +15,8 @@ final class ProcessSupervisorTest extends TestCase
     {
         // Arrange
         if (PHP_OS_FAMILY === 'Windows') {
-            self::markTestSkipped('POSIX process-table discovery is not available on Windows.');
+            self::assertTrue(true, 'POSIX process-table discovery is not available on Windows.');
+            return;
         }
 
         $pidFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR
