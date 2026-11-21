@@ -90,6 +90,7 @@ final class ExecTask extends BaseTask
         $stdout = '';
         $stderr = '';
         $cancelledSignal = null;
+        $windowsControlHandler = null;
         $previousAsyncSignals = null;
         $previousSignalHandlers = [];
 
@@ -107,12 +108,21 @@ final class ExecTask extends BaseTask
                     ? pcntl_signal_get_handler($signal)
                     : SIG_DFL;
                 pcntl_signal($signal, static function (int $receivedSignal) use (&$cancelledSignal): void {
-                    $cancelledSignal = $receivedSignal;
+                    $cancelledSignal = $receivedSignal === SIGINT ? 'SIGINT' : 'SIGTERM';
                 });
             }
         }
 
         try {
+            if (PHP_OS_FAMILY === 'Windows' && PHP_SAPI === 'cli') {
+                $windowsControlHandler = new \\PhpMake\\Process\\WindowsConsoleSignalHandler(
+                    static function (string $event) use (&$cancelledSignal): void {
+                        $cancelledSignal = $event;
+                    }
+                );
+                $windowsControlHandler->register();
+            }
+
             while (true) {
                 // A descendant can create a new POSIX session and escape the
                 // original process group. Snapshot descendants periodically so
@@ -174,6 +184,10 @@ final class ExecTask extends BaseTask
 
                 pcntl_async_signals($previousAsyncSignals);
             }
+
+            if ($windowsControlHandler instanceof \\PhpMake\\Process\\WindowsConsoleSignalHandler) {
+                $windowsControlHandler->unregister();
+            }
         }
 
         $closeCode = proc_close($process);
@@ -197,8 +211,7 @@ final class ExecTask extends BaseTask
         }
 
         if ($cancelledSignal !== null) {
-            $signalName = $cancelledSignal === SIGINT ? 'SIGINT' : 'SIGTERM';
-            $this->logger->error(sprintf('Command cancelled after receiving %s.', $signalName));
+            $this->logger->error(sprintf('Command cancelled after receiving %s.', $cancelledSignal));
             return false;
         }
 
