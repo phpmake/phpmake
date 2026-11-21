@@ -8,9 +8,20 @@ extensions:
 exclude:
   - .git/
   - .github/
+  - .idea/
+  - .vscode/
+  - .vs/
+  - node_modules/
+  - coverage/
+  - .cache/
+  - vendor/
+  - __pycache__/
+  - bootstrap/
+  - cache/
+  - packages/
+  - lua_modules/
   - resources/
   - schema/
-  - vendor/
 jobs: 1
 warning: true
 memory-limit: -1
