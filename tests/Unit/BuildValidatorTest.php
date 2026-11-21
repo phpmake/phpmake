@@ -279,7 +279,7 @@ final class BuildValidatorTest extends TestCase
                 '' => ['description' => 123, 'tasks' => ['not-an-object']],
                 'build' => ['tasks' => [
                     ['params' => []],
-                    ['type' => 'exec', 'params' => ['command' => 'php', 'args' => [new \\stdClass()]]],
+                    ['type' => 'exec', 'params' => ['command' => 'php', 'args' => [new \stdClass()]]],
                 ]],
             ],
             'default_target' => 'build',
@@ -287,7 +287,7 @@ final class BuildValidatorTest extends TestCase
 
         // Act
         $errors = (new BuildValidator())->validate($config);
-        $messages = implode("\\n", $errors);
+        $messages = implode("\n", $errors);
 
         // Assert
         self::assertStringContainsString('Unknown top-level property', $messages);
