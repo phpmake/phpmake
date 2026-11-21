@@ -71,6 +71,7 @@ final class ProcessSupervisorTest extends TestCase
                 if ($childPid > 0 && function_exists('posix_kill')) {
                     @posix_kill($childPid, 9);
                 }
+
                 unlink($pidFile);
             }
         }
@@ -107,6 +108,7 @@ final class ProcessSupervisorTest extends TestCase
             if ($status['running']) {
                 proc_terminate($process, 9);
             }
+
             proc_close($process);
         }
     }
