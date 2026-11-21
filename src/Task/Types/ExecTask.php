@@ -33,7 +33,8 @@ final class ExecTask extends BaseTask
 
         $argv = array_merge($argv, array_map(static fn($arg): string => (string) $arg, $args));
         if ($this->logger->isDebugEnabled()) {
-            $this->logger->debug('Executing process: ' . implode(' ', array_map('escapeshellarg', $argv)));
+            // Arguments may contain API keys, passwords, or other credentials.
+            $this->logger->debug('Executing external process (arguments omitted).');
         }
 
         $processOptions = ['bypass_shell' => true];
@@ -213,8 +214,6 @@ final class ExecTask extends BaseTask
         return $exitCode === 0;
     }
 
-
-
     /**
      * Captures currently available pipe data without allowing either stream
      * buffer to exceed MAX_CAPTURE_BYTES. No output is spooled to disk.
@@ -248,8 +247,6 @@ final class ExecTask extends BaseTask
         return 'exec';
     }
 
-
-
     /** Validates the command, argument list, and optional timeout. */
     protected function validateParams(): void
     {
@@ -274,5 +271,4 @@ final class ExecTask extends BaseTask
             throw new \InvalidArgumentException("Exec task 'timeout' must be greater than 0 and at most 86400 seconds.");
         }
     }
-
 }
