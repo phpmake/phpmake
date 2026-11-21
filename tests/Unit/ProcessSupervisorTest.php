@@ -48,6 +48,7 @@ final class ProcessSupervisorTest extends TestCase
             while (!is_file($pidFile) && hrtime(true) < $deadline) {
                 usleep(10000);
             }
+
             self::assertFileExists($pidFile);
             $rootPid = proc_get_status($process)['pid'];
             $childPid = (int) file_get_contents($pidFile);
@@ -63,6 +64,7 @@ final class ProcessSupervisorTest extends TestCase
             if ($status['running']) {
                 proc_terminate($process, 9);
             }
+
             proc_close($process);
             if (is_file($pidFile)) {
                 $childPid = (int) file_get_contents($pidFile);
