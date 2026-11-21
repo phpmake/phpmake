@@ -455,8 +455,8 @@ final class FilesystemTreeTest extends TestCase
         // Act
         $emptySource = FilesystemTree::copyDirectory('', $destination);
         $emptyDestination = FilesystemTree::copyDirectory($source, '');
-        $nullByteSource = FilesystemTree::copyDirectory("invalid\\0source", $destination);
-        $nullByteDestination = FilesystemTree::copyDirectory($source, "invalid\\0destination");
+        $nullByteSource = FilesystemTree::copyDirectory('invalid' . chr(0) . 'source', $destination);
+        $nullByteDestination = FilesystemTree::copyDirectory($source, 'invalid' . chr(0) . 'destination');
 
         // Assert
         self::assertFalse($emptySource);
@@ -515,7 +515,7 @@ final class FilesystemTreeTest extends TestCase
     public function testRemoveRejectsNullBytePath(): void
     {
         // Arrange
-        $path = "invalid\\0path";
+        $path = 'invalid' . chr(0) . 'path';
 
         // Act
         $removed = FilesystemTree::remove($path);
