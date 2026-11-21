@@ -14,6 +14,7 @@ A PHP build automation tool using JSON configuration file.
 * [Requirements](#requirements)
 * [Installation](#installation)
 * [Usage](#usage)
+* [User Guide](documents/USER-GUIDE.md)
 * [FAQ](#faq)
 * [Support](#support)
 * [Changelog](#changelog)
@@ -87,6 +88,8 @@ composer global require phpmake/phpmake
 ```
 
 ## Usage
+
+For the complete build-file reference, task parameters, CLI behavior, troubleshooting, and extension instructions, see the [PHPMake User Guide](documents/USER-GUIDE.md).
 
 1. **Create a `build.json` file** (or generate a sample):
 
@@ -206,6 +209,9 @@ vendor/bin/phpunit tests/
 `exec` passes an argument vector directly to the process (no shell expansion or pipelines). Its default timeout is 300 seconds (maximum 86400); each output stream is capped at 1 MiB. On Windows, PHPMake uses a kill-on-close Job Object to terminate the target process and remaining descendants. On Linux, it uses a POSIX process group (using the POSIX extension, or the `setsid` and `kill` utilities when available). If neither POSIX mechanism is available, only the direct process can be terminated. On POSIX CLI runtimes with `pcntl`, `SIGINT` and `SIGTERM` request cooperative cancellation and trigger child-process cleanup. Host-process termination on Windows or runtimes without `pcntl` cannot guarantee descendant cleanup. ZIP creation is limited to 10,000 files, 20,000 filesystem entries, a directory depth of 256, 512 MiB per input file, and 2 GiB total uncompressed input. Build configuration files are limited to 2 MiB. Filesystem task paths are normalized and must resolve inside the project working directory. Symlink/junction ancestors that escape the project are rejected. UNC and drive-relative Windows paths are rejected. Destructive tasks reject the project root; `..` is permitted only when the normalized result remains inside CWD.
 
 ## Security considerations
+
+See [SECURITY.md](SECURITY.md) for supported-version policy, deployment guidance, and vulnerability reporting instructions.
+
 
 A `build.json` file is executable input, not a passive data file. The `exec` task can launch arbitrary programs with the permissions and environment of the PHPMake process. It does not provide a sandbox, network policy, DNS/hostname allowlist, or API rate limiting.
 
