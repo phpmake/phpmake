@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PhpMake\\Tests\\Unit;
+namespace PhpMake\Tests\Unit;
 
-use PhpMake\\Cli\\CliParser;
-use PHPUnit\\Framework\\TestCase;
+use PhpMake\Cli\CliParser;
+use PHPUnit\Framework\TestCase;
 
 /** Tests command-line option aliases, action conflicts, and target parsing. */
 final class CliParserTest extends TestCase
@@ -141,7 +141,7 @@ final class CliParserTest extends TestCase
         $output = ob_get_clean();
 
         // Assert
-        self::assertSame(\\PhpMake\\Config::TOOL_VERSION . PHP_EOL, $output);
+        self::assertSame(\PhpMake\Config::TOOL_VERSION . PHP_EOL, $output);
     }
 
     /** Prints runtime and extension diagnostics. */
@@ -169,7 +169,7 @@ final class CliParserTest extends TestCase
         $parser = new CliParser();
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Empty command-line argument');
 
         // Act
@@ -183,7 +183,7 @@ final class CliParserTest extends TestCase
         $parser = new CliParser();
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Extra argument detected');
 
         // Act
@@ -197,7 +197,7 @@ final class CliParserTest extends TestCase
         $parser = new CliParser();
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Conflicting command actions');
 
         // Act
@@ -211,7 +211,7 @@ final class CliParserTest extends TestCase
         $parser = new CliParser();
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('arguments must be strings');
 
         // Act
@@ -225,7 +225,7 @@ final class CliParserTest extends TestCase
         $parser = new CliParser();
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Unknown option');
 
         // Act
