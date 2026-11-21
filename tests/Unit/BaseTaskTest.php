@@ -14,6 +14,7 @@ use PHPUnit\Framework\TestCase;
 final class BaseTaskTest extends TestCase
 {
     use DirectoryLinkTestHelper;
+
     private string $root;
 
     private BaseTaskTestProbe $task;
