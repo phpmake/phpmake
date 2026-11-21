@@ -35,6 +35,9 @@ Q: How do I run a specific target?
 A: Use the target name as an argument:
 php vendor/bin/phpmake.php <target_name>
 
+Q: Where is the full task and configuration reference?
+A: See [USER-GUIDE.md](USER-GUIDE.md) for all task parameters, examples, CLI options, failure behavior, and extension instructions.
+
 Q: What tasks are supported?
 A:
 - `create_directory`: Create directories (`name`)
@@ -71,9 +74,10 @@ Q: How do I create a custom task?
 A:
 1. Create a new class in `src/Task/Types` extending `BaseTask`.
 2. Implement `runTask()`, `validateParams()`, and `getType()`.
-3. Update `TaskFactory` to map the new task type.
-4. Add parameter validation to `BuildValidator` and `schema/build-schema.json`.
-5. Add tests for success, failure, and unsafe inputs.
+3. Register the task identifier, class, required parameters, and allowed parameters in `TaskDefinitionRegistry`.
+4. Add the corresponding task and parameter definition to `schema/build-schema.json`.
+5. Add tests for success, failure, invalid values, and unsafe inputs; keep the registry/schema/runtime contract in sync.
+6. Update [the User Guide](USER-GUIDE.md) when the user-visible configuration contract changes.
 
 Q: What does silent mode hide?
 A: `--silent` suppresses normal console output. Errors remain visible on standard error (STDERR).

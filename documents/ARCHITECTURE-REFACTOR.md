@@ -36,7 +36,7 @@ All process launch paths continue to use argv arrays and `bypass_shell`; no shel
 - `TaskConfiguration` is the typed boundary between decoded task arrays and task construction.
 - `BuildConfiguration` documents the validated target/task array shape.
 - `BuildLoader` annotates the validated decoded build shape before constructing `BuildConfiguration`.
-- PHPStan is configured at level 2. Further increases should be incremental and based on resolved findings rather than suppressing errors globally.
+- PHPStan is configured at level 3 with the PHP 8.0 compatibility target. Keep the level and target synchronized with `phpstan.neon`; resolve findings rather than suppressing errors globally.
 
 ## 5. CLI output and error reporting
 
@@ -62,4 +62,4 @@ All process launch paths continue to use argv arrays and `bypass_shell`; no shel
 
 ## Validation still required
 
-Run PHPUnit, PHPStan level 2, PHP-CS-Fixer, PHP lint, the performance benchmark matrix, and the full PHP 8.0–8.5 Windows/Linux workflow matrix. In particular, validate process-tree termination and transactional copy/archive replacement on both operating systems before merging.
+Run PHPUnit, PHPStan level 3, PHP-CS-Fixer, PHP lint, Rector dry-run, the performance benchmark matrix, and the full PHP 8.0–8.5 Windows/Linux workflow matrix. In particular, validate process-tree termination and transactional copy/archive replacement on both operating systems before merging.
