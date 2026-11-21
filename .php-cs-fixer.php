@@ -2,23 +2,34 @@
 
 declare(strict_types=1);
 
-use PhpCsFixer\Finder;
 use PhpCsFixer\Config;
+use PhpCsFixer\Finder;
 
 static $rules = [
-    '@PSR1'  => true,
-    '@PSR2'  => true,
+    '@PSR1' => true,
+    '@PSR2' => true,
     '@PSR12' => true,
     '@PER-CS2.0' => true,
-    '@PHP8x0Migration' => true
+    '@PHP8x0Migration' => true,
 ];
 
 static $excludeFolders = [
     '.git/',
     '.github/',
+    '.idea/',
+    '.vscode/',
+    '.vs/',
+    'node_modules/',
+    'coverage/',
+    '.cache/',
+    'vendor/',
+    '__pycache__/',
+    'bootstrap/',
+    'cache/',
+    'packages/',
+    'lua_modules/',
     'resources/',
     'schema/',
-    'vendor/',
 ];
 
 $finder = Finder::create()
@@ -26,7 +37,6 @@ $finder = Finder::create()
     ->exclude($excludeFolders)
     ->ignoreDotFiles(true)
     ->ignoreVCS(true);
-
 
 return (new Config())
     ->setRules($rules)
