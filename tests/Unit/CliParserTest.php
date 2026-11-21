@@ -128,6 +128,9 @@ final class CliParserTest extends TestCase
         self::assertStringContainsString('-nl, --no-log', $output);
         self::assertStringContainsString('--silent', $output);
         self::assertStringContainsString('--init', $output);
+        self::assertStringContainsString('Build file: build.json in the current working directory.', $output);
+        self::assertStringContainsString('phpmake --validate-build', $output);
+        self::assertStringContainsString('phpmake build --debug', $output);
     }
 
     /** Prints the configured PHPMake version. */
