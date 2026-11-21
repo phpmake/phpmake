@@ -7,11 +7,13 @@ namespace PhpMake\Tests\Unit;
 use PhpMake\Filesystem\AtomicDirectoryPublisher;
 use PhpMake\Filesystem\AtomicFilePublisher;
 use PhpMake\Filesystem\FilesystemTree;
+use PhpMake\Tests\Support\DirectoryLinkTestHelper;
 use PHPUnit\Framework\TestCase;
 
 /** Covers rejected publication inputs without mutating existing filesystem entries. */
 final class AtomicPublisherValidationTest extends TestCase
 {
+    use DirectoryLinkTestHelper;
     use DirectoryLinkTestHelper;
 
     private string $base;
@@ -105,20 +107,24 @@ final class AtomicPublisherValidationTest extends TestCase
         $destination = $this->base . DIRECTORY_SEPARATOR . 'destination';
         self::assertTrue(mkdir($target));
         self::assertSame(4, file_put_contents($target . DIRECTORY_SEPARATOR . 'keep.txt', 'keep'));
-        if (!@symlink($target, $staging)) {
-            self::markTestSkipped('Symbolic-link creation is unavailable in this environment.');
-        }
+        $this->createDirectoryLink($target, $staging);
 
-        // Act / Assert
         try {
-            AtomicDirectoryPublisher::publish($staging, $destination);
-            self::fail('A staged directory link must not be published.');
-        } catch (\InvalidArgumentException $exception) {
-            self::assertStringContainsString('must not be a symbolic link', $exception->getMessage());
-        }
+            // Act / Assert
+            try {
+                AtomicDirectoryPublisher::publish($staging, $destination);
+                self::fail('A staged directory link must not be published.');
+            } catch (\InvalidArgumentException $exception) {
+                self::assertStringContainsString('must not be a symbolic link', $exception->getMessage());
+            }
 
-        // Assert
-        self::assertDirectoryDoesNotExist($destination);
-        self::assertSame('keep', file_get_contents($target . DIRECTORY_SEPARATOR . 'keep.txt'));
+            // Assert
+            self::assertDirectoryDoesNotExist($destination);
+            self::assertSame('keep', file_get_contents($target . DIRECTORY_SEPARATOR . 'keep.txt'));
+        } finally {
+            if (FilesystemTree::isLink($staging)) {
+                $this->removeDirectoryLink($staging);
+            }
+        }
     }
 }
