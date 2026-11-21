@@ -1,57 +1,50 @@
 # Code Quality Audit
 
 **Repository:** PHPMake  
-**Baseline reviewed:** \`main\` at \`db412b6a1d182fa8dce815d5b253a4bac7bb3edb\`  
-**Scope:** application source, CLI entry point, Composer configuration, static-analysis configuration, and representative unit tests.  
-**Compatibility constraint:** PHP 8.0–8.5; Windows and Linux.
+**Baseline:** main at eab11d8b3e09b225c8ed99f01aa48198945748d1 (Phase 3 merged)  
+**Scope:** source architecture, CLI/configuration boundaries, Composer/static-analysis configuration, and PHPUnit suite.  
+**Compatibility:** PHP 8.0–8.5; Windows and Linux.
 
 ## Executive summary
 
-The project has clear high-level layers (build loading/validation, dependency resolution, task creation/execution, task implementations, and logging). The main quality risks are duplicated task metadata, repeated filesystem transaction code, oversized task implementations, mixed output/error responsibilities, and weakly typed array-based configuration boundaries.
+The earlier audit findings have been rechecked against the current main branch. Several high-priority architectural findings are already resolved: task metadata is centralized, filesystem publication and identity logic are shared, process execution has dedicated parser/launcher/supervisor components, CLI output is routed through ConsoleOutput, configuration has typed boundary objects, and dependency traversal state is invocation-local.
 
-No broad rewrite is justified. Filesystem and process-management code is security-sensitive; it should be decomposed behind tested contracts in small steps.
+The remaining work is incremental. Avoid broad rewrites of filesystem and process code because those paths carry security and cross-platform correctness constraints.
 
-## Findings
+## Findings and status
 
-| Priority | Area | Finding | Recommended action |
+| Priority | Area | Current status | Follow-up |
 |---|---|---|---|
-| High | Task metadata | Supported task types and their parameter rules are independently declared in \`BuildValidator\` and \`TaskFactory\`. The JSON schema is a further source of truth. These can drift. | Introduce a PHP 8.0-compatible task-definition registry and parity tests against the JSON schema. Keep task construction and validation separate from task implementations. |
-| High | Filesystem tasks | \`CopyTask\` and \`ZipTask\` each implement filesystem identity checks and similar temporary-file/backup/rename/rollback flows. | Extract a narrowly scoped filesystem publication/identity utility, then test rollback and cleanup failures before migrating callers. |
-| High | Process execution | \`ExecTask\` owns command parsing, platform-specific launchers, process discovery, signal handling, output capture, timeouts, and termination. | Split command parsing, process supervision, and platform adapters. Preserve argv-based execution and existing process-tree guarantees. |
-| Medium | Configuration loading | \`BuildLoader\` performs a JSON object-shape pass, decodes the same document again into arrays, then invokes \`BuildValidator\`. The first pass is needed to distinguish JSON objects from arrays, but the conversion boundary is implicit. | Keep object/array distinction explicit and convert once into a documented internal representation. Add parity tests for empty objects, empty arrays, numeric target names, and malformed nested values. |
-| Medium | CLI parsing | \`CliParser::parse()\` keeps a known-flag list, an action map, and a separate switch statement. Adding a flag requires edits in multiple places. | Use one declarative option table containing aliases and effects; retain current conflict semantics. |
-| Medium | Error handling | Several boundaries use generic \`Exception\`; \`BaseTask::execute()\` catches every \`Throwable\` and reduces it to a boolean plus a message. This loses exception category and diagnostic context. | Use specific exception types for invalid configuration, missing targets, and runtime failures. Preserve user-facing concise output while making debug diagnostics retain exception class and trace. |
-| Medium | Type safety | Build configuration and task parameters cross multiple layers as unshaped arrays. PHPStan is configured at level 1 and most public array contracts lack array-shape/generic PHPDoc. | Add PHPDoc array shapes and list annotations incrementally; raise PHPStan level after each subsystem is clean. Avoid introducing PHP 8.1+ syntax. |
-| Low | Naming/documentation | Some classes retain verbose legacy class-level templates while newer classes use concise descriptions. CLI result keys use mixed naming conventions such as \`showVersion\` alongside lower-camel keys. | Standardize terminology and result-key naming in a separately tested compatibility change. |
-| Low | Dead code | No definite unused production method was established from source inspection alone. Several task methods accept the common \`debug\`/\`silent\` contract while using the injected logger instead; this is interface consistency, not dead code. | Confirm dead code with static-analysis/unused-symbol tooling before deleting anything. |
+| Resolved | Task metadata | TaskDefinitionRegistry is used by both BuildValidator and TaskFactory; BuildSchemaParityTest checks identifiers and parameter names against the published schema. | Keep parity tests mandatory when adding task types. |
+| Resolved | Filesystem operations | FilesystemIdentity, FilesystemTree, AtomicFilePublisher, and AtomicDirectoryPublisher centralize shared safety and publication behavior. | Extend failure-path tests when changing rollback or cleanup logic. |
+| Partially resolved | Process execution | Command tokenization, platform launch preparation, and process-tree supervision are separate components. ExecTask still coordinates lifecycle, output capture, timeout, cancellation, and logging. | Consider extracting output capture and lifecycle coordination only when tests can preserve current process-tree semantics. |
+| Resolved | Configuration boundary | TaskConfiguration and BuildConfiguration represent task and build data; BuildLoader explicitly checks JSON object/array distinctions before runtime validation. | Preserve regression cases for empty objects/arrays, numeric target names, and malformed nested values. |
+| Partially resolved | CLI options | Parsing uses a declarative option table, but help text was separately maintained and could drift from accepted aliases. | Phase 4 makes aliases, result keys, actions, and help descriptions a single source of truth. |
+| Resolved | CLI output | ConsoleOutput is the output boundary used by Logger and TaskExecutor. | Keep new console writes behind this service. |
+| Resolved | Dependency traversal | DependencyResolver keeps DFS state local to each resolve() call. | Retain resolver-reuse regression coverage. |
+| Partially resolved | Type safety | Build/task array shapes are documented and PHPStan runs at level 2 with PHP 8.0 syntax constraints. | Raise the level only after measuring and fixing findings without broad suppressions. |
+| Open | Error diagnostics | BaseTask::execute() converts Throwable into a failed task result and user-facing message. This is the task contract, but debug diagnostics do not currently preserve exception class/trace centrally. | Improve diagnostics separately without leaking command arguments or changing normal output. |
+| Open | Legacy tests | Some older test classes still contain generic names, inconsistent AAA markers, and cleanup patterns that are less robust than newer tests. | Refactor test classes incrementally; retain PHPUnit, AAA, no mocks, and no skipped tests. |
+| Open | Process containment | POSIX descendant sampling retains a documented fork-and-exit race; portable PHP does not provide an OS-native containment guarantee. | Treat stronger containment as an optional platform-specific capability, not a portable guarantee. |
 
-## Architecture and SOLID observations
+## Phase 4 changes
 
-- **Single Responsibility:** \`ExecTask\` is the clearest SRP pressure point. \`BuildLoader\` also combines bounded file I/O, JSON shape checks, validation orchestration, and object construction.
-- **Open/Closed:** adding a task currently requires coordinated edits to the validator, factory, schema, and tests.
-- **Dependency Inversion:** orchestration classes depend on concrete collaborators (\`TaskFactory\`, \`TaskExecutor\`, \`DependencyResolver\`). Interfaces may help if alternative implementations are genuinely needed; adding interfaces solely for abstraction would add noise.
-- **Separation of concerns:** \`TaskExecutor\` writes directly to global STDOUT/STDERR while task implementations write through \`Logger\`. Output policy is therefore split across layers.
-- **State management:** dependency traversal state was stored on the resolver instance even though it is only needed during one resolution call. This has been changed to invocation-local state.
+1. Consolidated CLI option metadata into one declarative table. Each option's aliases, result key, action-conflict behavior, and help description now come from the same definition.
+2. Generated help output from that table, eliminating the separate hard-coded option list and correcting the -nl, --no-log formatting.
+3. Expanded CLI parser tests to cover all short/long alias pairs, independent flags combined with a target, equivalent aliases, conflicting actions, invalid argument types, and help output.
+4. Updated this audit to reflect the current architecture and distinguish completed refactors from remaining work.
 
-## Changes made in this audit branch
+## Compatibility and behavior constraints
 
-1. \`DependencyResolver\` now keeps traversal state local to \`resolve()\` and passes it through the DFS. This removes mutable per-instance state and makes each resolution invocation self-contained.
-2. \`BuildExecutor\` now throws \`OutOfBoundsException\` when the requested target does not exist.
-3. \`TaskFactory\` now throws \`InvalidArgumentException\` for an unknown task type, identifying it as invalid build input rather than an unspecified failure.
+- PHP 8.0 syntax and PHP 8.0–8.5 support remain unchanged.
+- Windows and Linux remain the validated operating-system targets.
+- No runtime dependencies are added.
+- Existing CLI result keys, accepted flags, action-conflict rules, target parsing, task identifiers, build JSON format, and exit-code conventions remain unchanged.
+- No mocks are introduced; PHPUnit tests follow Arrange / Act / Assert.
 
-These are deliberately small behavior-preserving changes except for the more precise exception classes (both remain subclasses of \`Exception\`).
+## Validation required
 
-## Validation still required
-
-- Run the complete PHPUnit suite on PHP 8.0–8.5, Linux and Windows.
-- Run PHP-CS-Fixer, PHPLint, PHPStan, Rector dry-run, and Composer dependency checks.
-- Add focused tests for resolver reuse and the new exception contracts.
-- Do not merge this branch until all matrix checks pass.
-
-## Suggested follow-up sequence
-
-1. Centralize task definitions and enforce parity with \`schema/build-schema.json\`.
-2. Extract shared filesystem identity/publication primitives with failure-injection tests.
-3. Decompose \`ExecTask\` into parser, supervisor, and OS-specific process-control components.
-4. Introduce typed configuration DTO boundaries and raise PHPStan gradually.
-5. Consolidate CLI/output/error reporting and remove only dead code confirmed by tooling.
+- Run the complete PHPUnit suite on PHP 8.0–8.5, including Windows filesystem and process tests.
+- Run PHP-CS-Fixer, PHPLint, PHPStan, Rector dry-run, Composer normalization/unused-dependency/requirement checks, and the clean consumer-install check.
+- Confirm the CLI help text and parser stay synchronized through the new tests.
+- Do not claim validation is complete until the workflow for this branch has finished successfully.
