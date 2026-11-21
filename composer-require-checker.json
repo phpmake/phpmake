@@ -23,7 +23,8 @@
         "pcntl_signal_get_handler",
         "SIGINT",
         "SIGTERM",
-        "SIG_DFL"
+        "SIG_DFL",
+        "sapi_windows_set_ctrl_handler"
     ],
     "php-core-extensions": [
         "Core",
