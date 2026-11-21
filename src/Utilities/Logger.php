@@ -71,7 +71,8 @@ final class Logger
      */
     private function logToFile(string $message): void
     {
-        $lock = @fopen($this->logFile . '.lock', 'c');
+        $lockPath = $this->logFile . '.lock';
+        $lock = $this->openFileSafely($lockPath, 'c');
         if ($lock === false) {
             return;
         }
@@ -81,9 +82,11 @@ final class Logger
                 return;
             }
 
+            $this->assertSafeLocalFilePath($this->logFile);
             clearstatcache(true, $this->logFile);
             if (is_file($this->logFile) && filesize($this->logFile) >= self::MAX_SIZE) {
                 $oldest = $this->logFile . '.' . self::MAX_FILES;
+                $this->assertSafeLocalFilePath($oldest);
                 if (file_exists($oldest) && !@unlink($oldest)) {
                     throw new \RuntimeException(sprintf("Unable to remove old log '%s'.", $oldest));
                 }
@@ -91,17 +94,20 @@ final class Logger
                 for ($i = self::MAX_FILES - 1; $i >= 1; --$i) {
                     $from = $this->logFile . '.' . $i;
                     $to = $this->logFile . '.' . ($i + 1);
+                    $this->assertSafeLocalFilePath($from);
+                    $this->assertSafeLocalFilePath($to);
                     if (file_exists($from) && !@rename($from, $to)) {
                         throw new \RuntimeException(sprintf("Unable to rotate log '%s'.", $from));
                     }
                 }
 
+                $this->assertSafeLocalFilePath($this->logFile . '.1');
                 if (!@rename($this->logFile, $this->logFile . '.1')) {
                     throw new \RuntimeException(sprintf("Unable to rotate log '%s'.", $this->logFile));
                 }
             }
 
-            $fp = @fopen($this->logFile, 'ab');
+            $fp = $this->openFileSafely($this->logFile, 'ab');
             if ($fp === false) {
                 return;
             }
@@ -127,6 +133,66 @@ final class Logger
             flock($lock, LOCK_UN);
             fclose($lock);
         }
+    }
+
+    /**
+     * Opens local log files only when the path and opened handle identify the
+     * same regular, single-link file. Non-local stream wrappers retain their
+     * existing behavior for test and custom stream integrations.
+     *
+     * @return resource|false
+     */
+    private function openFileSafely(string $path, string $mode)
+    {
+        if (!stream_is_local($path)) {
+            return @fopen($path, $mode);
+        }
+
+        if (!self::isSafeLocalFilePath($path)) {
+            return false;
+        }
+
+        $handle = @fopen($path, $mode);
+        if ($handle === false) {
+            return false;
+        }
+
+        $pathStat = @lstat($path);
+        $handleStat = @fstat($handle);
+        if (!is_array($pathStat) || !is_array($handleStat)
+            || !self::isRegularSingleLinkFile($pathStat)
+            || !self::isRegularSingleLinkFile($handleStat)
+            || !isset($pathStat['dev'], $pathStat['ino'], $handleStat['dev'], $handleStat['ino'])
+            || $pathStat['dev'] !== $handleStat['dev']
+            || $pathStat['ino'] !== $handleStat['ino']) {
+            fclose($handle);
+            return false;
+        }
+
+        return $handle;
+    }
+
+    /** Rejects local symlinks, special files, and hardlinks before metadata access or rotation. */
+    private function assertSafeLocalFilePath(string $path): void
+    {
+        if (stream_is_local($path) && !self::isSafeLocalFilePath($path)) {
+            throw new \RuntimeException(sprintf("Refusing unsafe log path '%s'.", $path));
+        }
+    }
+
+    /** Returns whether a missing path or a regular single-link local file is safe to use. */
+    private static function isSafeLocalFilePath(string $path): bool
+    {
+        $stat = @lstat($path);
+        return $stat === false || self::isRegularSingleLinkFile($stat);
+    }
+
+    /** Determines whether stat metadata describes a regular file with no additional hardlinks. */
+    private static function isRegularSingleLinkFile(array $stat): bool
+    {
+        return isset($stat['mode'])
+            && (($stat['mode'] & 0170000) === 0100000)
+            && (!isset($stat['nlink']) || $stat['nlink'] <= 1);
     }
 
     /** Indicates whether debug messages are visible. */
