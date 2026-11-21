@@ -197,4 +197,18 @@ final class BuildLoaderTest extends TestCase
         (new BuildLoader())->load($this->buildFile);
     }
 
+    /** Rejects a missing build file before attempting to read it. */
+    public function testRejectsMissingBuildFile(): void
+    {
+        // Arrange
+        self::assertFileDoesNotExist($this->buildFile);
+
+        // Assert
+        $this->expectException(\\RuntimeException::class);
+        $this->expectExceptionMessage('not found or unreadable');
+
+        // Act
+        (new BuildLoader())->load($this->buildFile);
+    }
+
 }
