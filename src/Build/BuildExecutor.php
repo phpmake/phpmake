@@ -2,67 +2,38 @@
 
 namespace PhpMake\Build;
 
-use PhpMake\Task\TaskFactory;
-use PhpMake\Utilities\Logger;
 use PhpMake\Target\DependencyResolver;
 use PhpMake\Task\TaskExecutor;
+use PhpMake\Task\TaskFactory;
+use PhpMake\Utilities\Logger;
 
-/**
- * BuildExecutor Class
- *
- * Handles the execution of build tasks within PHPMake tool.
- * It coordinates task creation, dependency resolution, and execution.
- *
- * @package    PHPMake
- * @subpackage Build
- */
+/** Coordinates target resolution and task execution for a build. */
 final class BuildExecutor
 {
-    /**
-     * Constructor
-     *
-     * Initializes the BuildExecutor with required components.
-     *
-     * @param TaskFactory        $taskFactory        Factory for creating tasks.
-     * @param DependencyResolver $dependencyResolver Resolves dependencies between targets.
-     * @param TaskExecutor       $taskExecutor       Executes tasks in the correct order.
-     */
-    public function __construct(private TaskFactory $taskFactory, private DependencyResolver $dependencyResolver, private TaskExecutor $taskExecutor) {}
+    public function __construct(
+        private TaskFactory $taskFactory,
+        private DependencyResolver $dependencyResolver,
+        private TaskExecutor $taskExecutor
+    ) {}
 
     /**
-     * Execute build tasks.
+     * Resolves and executes the requested target and its dependencies.
      *
-     * Resolves dependencies and executes tasks for specified target.
-     *
-     * @param BuildConfiguration $config Build configuration object.
-     * @param string|null        $target Target to execute (defaults to the default target).
-     * @param Logger             $logger Logger instance for output handling.
-     *
-     * @return int Exit code (0 for success, non-zero for failure).
-     *
-     * @throws \Exception If the specified target is not found.
+     * @throws \OutOfBoundsException When the requested target does not exist.
      */
     public function execute(BuildConfiguration $config, ?string $target, Logger $logger): int
     {
-        $defaultTarget = $config->getDefaultTarget();
-        $target ??= $defaultTarget;
-
+        $target ??= $config->getDefaultTarget();
         if (!array_key_exists($target, $config->getTargets())) {
             throw new \OutOfBoundsException(sprintf("Target '%s' not found.", $target));
         }
 
-        $executionOrder = $this->dependencyResolver->resolve($config, $target);
-
-        // Get debug and silent modes from Logger.
-        $debug = $logger->isDebugEnabled();
-        $silent = $logger->isSilent();
-
         return $this->taskExecutor->executeTasks(
             $config,
-            $executionOrder,
+            $this->dependencyResolver->resolve($config, $target),
             $this->taskFactory,
-            $debug,
-            $silent
+            $logger->isDebugEnabled(),
+            $logger->isSilent()
         );
     }
 }
