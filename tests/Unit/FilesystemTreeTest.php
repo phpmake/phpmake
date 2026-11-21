@@ -444,4 +444,84 @@ final class FilesystemTreeTest extends TestCase
         self::assertSame([], glob(dirname($destination) . DIRECTORY_SEPARATOR . '.phpmake-tree-*.staging') ?: []);
     }
 
+    /** Rejects empty and null-byte paths before touching the filesystem. */
+    public function testCopyDirectoryRejectsEmptyAndNullBytePaths(): void
+    {
+        // Arrange
+        $source = $this->base . DIRECTORY_SEPARATOR . 'source';
+        $destination = $this->base . DIRECTORY_SEPARATOR . 'destination';
+        self::assertTrue(mkdir($source));
+
+        // Act
+        $emptySource = FilesystemTree::copyDirectory('', $destination);
+        $emptyDestination = FilesystemTree::copyDirectory($source, '');
+        $nullByteSource = FilesystemTree::copyDirectory("invalid\\0source", $destination);
+        $nullByteDestination = FilesystemTree::copyDirectory($source, "invalid\\0destination");
+
+        // Assert
+        self::assertFalse($emptySource);
+        self::assertFalse($emptyDestination);
+        self::assertFalse($nullByteSource);
+        self::assertFalse($nullByteDestination);
+        self::assertDirectoryDoesNotExist($destination);
+    }
+
+    /** Rejects a source directory link without copying content from its target. */
+    public function testCopyDirectoryRejectsSourceDirectoryLink(): void
+    {
+        // Arrange
+        $target = $this->base . DIRECTORY_SEPARATOR . 'target';
+        $sourceLink = $this->base . DIRECTORY_SEPARATOR . 'source-link';
+        $destination = $this->base . DIRECTORY_SEPARATOR . 'destination';
+        self::assertTrue(mkdir($target));
+        self::assertSame(4, file_put_contents($target . DIRECTORY_SEPARATOR . 'keep.txt', 'keep'));
+        $this->createDirectoryLink($target, $sourceLink);
+
+        try {
+            // Act
+            $copied = FilesystemTree::copyDirectory($sourceLink, $destination);
+
+            // Assert
+            self::assertFalse($copied);
+            self::assertDirectoryDoesNotExist($destination);
+            self::assertSame('keep', file_get_contents($target . DIRECTORY_SEPARATOR . 'keep.txt'));
+        } finally {
+            if (FilesystemTree::isLink($sourceLink)) {
+                $this->removeDirectoryLink($sourceLink);
+            }
+        }
+    }
+
+    /** Rejects a destination whose parent path is a regular file. */
+    public function testCopyDirectoryRejectsFileAsDestinationParent(): void
+    {
+        // Arrange
+        $source = $this->base . DIRECTORY_SEPARATOR . 'source';
+        $parent = $this->base . DIRECTORY_SEPARATOR . 'blocker';
+        $destination = $parent . DIRECTORY_SEPARATOR . 'destination';
+        self::assertTrue(mkdir($source));
+        self::assertSame(7, file_put_contents($parent, 'blocker'));
+
+        // Act
+        $copied = FilesystemTree::copyDirectory($source, $destination);
+
+        // Assert
+        self::assertFalse($copied);
+        self::assertSame('blocker', file_get_contents($parent));
+        self::assertFileDoesNotExist($destination);
+    }
+
+    /** Rejects a null-byte path before scanning or deleting filesystem entries. */
+    public function testRemoveRejectsNullBytePath(): void
+    {
+        // Arrange
+        $path = "invalid\\0path";
+
+        // Act
+        $removed = FilesystemTree::remove($path);
+
+        // Assert
+        self::assertFalse($removed);
+    }
+
 }
