@@ -13,30 +13,16 @@ final class WindowsConsoleSignalHandler
 
     private \Closure $handler;
 
+    private \Closure $onCancel;
+
     private bool $registered = false;
 
     /** Creates a handler that reports Ctrl+C and Ctrl+Break to the process coordinator. */
     public function __construct(callable $onCancel)
     {
-        $this->handler = function (int $event) use ($onCancel): bool {
-            $ctrlC = defined('PHP_WINDOWS_EVENT_CTRL_C')
-                ? (int) constant('PHP_WINDOWS_EVENT_CTRL_C')
-                : self::CTRL_C_EVENT;
-            $ctrlBreak = defined('PHP_WINDOWS_EVENT_CTRL_BREAK')
-                ? (int) constant('PHP_WINDOWS_EVENT_CTRL_BREAK')
-                : self::CTRL_BREAK_EVENT;
-
-            if ($event === $ctrlC) {
-                $onCancel('CTRL_C_EVENT');
-                return true;
-            }
-
-            if ($event === $ctrlBreak) {
-                $onCancel('CTRL_BREAK_EVENT');
-                return true;
-            }
-
-            return false;
+        $this->onCancel = \Closure::fromCallable($onCancel);
+        $this->handler = function (int $event): void {
+            $this->dispatch($event);
         };
     }
 
@@ -65,6 +51,29 @@ final class WindowsConsoleSignalHandler
     /** Dispatches a Windows console event; exposed for deterministic platform-independent tests. */
     public function handleEvent(int $event): bool
     {
-        return ($this->handler)($event);
+        return $this->dispatch($event);
+    }
+
+    /** Converts only Ctrl+C and Ctrl+Break into cancellation requests. */
+    private function dispatch(int $event): bool
+    {
+        $ctrlC = defined('PHP_WINDOWS_EVENT_CTRL_C')
+            ? (int) constant('PHP_WINDOWS_EVENT_CTRL_C')
+            : self::CTRL_C_EVENT;
+        $ctrlBreak = defined('PHP_WINDOWS_EVENT_CTRL_BREAK')
+            ? (int) constant('PHP_WINDOWS_EVENT_CTRL_BREAK')
+            : self::CTRL_BREAK_EVENT;
+
+        if ($event === $ctrlC) {
+            ($this->onCancel)('CTRL_C_EVENT');
+            return true;
+        }
+
+        if ($event === $ctrlBreak) {
+            ($this->onCancel)('CTRL_BREAK_EVENT');
+            return true;
+        }
+
+        return false;
     }
 }
