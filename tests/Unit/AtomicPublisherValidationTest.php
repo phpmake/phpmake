@@ -55,8 +55,8 @@ final class AtomicPublisherValidationTest extends TestCase
         try {
             AtomicFilePublisher::publish($path, $path);
             self::fail('A staged file must not replace itself.');
-        } catch (\InvalidArgumentException $exception) {
-            self::assertStringContainsString('different filesystem entries', $exception->getMessage());
+        } catch (\InvalidArgumentException $invalidArgumentException) {
+            self::assertStringContainsString('different filesystem entries', $invalidArgumentException->getMessage());
         }
 
         // Assert
@@ -77,8 +77,8 @@ final class AtomicPublisherValidationTest extends TestCase
         try {
             AtomicFilePublisher::publish($staged, $destination);
             self::fail('Publication across parent directories must be rejected.');
-        } catch (\InvalidArgumentException $exception) {
-            self::assertStringContainsString('share a directory', $exception->getMessage());
+        } catch (\InvalidArgumentException $invalidArgumentException) {
+            self::assertStringContainsString('share a directory', $invalidArgumentException->getMessage());
         }
 
         // Assert
@@ -114,8 +114,8 @@ final class AtomicPublisherValidationTest extends TestCase
             try {
                 AtomicDirectoryPublisher::publish($staging, $destination);
                 self::fail('A staged directory link must not be published.');
-            } catch (\InvalidArgumentException $exception) {
-                self::assertStringContainsString('must not be a symbolic link', $exception->getMessage());
+            } catch (\InvalidArgumentException $invalidArgumentException) {
+                self::assertStringContainsString('must not be a symbolic link', $invalidArgumentException->getMessage());
             }
 
             // Assert
