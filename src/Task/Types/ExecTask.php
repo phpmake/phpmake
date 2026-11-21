@@ -185,7 +185,7 @@ final class ExecTask extends BaseTask
                 pcntl_async_signals($previousAsyncSignals);
             }
 
-            if ($windowsControlHandler instanceof \PhpMake\\Process\\WindowsConsoleSignalHandler) {
+            if ($windowsControlHandler instanceof \PhpMake\Process\WindowsConsoleSignalHandler) {
                 $windowsControlHandler->unregister();
             }
         }
