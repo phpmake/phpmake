@@ -182,7 +182,7 @@ final class BaseTaskTest extends TestCase
         $path = $file . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'target';
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Non-directory path component');
 
         // Act
@@ -202,13 +202,13 @@ final class BaseTaskTest extends TestCase
 
         try {
             // Assert
-            $this->expectException(\\InvalidArgumentException::class);
+            $this->expectException(\InvalidArgumentException::class);
             $this->expectExceptionMessage('Dangling or unresolvable link');
 
             // Act
             $this->task->resolvePath($link . DIRECTORY_SEPARATOR . 'child', 'test path');
         } finally {
-            if (\\PhpMake\\Filesystem\\FilesystemTree::isLink($link)) {
+            if (\PhpMake\Filesystem\FilesystemTree::isLink($link)) {
                 $this->removeDirectoryLink($link);
             }
         }
@@ -232,9 +232,9 @@ final class BaseTaskTest extends TestCase
             self::assertTrue($removed);
             self::assertDirectoryExists($target);
             self::assertSame('keep', file_get_contents($target . DIRECTORY_SEPARATOR . 'keep.txt'));
-            self::assertFalse(\\PhpMake\\Filesystem\\FilesystemTree::isLink($link));
+            self::assertFalse(\PhpMake\Filesystem\FilesystemTree::isLink($link));
         } finally {
-            if (\\PhpMake\\Filesystem\\FilesystemTree::isLink($link)) {
+            if (\PhpMake\Filesystem\FilesystemTree::isLink($link)) {
                 $this->removeDirectoryLink($link);
             }
         }
