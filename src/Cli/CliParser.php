@@ -6,45 +6,30 @@ namespace PhpMake\Cli;
 
 use PhpMake\Config;
 
-/**
- * CliParser Class
- *
- * Parses command-line arguments for PHPMake tool, handling
- * options and determining the target to execute.
- *
- * @package    PHPMake
- * @subpackage CLI
- */
+/** Parses command-line options and identifies the requested build target. */
 final class CliParser
 {
     /**
-     * @var array<string, array{key:string, action:?string}>
+     * Each option is declared once with its aliases, result key, action, and help text.
+     *
+     * @var list<array{aliases:list<string>, key:string, action:?string, description:string}>
      */
-    private const FLAG_OPTIONS = [
-        '-h' => ['key' => 'help', 'action' => 'help'],
-        '--help' => ['key' => 'help', 'action' => 'help'],
-        '-v' => ['key' => 'showVersion', 'action' => 'showVersion'],
-        '--version' => ['key' => 'showVersion', 'action' => 'showVersion'],
-        '--diagnostics' => ['key' => 'diagnostics', 'action' => 'diagnostics'],
-        '--validate-build' => ['key' => 'validateBuild', 'action' => 'validateBuild'],
-        '-vb' => ['key' => 'validateBuild', 'action' => 'validateBuild'],
-        '-d' => ['key' => 'debug', 'action' => null],
-        '--debug' => ['key' => 'debug', 'action' => null],
-        '-s' => ['key' => 'silent', 'action' => null],
-        '--silent' => ['key' => 'silent', 'action' => null],
-        '-nl' => ['key' => 'noLog', 'action' => null],
-        '--no-log' => ['key' => 'noLog', 'action' => null],
-        '--init' => ['key' => 'init', 'action' => 'init'],
+    private const OPTIONS = [
+        ['aliases' => ['-h', '--help'], 'key' => 'help', 'action' => 'help', 'description' => 'Show this help.'],
+        ['aliases' => ['-v', '--version'], 'key' => 'showVersion', 'action' => 'showVersion', 'description' => 'Show version.'],
+        ['aliases' => ['--diagnostics'], 'key' => 'diagnostics', 'action' => 'diagnostics', 'description' => 'Show system diagnostics.'],
+        ['aliases' => ['-vb', '--validate-build'], 'key' => 'validateBuild', 'action' => 'validateBuild', 'description' => 'Validate build.json configuration.'],
+        ['aliases' => ['-d', '--debug'], 'key' => 'debug', 'action' => null, 'description' => 'Enable debug logging.'],
+        ['aliases' => ['-s', '--silent'], 'key' => 'silent', 'action' => null, 'description' => 'Suppress all output except errors.'],
+        ['aliases' => ['-nl', '--no-log'], 'key' => 'noLog', 'action' => null, 'description' => 'Disable file logging.'],
+        ['aliases' => ['--init'], 'key' => 'init', 'action' => 'init', 'description' => 'Create a sample build.json.'],
     ];
 
     /**
-     * Parse command-line arguments.
+     * Parses options, flags, and the target to execute.
      *
-     * Extracts options, flags, and the target to execute from user input.
-     *
-     * @param array $argv Command-line arguments.
-     *
-     * @return array Associative array of parsed arguments.
+     * @param array<int, mixed> $argv Command-line arguments, including the script name at index zero.
+     * @return array{help:bool, showVersion:bool, diagnostics:bool, validateBuild:bool, target:?string, debug:bool, silent:bool, noLog:bool, init:bool}
      */
     public function parse(array $argv): array
     {
@@ -70,8 +55,15 @@ final class CliParser
                 continue;
             }
 
-            if (isset(self::FLAG_OPTIONS[$arg])) {
-                $option = self::FLAG_OPTIONS[$arg];
+            $option = null;
+            foreach (self::OPTIONS as $definition) {
+                if (in_array($arg, $definition['aliases'], true)) {
+                    $option = $definition;
+                    break;
+                }
+            }
+
+            if ($option !== null) {
                 $action = $option['action'];
                 if ($action !== null) {
                     if ($selectedAction !== null && $selectedAction !== $action) {
@@ -104,28 +96,25 @@ final class CliParser
         return $result;
     }
 
-    /**
-     * Show help information.
-     *
-     * Displays usage and available command-line options.
-     */
+    /** Displays help generated from the same option definitions used by the parser. */
     public static function showHelp(): void
     {
         $lines = [
             'Usage: phpmake [Options] [target]',
             '',
             'Options:',
-            '-h, --help              Show this help.',
-            '-v, --version           Show version.',
-            '    --diagnostics       Show system diagnostics.',
-            '-vb, --validate-build   Validate build.json configuration.',
-            '-d, --debug             Enable debug logging.',
-            '-s, --silent            Suppress all output except errors.',
-            '-nl,--no-log            Disable file logging.',
-            '    --init              Create a sample build.json.',
-            '',
-            "[target]                 Target to execute (default: build.json's default)",
         ];
+
+        foreach (self::OPTIONS as $option) {
+            $lines[] = sprintf(
+                '  %-22s %s',
+                implode(', ', $option['aliases']),
+                $option['description']
+            );
+        }
+
+        $lines[] = '';
+        $lines[] = "[target]                 Target to execute (default: build.json's default)";
 
         (new ConsoleOutput())->stdout(implode(PHP_EOL, $lines) . PHP_EOL);
     }
