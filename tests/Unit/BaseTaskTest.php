@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace PhpMake\Tests\Unit;
 
 use PhpMake\Task\BaseTask;
+use PhpMake\Tests\Support\DirectoryLinkTestHelper;
 use PhpMake\Utilities\Logger;
 use PHPUnit\Framework\TestCase;
 
 /** Tests the shared task contract and base-class behavior. */
 final class BaseTaskTest extends TestCase
 {
+    use DirectoryLinkTestHelper;
     private string $root;
 
     private BaseTaskTestProbe $task;
@@ -157,6 +159,87 @@ final class BaseTaskTest extends TestCase
         // Act
         $this->task->resolvePath($path, 'test path');
     }
+    /** Resolves a missing leaf without treating it as an existing filesystem entry. */
+    public function testResolvesMissingLeafWithinProject(): void
+    {
+        // Arrange
+        $missing = $this->root . DIRECTORY_SEPARATOR . 'missing.txt';
+
+        // Act
+        $resolved = $this->task->resolvePath($missing, 'test path');
+
+        // Assert
+        self::assertStringEndsWith('missing.txt', $resolved);
+        self::assertStringStartsWith(realpath($this->root), $resolved);
+    }
+
+    /** Rejects parent traversal when a preceding component is a regular file. */
+    public function testRejectsNonDirectoryComponentBeforeParentTraversal(): void
+    {
+        // Arrange
+        $file = $this->root . DIRECTORY_SEPARATOR . 'not-a-directory';
+        self::assertSame(4, file_put_contents($file, 'data'));
+        $path = $file . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'target';
+
+        // Assert
+        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Non-directory path component');
+
+        // Act
+        $this->task->resolvePath($path, 'test path');
+    }
+
+    /** Rejects dangling links before using a path that cannot be resolved. */
+    public function testRejectsDanglingDirectoryLink(): void
+    {
+        // Arrange
+        $target = $this->root . DIRECTORY_SEPARATOR . 'link-target';
+        $movedTarget = $this->root . DIRECTORY_SEPARATOR . 'moved-target';
+        $link = $this->root . DIRECTORY_SEPARATOR . 'dangling-link';
+        self::assertTrue(mkdir($target));
+        $this->createDirectoryLink($target, $link);
+        self::assertTrue(rename($target, $movedTarget));
+
+        try {
+            // Assert
+            $this->expectException(\\InvalidArgumentException::class);
+            $this->expectExceptionMessage('Dangling or unresolvable link');
+
+            // Act
+            $this->task->resolvePath($link . DIRECTORY_SEPARATOR . 'child', 'test path');
+        } finally {
+            if (\\PhpMake\\Filesystem\\FilesystemTree::isLink($link)) {
+                $this->removeDirectoryLink($link);
+            }
+        }
+    }
+
+    /** Removes a directory link itself without deleting its target. */
+    public function testRemovesDirectoryLinkWithoutTraversingTarget(): void
+    {
+        // Arrange
+        $target = $this->root . DIRECTORY_SEPARATOR . 'remove-target';
+        $link = $this->root . DIRECTORY_SEPARATOR . 'remove-link';
+        self::assertTrue(mkdir($target));
+        self::assertSame(4, file_put_contents($target . DIRECTORY_SEPARATOR . 'keep.txt', 'keep'));
+        $this->createDirectoryLink($target, $link);
+
+        try {
+            // Act
+            $removed = $this->task->removeLinkOrJunction($link);
+
+            // Assert
+            self::assertTrue($removed);
+            self::assertDirectoryExists($target);
+            self::assertSame('keep', file_get_contents($target . DIRECTORY_SEPARATOR . 'keep.txt'));
+            self::assertFalse(\\PhpMake\\Filesystem\\FilesystemTree::isLink($link));
+        } finally {
+            if (\\PhpMake\\Filesystem\\FilesystemTree::isLink($link)) {
+                $this->removeDirectoryLink($link);
+            }
+        }
+    }
+
 }
 
 /** Exposes protected BaseTask path helpers for focused unit tests. */
@@ -180,6 +263,11 @@ class BaseTaskTestProbe extends BaseTask
     public function resolvePath(string $path, string $label): string
     {
         return $this->resolvePathInFilesystemOrder($path, $label);
+    }
+
+    public function removeLinkOrJunction(string $path): bool
+    {
+        return $this->removeSymbolicLinkOrJunction($path);
     }
 
     protected function runTask(bool $debug, bool $silent): bool
