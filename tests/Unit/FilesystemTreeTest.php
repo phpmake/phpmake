@@ -385,10 +385,8 @@ final class FilesystemTreeTest extends TestCase
             self::assertFalse(file_exists($link));
             self::assertFalse(is_link($link));
         } finally {
-            if (PHP_OS_FAMILY === 'Windows') {
+            if (FilesystemTree::isLink($link)) {
                 $this->removeDirectoryLink($link);
-            } elseif (is_link($link)) {
-                unlink($link);
             }
         }
     }
