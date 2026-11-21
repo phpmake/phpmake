@@ -144,7 +144,7 @@ final class Logger
      */
     private function openFileSafely(string $path, string $mode)
     {
-        if (!stream_is_local($path)) {
+        if (!self::isLocalFilesystemPath($path)) {
             return @fopen($path, $mode);
         }
 
@@ -175,7 +175,7 @@ final class Logger
     /** Rejects local symlinks, special files, and hardlinks before metadata access or rotation. */
     private function assertSafeLocalFilePath(string $path): void
     {
-        if (stream_is_local($path) && !self::isSafeLocalFilePath($path)) {
+        if (self::isLocalFilesystemPath($path) && !self::isSafeLocalFilePath($path)) {
             throw new \RuntimeException(sprintf("Refusing unsafe log path '%s'.", $path));
         }
     }
@@ -185,6 +185,18 @@ final class Logger
     {
         $stat = @lstat($path);
         return $stat === false || self::isRegularSingleLinkFile($stat);
+    }
+
+    /** Identifies local filesystem paths while leaving custom stream wrappers untouched. */
+    private static function isLocalFilesystemPath(string $path): bool
+    {
+        if (strlen($path) >= 3 && preg_match('/^[A-Za-z]$/D', $path[0]) === 1
+            && $path[1] === ':' && ($path[2] === '\\' || $path[2] === '/')) {
+            return true;
+        }
+
+        $scheme = parse_url($path, PHP_URL_SCHEME);
+        return $scheme === null || (is_string($scheme) && strtolower($scheme) === 'file');
     }
 
     /** Determines whether stat metadata describes a regular file with no additional hardlinks. */
