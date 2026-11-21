@@ -68,10 +68,21 @@ jobs:
           set -o errexit
           set -o pipefail
           find . \
-            \( -path './.git' -o -path './.idea' -o -path './.vscode' -o -path './.vs' \
-            -o -path './node_modules' -o -path './coverage' -o -path './.cache' \
-            -o -path './vendor' -o -path './__pycache__' -o -path './bootstrap' \
-            -o -path './cache' -o -path './packages' -o -path './lua_modules' \) -prune \
+            \( \
+              -path './.git' -o \
+              -path './.idea' -o \
+              -path './.vscode' -o \
+              -path './.vs' -o \
+              -path './node_modules' -o \
+              -path './coverage' -o \
+              -path './.cache' -o \
+              -path './vendor' -o \
+              -path './__pycache__' -o \
+              -path './bootstrap' -o \
+              -path './cache' -o \
+              -path './packages' -o \
+              -path './lua_modules' \
+            \) -prune \
             -o -type f -name "*.php" -print0 | xargs -0 -n 1 php -l
 
       - name: Validate manifest file
