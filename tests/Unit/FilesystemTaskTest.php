@@ -7,6 +7,7 @@ namespace PhpMake\Tests\Unit;
 use PhpMake\Task\Types\CopyTask;
 use PhpMake\Task\Types\DeleteTask;
 use PhpMake\Task\Types\ZipTask;
+use PhpMake\Filesystem\FilesystemTree;
 use PhpMake\Utilities\Logger;
 use PhpMake\Tests\Support\DirectoryLinkTestHelper;
 use PHPUnit\Framework\TestCase;
@@ -230,6 +231,29 @@ final class FilesystemTaskTest extends TestCase
         // Act
         self::assertTrue($task->execute(false, true));
         self::assertDirectoryDoesNotExist($directory);
+    }
+
+
+    /** Deletes a directory link itself without traversing its target. */
+    public function testDeleteTaskDeletesDirectoryLinkWithoutTouchingTarget(): void
+    {
+        // Arrange
+        $target = $this->root . DIRECTORY_SEPARATOR . 'delete-target';
+        $link = $this->root . DIRECTORY_SEPARATOR . 'delete-link';
+        self::assertTrue(mkdir($target));
+        self::assertSame(4, file_put_contents($target . DIRECTORY_SEPARATOR . 'keep.txt', 'keep'));
+        $this->createDirectoryLink($target, $link);
+        $task = new DeleteTask(['path' => $link], $this->logger);
+
+        // Act
+        $deleted = $task->execute(false, true);
+
+        // Assert
+        self::assertTrue($deleted);
+        self::assertDirectoryExists($target);
+        self::assertSame('keep', file_get_contents($target . DIRECTORY_SEPARATOR . 'keep.txt'));
+        self::assertFalse(FilesystemTree::isLink($link));
+        self::assertFalse(file_exists($link));
     }
 
     /** A symlink used as the archive source is rejected rather than followed. */
