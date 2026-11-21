@@ -1,13 +1,13 @@
 # PHPMake User Guide
 
-This guide documents the build-file format, built-in tasks, command-line interface, common failures, and supported extension points for PHPMake 2.x.
+This guide documents the build-file format, built-in tasks, command-line interface, common failures, and built-in task development for PHPMake 2.x.
 
 - Runtime: PHP 8.0 or newer
 - Package manager: Composer 2 or newer
 - Required PHP extensions: `ctype`, `json`, and `zip`
 - Supported operating systems: Windows and GNU/Linux
 
-For security boundaries and deployment guidance, read [SECURITY.md](../SECURITY.md). For concise answers, see [FAQ.txt](FAQ.txt).
+For security boundaries and deployment guidance, read [SECURITY.md](../SECURITY.md). For concise answers, see [FAQ.txt](FAQ.txt). The supported integration surface and deprecation policy are defined in [API-COMPATIBILITY.md](API-COMPATIBILITY.md).
 
 ## 1. Installation and first run
 
@@ -260,7 +260,7 @@ By default, PHPMake writes `build.log` in the current working directory. Log wri
 |---|---|---|
 | `Build file ... not found or unreadable` | No readable `build.json` in the current directory | Run PHPMake from the project directory or place the file there |
 | `Invalid build configuration` | Missing/unknown property, malformed target/task, invalid parameter | Run `--validate-build`; compare with the schema and task reference |
-| Unknown task type | The task identifier is not registered | Use one of the six built-in identifiers or implement/register an extension |
+| Unknown task type | The task identifier is not registered | Use one of the six built-in identifiers; third-party runtime task registration is not currently supported |
 | Dependency/cycle error | Missing dependency or circular target dependency | Check every `depends` name and remove cycles |
 | Safety violation / path escapes project | A filesystem path resolves outside CWD, crosses an unsafe link, or targets a protected root | Resolve the path relative to the invocation directory and inspect symlink/junction ancestors |
 | Copy/archive fails | Source missing, unsupported link/entry, permission issue, size/count limit, or publication error | Use `--debug`; verify source readability and destination writability |
@@ -274,9 +274,9 @@ Use `--diagnostics` when investigating runtime/environment problems. It reports 
 
 ## 6. Extending PHPMake
 
-Built-in task metadata is centralized in `PhpMake\\Task\\TaskDefinitionRegistry`. `TaskFactory` creates the class registered for a task identifier, while `BuildValidator` consumes the registry's required and allowed parameter lists. The published JSON Schema is maintained at `schema/build-schema.json`; `BuildSchemaParityTest` protects consistency between the registry, schema, and runtime validation.
+Built-in task metadata is centralized in `PhpMake\\Task\\TaskDefinitionRegistry`. `TaskFactory` creates the class registered for a task identifier, while `BuildValidator` consumes the registry's required and allowed parameter lists. The published JSON Schema is maintained at `schema/build-schema.json`; `BuildSchemaParityTest` protects consistency between the registry, schema, and runtime validation. The registry is static and has no public registration method: extending `BaseTask` or implementing `TaskInterface` alone does not make a new task type available to build files. See [API-COMPATIBILITY.md](API-COMPATIBILITY.md) for the supported API boundary.
 
-To add a built-in task:
+To contribute a new built-in task to PHPMake itself:
 
 1. Add a class under `src/Task/Types` extending `BaseTask`.
 2. Implement `validateParams()`, `runTask()`, and `getType()`; validate types and reject unsupported values before side effects.
