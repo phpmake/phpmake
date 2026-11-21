@@ -161,7 +161,7 @@ final class BuildValidatorTest extends TestCase
     public function testNonPositiveExecTimeoutIsInvalid(): void
     {
         // Arrange
-        foreach ([0, -1] as $timeout) {
+        foreach ([0, -1, INF, NAN] as $timeout) {
             $config = [
                 'name' => 'Test', 'description' => 'Timeout boundary', 'version' => '1.0',
                 'targets' => ['build' => ['tasks' => [[
