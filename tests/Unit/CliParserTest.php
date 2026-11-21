@@ -2,82 +2,132 @@
 
 declare(strict_types=1);
 
-namespace PhpMake\Tests\Unit;
+namespace PhpMake\\Tests\\Unit;
 
-use PhpMake\Cli\CliParser;
-use PHPUnit\Framework\TestCase;
+use PhpMake\\Cli\\CliParser;
+use PHPUnit\\Framework\\TestCase;
 
-/** Tests parsing of command-line flags and target arguments. */
+/** Tests command-line option aliases, action conflicts, and target parsing. */
 final class CliParserTest extends TestCase
 {
-    public function testParseVersionFlag(): void
+    /** Parses the long version option. */
+    public function testParsesLongVersionOption(): void
     {
         // Arrange
-        $args = ['script.php', '--version']; // Include the script name as first argument.
         $parser = new CliParser();
-        // Action
-        $result = $parser->parse($args);
+
+        // Act
+        $result = $parser->parse(['script.php', '--version']);
+
         // Assert
-        $this->assertTrue((bool) $result['showVersion']);
+        self::assertTrue($result['showVersion']);
     }
 
-    public function testParseHelpFlag(): void
+    /** Parses the short help option. */
+    public function testParsesShortHelpOption(): void
     {
         // Arrange
-        $args = ['script.php', '-h'];
         $parser = new CliParser();
-        // Action
-        $result = $parser->parse($args);
+
+        // Act
+        $result = $parser->parse(['script.php', '-h']);
+
         // Assert
-        $this->assertTrue((bool) $result['help']);
+        self::assertTrue($result['help']);
     }
 
-    public function testParseValidateBuild(): void
+    /** Parses build validation and initialization actions. */
+    public function testParsesBuildValidationAndInitializationActions(): void
     {
         // Arrange
-        $args = ['script.php', '--validate-build'];
         $parser = new CliParser();
-        // Action
-        $result = $parser->parse($args);
+
+        // Act
+        $validation = $parser->parse(['script.php', '--validate-build']);
+        $initialization = $parser->parse(['script.php', '--init']);
+
         // Assert
-        $this->assertTrue((bool) $result['validateBuild']);
+        self::assertTrue($validation['validateBuild']);
+        self::assertTrue($initialization['init']);
     }
 
-    public function testParseInitFlag(): void
+    /** Ensures every short/long alias pair produces the same result key. */
+    public function testShortAndLongAliasesHaveEquivalentEffects(): void
     {
         // Arrange
-        $args = ['script.php', '--init'];
         $parser = new CliParser();
-        // Action
-        $result = $parser->parse($args);
+        $aliases = [
+            ['-h', '--help', 'help'],
+            ['-v', '--version', 'showVersion'],
+            ['-vb', '--validate-build', 'validateBuild'],
+            ['-d', '--debug', 'debug'],
+            ['-s', '--silent', 'silent'],
+            ['-nl', '--no-log', 'noLog'],
+        ];
+
+        // Act
+        $results = [];
+        foreach ($aliases as [$short, $long, $key]) {
+            $results[] = [
+                $parser->parse(['script.php', $short]),
+                $parser->parse(['script.php', $long]),
+                $key,
+            ];
+        }
+
         // Assert
-        $this->assertTrue((bool) $result['init']);
+        foreach ($results as [$shortResult, $longResult, $key]) {
+            self::assertSame($shortResult, $longResult);
+            self::assertTrue($shortResult[$key]);
+        }
     }
 
-    public function testParseTarget(): void
+    /** Parses a target together with independent behavior flags. */
+    public function testParsesTargetAndIndependentFlagsTogether(): void
     {
         // Arrange
-        $args = ['script.php', 'custom_target'];
         $parser = new CliParser();
-        // Action
-        $result = $parser->parse($args);
+
+        // Act
+        $result = $parser->parse(['script.php', 'release', '--debug', '--silent', '--no-log']);
+
         // Assert
-        $this->assertEquals('custom_target', $result['target']);
+        self::assertSame('release', $result['target']);
+        self::assertTrue($result['debug']);
+        self::assertTrue($result['silent']);
+        self::assertTrue($result['noLog']);
     }
 
-    /** Prints the complete command-line help text. */
-    public function testShowHelpPrintsUsageAndOptions(): void
+    /** Allows equivalent aliases for the same action in one invocation. */
+    public function testAllowsEquivalentActionAliasesTogether(): void
+    {
+        // Arrange
+        $parser = new CliParser();
+
+        // Act
+        $result = $parser->parse(['script.php', '-h', '--help']);
+
+        // Assert
+        self::assertTrue($result['help']);
+    }
+
+    /** Prints usage and option help from the parser's option definitions. */
+    public function testShowHelpPrintsRegisteredOptionsAndAliases(): void
     {
         // Arrange
         ob_start();
+
+        // Act
         CliParser::showHelp();
         $output = ob_get_clean();
 
         // Assert
         self::assertIsString($output);
         self::assertStringContainsString('Usage: phpmake', $output);
-        self::assertStringContainsString('--validate-build', $output);
+        self::assertStringContainsString('-vb, --validate-build', $output);
+        self::assertStringContainsString('-nl, --no-log', $output);
         self::assertStringContainsString('--silent', $output);
+        self::assertStringContainsString('--init', $output);
     }
 
     /** Prints the configured PHPMake version. */
@@ -85,11 +135,13 @@ final class CliParserTest extends TestCase
     {
         // Arrange
         ob_start();
+
+        // Act
         CliParser::showVersion();
         $output = ob_get_clean();
 
         // Assert
-        self::assertSame(\PhpMake\Config::TOOL_VERSION . PHP_EOL, $output);
+        self::assertSame(\\PhpMake\\Config::TOOL_VERSION . PHP_EOL, $output);
     }
 
     /** Prints runtime and extension diagnostics. */
@@ -97,6 +149,8 @@ final class CliParserTest extends TestCase
     {
         // Arrange
         ob_start();
+
+        // Act
         CliParser::showDiagnostics();
         $output = ob_get_clean();
 
@@ -111,53 +165,70 @@ final class CliParserTest extends TestCase
     /** Rejects empty arguments rather than indexing an empty string. */
     public function testRejectsEmptyArgument(): void
     {
+        // Arrange
+        $parser = new CliParser();
+
         // Assert
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\\InvalidArgumentException::class);
         $this->expectExceptionMessage('Empty command-line argument');
+
         // Act
-        (new CliParser())->parse(['script.php', '']);
+        $parser->parse(['script.php', '']);
     }
 
     /** Rejects more than one positional target. */
     public function testRejectsDuplicatePositionalTargets(): void
     {
+        // Arrange
+        $parser = new CliParser();
+
         // Assert
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\\InvalidArgumentException::class);
         $this->expectExceptionMessage('Extra argument detected');
+
         // Act
-        (new CliParser())->parse(['script.php', 'build', 'test']);
+        $parser->parse(['script.php', 'build', 'test']);
     }
 
     /** Rejects conflicting command actions. */
     public function testRejectsConflictingActionFlags(): void
     {
+        // Arrange
+        $parser = new CliParser();
+
         // Assert
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\\InvalidArgumentException::class);
         $this->expectExceptionMessage('Conflicting command actions');
+
         // Act
-        (new CliParser())->parse(['script.php', '--help', '--version']);
+        $parser->parse(['script.php', '--help', '--version']);
     }
 
     /** Rejects non-string command-line arguments. */
     public function testRejectsNonStringArgument(): void
     {
+        // Arrange
+        $parser = new CliParser();
+
         // Assert
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\\InvalidArgumentException::class);
         $this->expectExceptionMessage('arguments must be strings');
 
         // Act
-        (new CliParser())->parse(['script.php', 123]);
+        $parser->parse(['script.php', 123]);
     }
 
     /** Rejects unrecognized command-line options. */
     public function testRejectsUnknownOption(): void
     {
+        // Arrange
+        $parser = new CliParser();
+
         // Assert
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\\InvalidArgumentException::class);
         $this->expectExceptionMessage('Unknown option');
 
         // Act
-        (new CliParser())->parse(['script.php', '--unknown-option']);
+        $parser->parse(['script.php', '--unknown-option']);
     }
-
 }
