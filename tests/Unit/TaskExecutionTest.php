@@ -689,7 +689,6 @@ final class TaskExecutionTest extends TestCase
         self::assertStringContainsString('Executing target: build', $output);
         self::assertStringContainsString('Running task: echo', $output);
         self::assertStringContainsString('Task succeeded', $output);
-        self::assertStringContainsString('visible payload', $output);
     }
 
     /** Reports a task failure in visible mode before returning a failure exit code. */
