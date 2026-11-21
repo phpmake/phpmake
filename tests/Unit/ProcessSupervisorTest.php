@@ -112,6 +112,7 @@ final class ProcessSupervisorTest extends TestCase
             proc_close($process);
         }
     }
+
     /** Returns an empty descendant list when process-table tools are unavailable. */
     public function testGetDescendantProcessIdsReturnsEmptyWhenPsIsUnavailable(): void
     {
