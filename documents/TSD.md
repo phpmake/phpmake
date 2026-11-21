@@ -5,6 +5,8 @@
 **Document:** Technical Specification  
 **Status:** Active
 
+The supported PHP/CLI integration surface, current public class inventory, deprecation policy, and compatibility verification are documented in [API-COMPATIBILITY.md](API-COMPATIBILITY.md).
+
 ## 1. Technology Stack
 
 | Component | Technology |
