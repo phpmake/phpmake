@@ -13,9 +13,9 @@ The following are the supported, stable integration points for the 2.x line:
 
 1. **CLI:** the Composer-installed `phpmake` executable and the documented command-line options, target selection, standard output/error behavior, and process exit status.
 2. **Build files:** the JSON configuration format and the six built-in task identifiers documented in the User Guide and defined by `schema/build-schema.json`. Runtime validation and the published schema must remain aligned.
-3. **Composer installation:** package name `phpmake/phpmake`, PSR-4 root `PhpMake\\` mapped to `src/`, the `bin/phpmake.php` executable, PHP requirement `^8.0`, and runtime extension requirements `ext-ctype`, `ext-json`, and `ext-zip`.
-4. **Task interface:** `PhpMake\\Task\\TaskInterface` with `execute(bool $debug, bool $silent): bool` and `getType(): string`.
-5. **Version constant:** `PhpMake\\Config::TOOL_VERSION`, which must match the repository's `VERSION.txt`.
+3. **Composer installation:** package name `phpmake/phpmake`, PSR-4 root `PhpMake\` mapped to `src/`, the `bin/phpmake.php` executable, PHP requirement `^8.0`, and runtime extension requirements `ext-ctype`, `ext-json`, and `ext-zip`.
+4. **Task interface:** `PhpMake\Task\TaskInterface` with `execute(bool $debug, bool $silent): bool` and `getType(): string`.
+5. **Version constant:** `PhpMake\Config::TOOL_VERSION`, which must match the repository's `VERSION.txt`.
 
 The CLI and build-file contracts are the primary user-facing API. The TaskInterface is the only currently designated stable PHP interface.
 
@@ -25,37 +25,37 @@ All classes under the Composer PSR-4 namespace are currently autoloadable. Publi
 
 | Namespace / class | Current public methods and constants |
 |---|---|
-| `PhpMake\\Config` | `TOOL_VERSION` |
-| `PhpMake\\Build\\BuildConfiguration` | `__construct`, `getName`, `getDescription`, `getVersion`, `getTargets`, `getDefaultTarget` |
-| `PhpMake\\Build\\BuildExecutor` | `__construct`, `execute` |
-| `PhpMake\\Build\\BuildLoader` | `load` |
-| `PhpMake\\Build\\BuildValidator` | `validate` |
-| `PhpMake\\Cli\\CliParser` | `parse`, `showHelp`, `showVersion`, `showDiagnostics` |
-| `PhpMake\\Cli\\ConsoleOutput` | `stdout`, `stderr`, `info`, `error`, `success` |
-| `PhpMake\\Filesystem\\AtomicDirectoryPublisher` | `publish` |
-| `PhpMake\\Filesystem\\AtomicFilePublisher` | `publish` |
-| `PhpMake\\Filesystem\\FilesystemIdentity` | `sameFile` |
-| `PhpMake\\Filesystem\\FilesystemTree` | `copyDirectory`, `remove`, `isLink` |
-| `PhpMake\\Process\\CommandLineParser` | `hasBalancedQuotes`, `tokenize` |
-| `PhpMake\\Process\\PosixProcessLauncher` | `prepare` |
-| `PhpMake\\Process\\ProcessLauncher` | `prepare` |
-| `PhpMake\\Process\\ProcessSupervisor` | `getDescendantProcessIds`, `terminate` |
-| `PhpMake\\Process\\WindowsConsoleSignalHandler` | `__construct`, `register`, `unregister`, `handleEvent` |
-| `PhpMake\\Process\\WindowsProcessLauncher` | `build` |
-| `PhpMake\\Target\\DependencyResolver` | `resolve` |
-| `PhpMake\\Task\\TaskInterface` | `execute`, `getType` |
-| `PhpMake\\Task\\BaseTask` | `__construct`, `execute`, `getType` |
-| `PhpMake\\Task\\TaskConfiguration` | `__construct`, `fromArray`, `getType`, `getParams` |
-| `PhpMake\\Task\\TaskDefinitionRegistry` | `all`, `find`, `types` |
-| `PhpMake\\Task\\TaskExecutor` | `__construct`, `executeTasks` |
-| `PhpMake\\Task\\TaskFactory` | `__construct`, `create` |
-| `PhpMake\\Task\\Types\\CopyTask` | `getType` (also inherits `execute`) |
-| `PhpMake\\Task\\Types\\CreateDirectoryTask` | `getType` (also inherits `execute`) |
-| `PhpMake\\Task\\Types\\DeleteTask` | `getType` (also inherits `execute`) |
-| `PhpMake\\Task\\Types\\EchoTask` | `getType` (also inherits `execute`) |
-| `PhpMake\\Task\\Types\\ExecTask` | `getType` (also inherits `execute`) |
-| `PhpMake\\Task\\Types\\ZipTask` | `getType` (also inherits `execute`) |
-| `PhpMake\\Utilities\\Logger` | `__construct`, `info`, `debug`, `error`, `isDebugEnabled`, `isSilent` |
+| `PhpMake\Config` | `TOOL_VERSION` |
+| `PhpMake\Build\BuildConfiguration` | `__construct`, `getName`, `getDescription`, `getVersion`, `getTargets`, `getDefaultTarget` |
+| `PhpMake\Build\BuildExecutor` | `__construct`, `execute` |
+| `PhpMake\Build\BuildLoader` | `load` |
+| `PhpMake\Build\BuildValidator` | `validate` |
+| `PhpMake\Cli\CliParser` | `parse`, `showHelp`, `showVersion`, `showDiagnostics` |
+| `PhpMake\Cli\ConsoleOutput` | `stdout`, `stderr`, `info`, `error`, `success` |
+| `PhpMake\Filesystem\AtomicDirectoryPublisher` | `publish` |
+| `PhpMake\Filesystem\AtomicFilePublisher` | `publish` |
+| `PhpMake\Filesystem\FilesystemIdentity` | `sameFile` |
+| `PhpMake\Filesystem\FilesystemTree` | `copyDirectory`, `remove`, `isLink` |
+| `PhpMake\Process\CommandLineParser` | `hasBalancedQuotes`, `tokenize` |
+| `PhpMake\Process\PosixProcessLauncher` | `prepare` |
+| `PhpMake\Process\ProcessLauncher` | `prepare` |
+| `PhpMake\Process\ProcessSupervisor` | `getDescendantProcessIds`, `terminate` |
+| `PhpMake\Process\WindowsConsoleSignalHandler` | `__construct`, `register`, `unregister`, `handleEvent` |
+| `PhpMake\Process\WindowsProcessLauncher` | `build` |
+| `PhpMake\Target\DependencyResolver` | `resolve` |
+| `PhpMake\Task\TaskInterface` | `execute`, `getType` |
+| `PhpMake\Task\BaseTask` | `__construct`, `execute`, `getType` |
+| `PhpMake\Task\TaskConfiguration` | `__construct`, `fromArray`, `getType`, `getParams` |
+| `PhpMake\Task\TaskDefinitionRegistry` | `all`, `find`, `types` |
+| `PhpMake\Task\TaskExecutor` | `__construct`, `executeTasks` |
+| `PhpMake\Task\TaskFactory` | `__construct`, `create` |
+| `PhpMake\Task\Types\CopyTask` | `getType` (also inherits `execute`) |
+| `PhpMake\Task\Types\CreateDirectoryTask` | `getType` (also inherits `execute`) |
+| `PhpMake\Task\Types\DeleteTask` | `getType` (also inherits `execute`) |
+| `PhpMake\Task\Types\EchoTask` | `getType` (also inherits `execute`) |
+| `PhpMake\Task\Types\ExecTask` | `getType` (also inherits `execute`) |
+| `PhpMake\Task\Types\ZipTask` | `getType` (also inherits `execute`) |
+| `PhpMake\Utilities\Logger` | `__construct`, `info`, `debug`, `error`, `isDebugEnabled`, `isSilent` |
 
 This inventory describes the current source surface; it does not promote the implementation-facing classes to stable extension points.
 
