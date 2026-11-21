@@ -22,20 +22,21 @@ The JSON Schema remains a published static artifact. The parity test intentional
 ## 3. Process execution boundaries
 
 - `CommandLineParser` owns quote validation and shell-free command tokenization.
-- `ProcessLauncher` selects the platform adapter.
+- `ProcessLauncher` selects the platform-specific adapter.
 - `WindowsProcessLauncher` prepares the PowerShell Job Object launcher.
+- `WindowsConsoleSignalHandler` translates Windows CLI Ctrl+C and Ctrl+Break events into cooperative cancellation requests; the handler is unregistered after process cleanup.
 - `PosixProcessLauncher` prepares the POSIX session/process-group launcher.
 - `ProcessSupervisor` discovers and terminates process trees, including tracked descendants.
 - `ExecTask` coordinates process lifecycle, bounded output capture, timeout handling, cancellation, and task-level logging.
 
-All process launch paths continue to use argv arrays and `bypass_shell`; no shell command interpolation was introduced.
+All process launch paths continue to use argv arrays and `bypass_shell`; no shell command interpolation was introduced. On Windows, the Job Object's kill-on-close behavior terminates descendants when the launcher exits. On POSIX, process-group termination is supplemented by periodic descendant sampling.
 
 ## 4. Typed configuration and static analysis
 
 - `TaskConfiguration` is the typed boundary between decoded task arrays and task construction.
 - `BuildConfiguration` documents the validated target/task array shape.
 - `BuildLoader` annotates the validated decoded build shape before constructing `BuildConfiguration`.
-- PHPStan is raised from level 1 to level 2. Further increases should be incremental and based on resolved findings rather than suppressing errors globally.
+- PHPStan is configured at level 2. Further increases should be incremental and based on resolved findings rather than suppressing errors globally.
 
 ## 5. CLI output and error reporting
 
@@ -44,6 +45,13 @@ All process launch paths continue to use argv arrays and `bypass_shell`; no shel
 - `TaskExecutor` delegates target/task status and error messages to the same output boundary.
 - `CliParser` uses one declarative flag table and routes help/version/diagnostic output through the output service.
 - The CLI entrypoint shares one output instance with the logger and task executor. The pre-autoload failure remains a direct stderr write because the Composer autoloader and output class are not available yet.
+
+## 6. Operational reliability
+
+- The benchmark records filesystem write throughput, ZIP throughput, process-start median latency, concurrent worker wall time, peak memory, PHP version, and OS family.
+- CI runs the benchmark on Windows and Linux for PHP 8.0–8.5 and retains each JSON result as a 90-day artifact.
+- Benchmark workers are terminated and reaped if a worker fails, preventing a failed benchmark from leaving background processes behind.
+- Benchmark values are observational baselines, not hard pass/fail performance thresholds; shared-runner variance must be accounted for before introducing regression gates.
 
 ## Compatibility and behavior constraints
 
@@ -54,4 +62,4 @@ All process launch paths continue to use argv arrays and `bypass_shell`; no shel
 
 ## Validation still required
 
-Run PHPUnit, PHPStan level 2, PHP-CS-Fixer, PHP lint, and the full PHP 8.0–8.5 Windows/Linux workflow matrix. In particular, validate process-tree termination and transactional copy/archive replacement on both operating systems before merging.
+Run PHPUnit, PHPStan level 2, PHP-CS-Fixer, PHP lint, the performance benchmark matrix, and the full PHP 8.0–8.5 Windows/Linux workflow matrix. In particular, validate process-tree termination and transactional copy/archive replacement on both operating systems before merging.
