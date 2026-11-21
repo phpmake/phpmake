@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace PhpMake\Tests\Unit;
 
+use PhpMake\Filesystem\FilesystemTree;
 use PhpMake\Task\Types\CopyTask;
 use PhpMake\Task\Types\DeleteTask;
 use PhpMake\Task\Types\ZipTask;
-use PhpMake\Filesystem\FilesystemTree;
-use PhpMake\Utilities\Logger;
 use PhpMake\Tests\Support\DirectoryLinkTestHelper;
+use PhpMake\Utilities\Logger;
 use PHPUnit\Framework\TestCase;
 
 /** Exercises filesystem task behavior against real temporary files and directories. */
