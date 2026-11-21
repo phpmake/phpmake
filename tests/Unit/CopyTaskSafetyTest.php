@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpMake\Tests\Unit;
 
+use PhpMake\Filesystem\FilesystemTree;
 use PhpMake\Task\Types\CopyTask;
 use PhpMake\Utilities\Logger;
 use PHPUnit\Framework\TestCase;
@@ -32,16 +33,7 @@ final class CopyTaskSafetyTest extends TestCase
     protected function tearDown(): void
     {
         chdir($this->originalWorkingDirectory);
-
-        foreach (glob($this->root . DIRECTORY_SEPARATOR . '*') ?: [] as $path) {
-            if (is_file($path) || is_link($path)) {
-                @unlink($path);
-            }
-        }
-
-        if (is_dir($this->root)) {
-            @rmdir($this->root);
-        }
+        FilesystemTree::remove($this->root);
     }
 
     /** Rejects a hardlink alias instead of truncating the source inode. */
@@ -110,6 +102,71 @@ final class CopyTaskSafetyTest extends TestCase
         self::assertSame('keep', file_get_contents($source . DIRECTORY_SEPARATOR . 'keep.txt'));
         self::assertFileDoesNotExist($destination . DIRECTORY_SEPARATOR . 'keep.txt');
         self::assertSame([], glob($this->root . DIRECTORY_SEPARATOR . '*.staging') ?: []);
+    }
+
+    /** Rejects a file destination link without modifying its target. */
+    public function testCopyFileRejectsDestinationSymbolicLink(): void
+    {
+        // Arrange
+        if (PHP_OS_FAMILY === 'Windows') {
+            self::assertTrue(true, 'File symbolic-link creation is not assumed on Windows.');
+            return;
+        }
+
+        $source = $this->root . DIRECTORY_SEPARATOR . 'source.txt';
+        $target = $this->root . DIRECTORY_SEPARATOR . 'target.txt';
+        $destination = $this->root . DIRECTORY_SEPARATOR . 'destination-link.txt';
+        self::assertSame(6, file_put_contents($source, 'source'));
+        self::assertSame(6, file_put_contents($target, 'target'));
+        if (!@symlink($target, $destination)) {
+            self::assertTrue(true, 'File symbolic-link creation is unavailable in this environment.');
+            return;
+        }
+
+        try {
+            $task = new CopyTask(['source' => $source, 'dest' => $destination], $this->logger);
+
+            // Act
+            $result = $task->execute(false, true);
+
+            // Assert
+            self::assertFalse($result);
+            self::assertSame('source', file_get_contents($source));
+            self::assertSame('target', file_get_contents($target));
+        } finally {
+            if (is_link($destination)) {
+                unlink($destination);
+            }
+        }
+    }
+
+    /** Rejects special filesystem entries that are neither regular files nor directories. */
+    public function testCopyTaskRejectsNamedPipeSource(): void
+    {
+        // Arrange
+        if (PHP_OS_FAMILY === 'Windows' || !function_exists('posix_mkfifo')) {
+            self::assertTrue(true, 'Named-pipe creation is not available on this platform.');
+            return;
+        }
+
+        $source = $this->root . DIRECTORY_SEPARATOR . 'source.pipe';
+        self::assertTrue(posix_mkfifo($source, 0600));
+        $destination = $this->root . DIRECTORY_SEPARATOR . 'destination.txt';
+
+        try {
+            $task = new CopyTask(['source' => $source, 'dest' => $destination], $this->logger);
+
+            // Act
+            $result = $task->execute(false, true);
+
+            // Assert
+            self::assertFalse($result);
+            self::assertFileDoesNotExist($destination);
+        } finally {
+            if (file_exists($source)) {
+                unlink($source);
+            }
+        }
     }
 
 }

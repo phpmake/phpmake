@@ -161,7 +161,7 @@ final class BuildValidatorTest extends TestCase
     public function testNonPositiveExecTimeoutIsInvalid(): void
     {
         // Arrange
-        foreach ([0, -1] as $timeout) {
+        foreach ([0, -1, INF, NAN] as $timeout) {
             $config = [
                 'name' => 'Test', 'description' => 'Timeout boundary', 'version' => '1.0',
                 'targets' => ['build' => ['tasks' => [[
@@ -266,4 +266,37 @@ final class BuildValidatorTest extends TestCase
         // Assert
         self::assertStringContainsString("has no valid 'params' object", implode("\n", $errors));
     }
+
+    /** Rejects malformed target metadata, task entries, task types, and exec arguments. */
+    public function testRejectsMalformedPropertiesAndTaskEntries(): void
+    {
+        // Arrange
+        $config = [
+            'name' => 'Test',
+            'description' => 'Malformed metadata',
+            'version' => '1.0',
+            'unexpected' => true,
+            'targets' => [
+                '' => ['description' => 123, 'tasks' => ['not-an-object']],
+                'build' => ['tasks' => [
+                    ['params' => []],
+                    ['type' => 'exec', 'params' => ['command' => 'php', 'args' => [new \stdClass()]]],
+                ]],
+            ],
+            'default_target' => 'build',
+        ];
+
+        // Act
+        $errors = (new BuildValidator())->validate($config);
+        $messages = implode("\n", $errors);
+
+        // Assert
+        self::assertStringContainsString('Unknown top-level property', $messages);
+        self::assertStringContainsString('Target names must be non-empty strings', $messages);
+        self::assertStringContainsString('description must be a string', $messages);
+        self::assertStringContainsString('must be an object', $messages);
+        self::assertStringContainsString("has no valid 'type'", $messages);
+        self::assertStringContainsString("invalid 'args'", $messages);
+    }
+
 }

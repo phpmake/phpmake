@@ -68,4 +68,67 @@ final class DependencyResolverTest extends TestCase
         // Act
         (new DependencyResolver())->resolve($config, 'build');
     }
+
+    /** Resolves duplicate dependencies only once while preserving their first-seen order. */
+    public function testDuplicateDependenciesAreResolvedOnce(): void
+    {
+        // Arrange
+        $config = new BuildConfiguration(
+            'Test',
+            'Duplicate dependencies',
+            '1.0',
+            [
+                'base' => ['depends' => [], 'tasks' => []],
+                'build' => ['depends' => ['base', 'base'], 'tasks' => []],
+            ],
+            'build'
+        );
+
+        // Act
+        $order = (new DependencyResolver())->resolve($config, 'build');
+
+        // Assert
+        self::assertSame(['base', 'build'], $order);
+    }
+
+    /** Rejects a dependency property that is not an array. */
+    public function testNonArrayDependenciesAreRejected(): void
+    {
+        // Arrange
+        $config = new BuildConfiguration(
+            'Test',
+            'Malformed dependencies',
+            '1.0',
+            ['build' => ['depends' => 'base', 'tasks' => []]],
+            'build'
+        );
+
+        // Assert
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Dependencies for target');
+
+        // Act
+        (new DependencyResolver())->resolve($config, 'build');
+    }
+
+    /** Rejects dependency entries that are not non-empty strings. */
+    public function testNonStringDependencyIsRejected(): void
+    {
+        // Arrange
+        $config = new BuildConfiguration(
+            'Test',
+            'Invalid dependency entry',
+            '1.0',
+            ['build' => ['depends' => [123], 'tasks' => []]],
+            'build'
+        );
+
+        // Assert
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('invalid dependency');
+
+        // Act
+        (new DependencyResolver())->resolve($config, 'build');
+    }
+
 }
