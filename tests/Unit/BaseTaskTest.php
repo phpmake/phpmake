@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpMake\Tests\Unit;
 
+use PhpMake\Filesystem\FilesystemTree;
 use PhpMake\Task\BaseTask;
 use PhpMake\Tests\Support\DirectoryLinkTestHelper;
 use PhpMake\Utilities\Logger;
@@ -27,15 +28,7 @@ final class BaseTaskTest extends TestCase
 
     protected function tearDown(): void
     {
-        foreach (glob($this->root . DIRECTORY_SEPARATOR . '*') ?: [] as $path) {
-            if (is_file($path) || is_link($path)) {
-                @unlink($path);
-            } elseif (is_dir($path)) {
-                @rmdir($path);
-            }
-        }
-
-        @rmdir($this->root);
+        FilesystemTree::remove($this->root);
         parent::tearDown();
     }
 
