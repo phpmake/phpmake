@@ -55,8 +55,8 @@ final class FilesystemFailurePathsTest extends TestCase
             try {
                 AtomicFilePublisher::publish($staged, $destination);
                 self::fail('The publisher must reject a recovery path outside the destination directory.');
-            } catch (\RuntimeException $exception) {
-                self::assertStringContainsString('Unable to create recovery path', $exception->getMessage());
+            } catch (\RuntimeException $runtimeException) {
+                self::assertStringContainsString('Unable to create recovery path', $runtimeException->getMessage());
             }
 
             // Assert
@@ -89,8 +89,8 @@ final class FilesystemFailurePathsTest extends TestCase
             try {
                 AtomicDirectoryPublisher::publish($staging, $destination);
                 self::fail('The publisher must fail when the destination parent cannot be modified.');
-            } catch (\RuntimeException $exception) {
-                self::assertStringContainsString('Unable to preserve existing destination', $exception->getMessage());
+            } catch (\RuntimeException $runtimeException) {
+                self::assertStringContainsString('Unable to preserve existing destination', $runtimeException->getMessage());
             }
 
             // Assert
