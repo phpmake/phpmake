@@ -1,19 +1,82 @@
-All kinds of contributions are welcome. If you feel like contributing, fork the project and open a pull request. You can:
+# Contributing to PHPMake
 
-* Send feedbacks.
-* Submit bug reports.
-   * Ensure the bug you are reporting hasn't already been fixed.
-   * Make sure that your bug hasn't been submitted already.
-   * It is also very helpful to gather additional information that can be used to track down a bug, such as traces and logs.
-   * Do not use the bug tracker for personal support requests.
-* Write/Edit the documents.
-* Fix bugs or add new features.
-   * Enter a meaningful explanation in the commit log message.
-   * Don't do reformatting commits, unless you're the original author of the code. This includes changing line endings.
-   * Never remove copyright notices from the code.
-   * Never remove licensing info from code.
-   * Never commit code you didn't write yourself.
-* Ensure contributions work across:
-  * Microsoft Windows
-  * GNU/Linux
-* Use UTF-8 for all text assets.
+Contributions are welcome, including bug reports, tests, documentation, maintenance, and new features.
+
+## Before opening an issue
+
+- Search existing open and closed issues and pull requests to avoid duplicates.
+- Include the PHPMake version, PHP version, operating system, and required PHP extensions.
+- Provide a minimal build configuration and exact reproduction steps.
+- Include relevant console output and sanitized log excerpts.
+- Never include passwords, API keys, tokens, private build files, or other secrets in a report.
+- Use the private process in [SECURITY.md](../SECURITY.md) for suspected vulnerabilities; do not publish exploit details in a public issue.
+
+## Development setup
+
+1. Fork and clone the repository.
+2. Use PHP 8.0 or newer and Composer 2 or newer.
+3. Install development dependencies:
+
+   ```sh
+   composer install
+   ```
+
+4. Create a focused branch for the change.
+5. Run the relevant tests before editing and add regression coverage for confirmed bugs.
+
+Required runtime extensions are `ctype`, `json`, and `zip`. The supported CI matrix covers PHP 8.0–8.5 on Windows and Linux; changes must preserve the PHP 8.0 syntax/runtime floor and both operating systems.
+
+## Quality checks
+
+Run the checks exposed by Composer:
+
+```sh
+composer test
+composer analyse
+composer format-check
+composer lint
+composer refactor-check
+```
+
+Run the benchmark when changing performance-sensitive code:
+
+```sh
+composer benchmark
+```
+
+Use `composer reformat` to apply the configured formatter and `composer refactor` only when you intend to apply Rector transformations. Review generated changes rather than committing broad mechanical edits without inspection.
+
+Before requesting review:
+
+- Ensure the complete relevant test suite passes.
+- Add tests for success, failure, boundary, and platform-specific behavior as appropriate.
+- Use Arrange, Act, Assert (AAA) structure in tests.
+- Keep public behavior and the PHP 8.0 compatibility floor intact unless the change explicitly proposes a documented compatibility change.
+- Do not add a dependency without explaining why it is needed.
+- Update README, FAQ, the User Guide, schema, and changelog when behavior or user-visible configuration changes.
+- Check that examples and links point to files that exist.
+- Never commit generated dependencies, local environment files, credentials, or test artifacts.
+
+## Pull requests
+
+- Explain the problem and the chosen solution.
+- Describe user-visible behavior changes and compatibility impact.
+- List the tests and quality commands actually run, including platform/version coverage.
+- Link related issues.
+- Keep each pull request focused; avoid unrelated formatting or line-ending changes.
+- Do not claim CI passed unless the GitHub Actions results show it passed.
+
+## Code conventions
+
+- Use UTF-8 for text assets.
+- Follow the existing PHP style and configured PHP-CS-Fixer rules.
+- Preserve copyright and licensing notices.
+- Do not commit code or assets you do not have the right to contribute.
+- Prefer small, explicit changes over speculative abstractions.
+- Keep documentation factual and aligned with the implementation.
+
+## Architecture and task extensions
+
+The [User Guide](USER-GUIDE.md) documents the supported build-file format and the built-in task extension process. The [Architecture Refactor](ARCHITECTURE-REFACTOR.md) describes internal boundaries. In brief, task metadata belongs in `TaskDefinitionRegistry`, the published contract belongs in `schema/build-schema.json`, and parity is protected by `BuildSchemaParityTest`.
+
+Contributors should not bypass path-safety, process-launch, output-limit, or atomic-publication helpers when changing filesystem or process behavior.
