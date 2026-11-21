@@ -660,4 +660,65 @@ final class TaskExecutionTest extends TestCase
         }
     }
 
+    /** Reports the full successful task lifecycle when execution is not silent. */
+    public function testTaskExecutorOutputsSuccessfulTaskLifecycle(): void
+    {
+        // Arrange
+        $config = new \\PhpMake\\Build\\BuildConfiguration(
+            'VisibleTest',
+            'Visible output contract',
+            '1.0.0',
+            ['build' => ['tasks' => [[
+                'type' => 'echo',
+                'params' => ['message' => 'visible payload'],
+            ]]]],
+            'build'
+        );
+        $executor = new \\PhpMake\\Task\\TaskExecutor();
+        $factory = new \\PhpMake\\Task\\TaskFactory($this->logger);
+
+        ob_start();
+
+        // Act
+        $exitCode = $executor->executeTasks($config, ['build'], $factory, false, false);
+        $output = ob_get_clean();
+
+        // Assert
+        self::assertSame(0, $exitCode);
+        self::assertStringContainsString('Executing target: build', $output);
+        self::assertStringContainsString('Running task: echo', $output);
+        self::assertStringContainsString('Task succeeded', $output);
+        self::assertStringContainsString('visible payload', $output);
+    }
+
+    /** Reports a task failure in visible mode before returning a failure exit code. */
+    public function testTaskExecutorOutputsTaskFailureWhenNotSilent(): void
+    {
+        // Arrange
+        $config = new \\PhpMake\\Build\\BuildConfiguration(
+            'VisibleFailure',
+            'Visible failure output',
+            '1.0.0',
+            ['build' => ['tasks' => [[
+                'type' => 'exec',
+                'params' => ['command' => PHP_BINARY, 'args' => ['-r', 'exit(7);']],
+            ]]]],
+            'build'
+        );
+        $executor = new \\PhpMake\\Task\\TaskExecutor();
+        $factory = new \\PhpMake\\Task\\TaskFactory($this->logger);
+
+        ob_start();
+
+        // Act
+        $exitCode = $executor->executeTasks($config, ['build'], $factory, false, false);
+        $output = ob_get_clean();
+
+        // Assert
+        self::assertSame(1, $exitCode);
+        self::assertStringContainsString('Executing target: build', $output);
+        self::assertStringContainsString('Running task: exec', $output);
+        self::assertStringContainsString('Task failed', $output);
+    }
+
 }
