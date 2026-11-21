@@ -146,7 +146,7 @@ final class AtomicPublisherValidationTest extends TestCase
 
         try {
             // Assert
-            $this->expectException(\\InvalidArgumentException::class);
+            $this->expectException(\InvalidArgumentException::class);
             $this->expectExceptionMessage('Staged path must be a regular file');
 
             // Act
@@ -182,7 +182,7 @@ final class AtomicPublisherValidationTest extends TestCase
             try {
                 AtomicFilePublisher::publish($staged, $destination);
                 self::fail('A destination file link must not be replaced.');
-            } catch (\\InvalidArgumentException $invalidArgumentException) {
+            } catch (\InvalidArgumentException $invalidArgumentException) {
                 self::assertStringContainsString('Destination must not be a symbolic link', $invalidArgumentException->getMessage());
             }
 
@@ -206,7 +206,7 @@ final class AtomicPublisherValidationTest extends TestCase
         self::assertTrue(mkdir($destination));
 
         // Act / Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Existing destination must be a regular file.');
         AtomicFilePublisher::publish($staged, $destination);
     }
@@ -228,7 +228,7 @@ final class AtomicPublisherValidationTest extends TestCase
             try {
                 AtomicDirectoryPublisher::publish($staging, $destination);
                 self::fail('A destination directory link must not be replaced.');
-            } catch (\\InvalidArgumentException $invalidArgumentException) {
+            } catch (\InvalidArgumentException $invalidArgumentException) {
                 self::assertStringContainsString('Destination must not be a symbolic link', $invalidArgumentException->getMessage());
             }
 
@@ -251,7 +251,7 @@ final class AtomicPublisherValidationTest extends TestCase
         self::assertSame(7, file_put_contents($destination, 'blocker'));
 
         // Act / Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Existing destination must be a directory.');
         AtomicDirectoryPublisher::publish($staging, $destination);
     }
@@ -275,7 +275,7 @@ final class AtomicPublisherValidationTest extends TestCase
             try {
                 AtomicFilePublisher::publish($staged, $destination);
                 self::fail('Publication must fail when the parent directory is not writable.');
-            } catch (\\RuntimeException $runtimeException) {
+            } catch (\RuntimeException $runtimeException) {
                 self::assertStringContainsString('Unable to publish file', $runtimeException->getMessage());
             }
 
