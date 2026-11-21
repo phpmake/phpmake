@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace PhpMake\\Cli;
+namespace PhpMake\Cli;
 
-use PhpMake\\Config;
+use PhpMake\Config;
 
 /** Parses command-line options and identifies the requested build target. */
 final class CliParser
@@ -48,7 +48,7 @@ final class CliParser
         $selectedAction = null;
         foreach ($argv as $index => $arg) {
             if (!is_string($arg)) {
-                throw new \\InvalidArgumentException('Command-line arguments must be strings.');
+                throw new \InvalidArgumentException('Command-line arguments must be strings.');
             }
 
             if ($index === 0) {
@@ -67,7 +67,7 @@ final class CliParser
                 $action = $option['action'];
                 if ($action !== null) {
                     if ($selectedAction !== null && $selectedAction !== $action) {
-                        throw new \\InvalidArgumentException('Conflicting command actions were specified.');
+                        throw new \InvalidArgumentException('Conflicting command actions were specified.');
                     }
 
                     $selectedAction = $action;
@@ -78,19 +78,19 @@ final class CliParser
             }
 
             if ($arg === '') {
-                throw new \\InvalidArgumentException('Empty command-line argument is not valid.');
+                throw new \InvalidArgumentException('Empty command-line argument is not valid.');
             }
 
             if ($arg[0] !== '-') {
                 if ($result['target'] !== null) {
-                    throw new \\InvalidArgumentException(sprintf("Error: Extra argument detected: '%s'.", $arg));
+                    throw new \InvalidArgumentException(sprintf("Error: Extra argument detected: '%s'.", $arg));
                 }
 
                 $result['target'] = $arg;
                 continue;
             }
 
-            throw new \\InvalidArgumentException(sprintf("Unknown option: '%s'.", $arg));
+            throw new \InvalidArgumentException(sprintf("Unknown option: '%s'.", $arg));
         }
 
         return $result;
