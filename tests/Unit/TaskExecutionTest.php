@@ -132,6 +132,7 @@ final class TaskExecutionTest extends TestCase
         $output = ob_get_clean();
 
         // Assert
+        self::assertIsString($output);
         self::assertSame(0, $exitCode);
         self::assertSame('', $output);
     }
@@ -715,6 +716,7 @@ final class TaskExecutionTest extends TestCase
         $output = ob_get_clean();
 
         // Assert
+        self::assertIsString($output);
         self::assertSame(1, $exitCode);
         self::assertStringContainsString('Executing target: build', $output);
         self::assertStringContainsString('Running task: exec', $output);
