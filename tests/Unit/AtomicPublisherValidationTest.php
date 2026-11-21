@@ -12,6 +12,8 @@ use PHPUnit\Framework\TestCase;
 /** Covers rejected publication inputs without mutating existing filesystem entries. */
 final class AtomicPublisherValidationTest extends TestCase
 {
+    use DirectoryLinkTestHelper;
+
     private string $base;
 
     protected function setUp(): void
