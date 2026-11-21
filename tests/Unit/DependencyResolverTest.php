@@ -68,6 +68,7 @@ final class DependencyResolverTest extends TestCase
         // Act
         (new DependencyResolver())->resolve($config, 'build');
     }
+
     /** Resolves duplicate dependencies only once while preserving their first-seen order. */
     public function testDuplicateDependenciesAreResolvedOnce(): void
     {
