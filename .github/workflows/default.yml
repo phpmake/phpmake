@@ -111,9 +111,6 @@ jobs:
       - name: Run PHPUnit tests
         run: composer test
 
-      - name: Run performance benchmark
-        run: composer benchmark
-
       - name: Verify clean Composer consumer installation
         shell: bash
         run: |
@@ -194,6 +191,45 @@ jobs:
           path: build/coverage.xml
           if-no-files-found: error
           retention-days: 14
+
+  performance:
+    name: Performance Baseline (${{ matrix.os }}, PHP ${{ matrix.php-version }})
+    runs-on: ${{ matrix.os }}
+    continue-on-error: false
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        php-version: ['8.0', '8.1', '8.2', '8.3', '8.4', '8.5']
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: zip
+          tools: composer:v2
+          ini-values: memory_limit=256M, error_reporting=-1, display_errors=On
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run performance benchmark
+        shell: bash
+        run: |
+          set -o pipefail
+          composer benchmark | tee benchmark-results.json
+
+      - name: Retain performance baseline
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-${{ runner.os }}-php-${{ matrix.php-version }}
+          path: benchmark-results.json
+          if-no-files-found: error
+          retention-days: 90
 
   php-compatibility:
     name: PHP ${{ matrix.php-version }} compatibility
