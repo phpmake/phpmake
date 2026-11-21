@@ -126,6 +126,7 @@ final class AtomicPublisherValidationTest extends TestCase
             }
         }
     }
+
     /** Rejects a staged file link without reading through it. */
     public function testFilePublisherRejectsStagedFileLink(): void
     {
