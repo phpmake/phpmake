@@ -61,7 +61,8 @@ final class FilesystemFailurePathsTest extends TestCase
 
             // Assert
             self::assertSame('old', file_get_contents($destination));
-            self::assertFileDoesNotExist($staged);
+            self::assertFileExists($staged);
+            self::assertSame('new', file_get_contents($staged));
         } finally {
             chmod($this->base, 0700);
         }
