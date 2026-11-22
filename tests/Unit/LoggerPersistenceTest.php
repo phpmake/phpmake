@@ -34,6 +34,22 @@ final class LoggerPersistenceTest extends TestCase
         parent::tearDown();
     }
 
+    /** Debug logging remains available in the file when console output is silent. */
+    public function testDebugRequestIsIndependentOfConsoleVisibility(): void
+    {
+        // Arrange
+        $logger = new Logger(true, true, false, 'silent-debug.log');
+
+        // Act
+        $logger->debug('diagnostic-entry');
+
+        // Assert
+        self::assertTrue($logger->isDebugRequested());
+        self::assertFalse($logger->isDebugEnabled());
+        self::assertTrue($logger->isSilent());
+        self::assertStringContainsString('DEBUG: diagnostic-entry', file_get_contents('silent-debug.log'));
+    }
+
     /** Covers console modes, errors, persistent writes, log rotation, and safe failure modes. */
     public function testLoggerWritesRotatesAndSurvivesPersistenceFailures(): void
     {
