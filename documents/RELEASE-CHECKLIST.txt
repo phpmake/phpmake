@@ -73,6 +73,8 @@ Record the workflow URL and candidate commit SHA in the release record.
 Only after all mandatory gates pass:
 
 - [ ] Re-run or verify all required checks against the final release commit.
+- [ ] Wait for the push-triggered `Build and Test` run for the exact `main` commit
+      to complete successfully before pushing its release tag.
 - [ ] Create an annotated Git tag matching `VERSION.txt`.
 - [ ] Push the annotated tag matching `VERSION.txt`; this triggers
       `.github/workflows/release.yml`.
