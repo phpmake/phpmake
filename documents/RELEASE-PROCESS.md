@@ -8,7 +8,7 @@ publishes a GitHub Release only after it validates the exact tagged commit.
 1. Start from an up-to-date `main` branch and create a reviewed release candidate.
 2. Choose a stable SemVer version that is not already present as a Git tag or on
    Packagist. Do not assume the current source version is available for publication.
-3. Update `VERSION.txt` and `PhpMake\\Config::TOOL_VERSION` to the same version.
+3. Update `VERSION.txt` and `PhpMake\Config::TOOL_VERSION` to the same version.
 4. Move the completed entries from the `Unreleased` section in
    `documents/CHANGELOG.txt` into a new `PHPMake VERSION - YYYY-MM-DD` section.
 5. Review README examples, migration notes, API compatibility, security policy,
@@ -34,8 +34,10 @@ git push origin "$VERSION"
 The `.github/workflows/release.yml` workflow runs when a stable SemVer tag is pushed.
 It refuses to publish unless all of the following are true:
 
-- The tag is an annotated tag and points to a commit reachable from `main`.
-- The tag, `VERSION.txt`, and `PhpMake\\Config::TOOL_VERSION` match exactly.
+- The tag uses strict stable SemVer, is newly created (not moved or replaced),
+  is annotated, and points to a commit reachable from `main`.
+- No GitHub Release already exists for the tag.
+- The tag, `VERSION.txt`, and `PhpMake\Config::TOOL_VERSION` match exactly.
 - The changelog contains a non-empty section for that version.
 - The exact commit has a successful `Build and Test` workflow run on `main`.
 - Composer metadata validation, the complete PHPUnit suite, and Composer security
