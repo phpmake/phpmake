@@ -32,7 +32,7 @@ final class ExecTask extends BaseTask
         }
 
         $argv = array_merge($argv, array_map(static fn($arg): string => (string) $arg, $args));
-        if ($this->logger->isDebugEnabled()) {
+        if ($this->logger->isDebugRequested()) {
             // Arguments may contain API keys, passwords, or other credentials.
             $this->logger->debug('Executing external process (arguments omitted).');
         }

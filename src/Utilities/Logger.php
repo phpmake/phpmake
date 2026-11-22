@@ -207,6 +207,12 @@ final class Logger
             && (!isset($stat['nlink']) || $stat['nlink'] <= 1);
     }
 
+    /** Indicates whether debug logging was requested, independent of console silence. */
+    public function isDebugRequested(): bool
+    {
+        return $this->debug;
+    }
+
     /** Indicates whether debug messages are visible. */
     public function isDebugEnabled(): bool
     {

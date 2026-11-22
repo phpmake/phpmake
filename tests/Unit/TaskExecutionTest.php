@@ -189,6 +189,48 @@ final class TaskExecutionTest extends TestCase
         self::assertSame(1, $exitCode);
     }
 
+    /** Debug mode records diagnostics when task construction throws before execution. */
+    public function testTaskExecutorLogsFactoryExceptionDiagnostics(): void
+    {
+        // Arrange
+        $logFile = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-task-diagnostics-' . bin2hex(random_bytes(6)) . '.log';
+        $logger = new Logger(true, true, false, $logFile);
+        $config = new \PhpMake\Build\BuildConfiguration(
+            'InvalidTask',
+            'Invalid task configuration',
+            '1.0.0',
+            ['build' => ['tasks' => [['type' => '', 'params' => []]]]],
+            'build'
+        );
+
+        try {
+            // Act
+            $exitCode = (new \PhpMake\Task\TaskExecutor())->executeTasks(
+                $config,
+                ['build'],
+                new \PhpMake\Task\TaskFactory($logger),
+                true,
+                true,
+                $logger
+            );
+
+            // Assert
+            $log = file_get_contents($logFile);
+            self::assertSame(1, $exitCode);
+            self::assertIsString($log);
+            self::assertStringContainsString('Exception: ', $log);
+            self::assertStringContainsString('Stack trace:', $log);
+        } finally {
+            if (is_file($logFile)) {
+                unlink($logFile);
+            }
+
+            if (is_file($logFile . '.lock')) {
+                unlink($logFile . '.lock');
+            }
+        }
+    }
+
     /** Invalid task configuration is caught and reported as a failed build. */
     public function testTaskExecutorHandlesTaskFactoryFailure(): void
     {

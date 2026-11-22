@@ -32,8 +32,9 @@ final class BuildExecutor
             $config,
             $this->dependencyResolver->resolve($config, $target),
             $this->taskFactory,
-            $logger->isDebugEnabled(),
-            $logger->isSilent()
+            $logger->isDebugRequested(),
+            $logger->isSilent(),
+            $logger
         );
     }
 }

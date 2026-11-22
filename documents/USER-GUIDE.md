@@ -252,7 +252,7 @@ Only one target argument is accepted. Conflicting action options (for example, `
 
 ### Logging
 
-By default, PHPMake writes `build.log` in the current working directory. Log writes and rotation use `build.log.lock`. The active log rotates at 10 MiB and retains up to five rotated files (`build.log.1` through `build.log.5`). Use `--no-log` to disable file logging. Debug mode adds diagnostic messages. Silent mode suppresses normal console output, but errors remain visible on STDERR.
+By default, PHPMake writes `build.log` in the current working directory. Log writes and rotation use `build.log.lock`. The active log rotates at 10 MiB and retains up to five rotated files (`build.log.1` through `build.log.5`). Use `--no-log` to disable file logging. Debug mode adds diagnostic messages. For caught exceptions, diagnostics include the exception class, source location, and stack trace; stack frames do not include argument values. Exception messages and child-process output may still contain secrets. With `--silent --debug`, debug details are retained in `build.log` but are not printed to the console. Silent mode suppresses normal console output, but errors remain visible on STDERR.
 
 ## 5. Troubleshooting
 
@@ -267,7 +267,7 @@ By default, PHPMake writes `build.log` in the current working directory. Log wri
 | External command does not start | Executable unavailable or invalid command tokenization | Check executable availability and quote handling; use an explicit executable path |
 | External command times out | Runtime exceeds configured timeout | Increase `timeout` only when justified; inspect child processes and command behavior |
 | External command reports output-limit failure | STDOUT or STDERR exceeded 1 MiB | Reduce command verbosity or redirect output within the child command's own supported interface |
-| Build stops after a task | The task returned failure or threw an exception | Read console STDERR and `build.log`; PHPMake stops the current build on task failure |
+| Build stops after a task | The task returned failure or threw an exception | Read console STDERR and `build.log`; use `--debug` for exception class, source location, and stack trace; PHPMake stops the current build on task failure |
 | `--init` says build.json already exists | A file, directory, or link already occupies the destination | Back up or rename it manually; PHPMake intentionally does not overwrite it |
 
 Use `--diagnostics` when investigating runtime/environment problems. It reports the PHP runtime and loaded extensions; it does not run a build or validate the configuration.
