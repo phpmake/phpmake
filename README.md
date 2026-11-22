@@ -16,6 +16,7 @@ A PHP build automation tool using JSON configuration file.
 * [Usage](#usage)
 * [User Guide](documents/USER-GUIDE.md)
 * [API and Backward Compatibility](documents/API-COMPATIBILITY.md)
+* [Release Checklist](documents/RELEASE-CHECKLIST.txt)
 * [FAQ](#faq)
 * [Support](#support)
 * [Changelog](#changelog)
