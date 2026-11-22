@@ -156,7 +156,9 @@ jobs:
             printf 'Version: %s\n' "$version"
             printf 'Commit: %s\n' "$GITHUB_SHA"
             printf 'Tag: %s\n' "$GITHUB_REF"
-            printf 'Workflow: %s\n' "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            workflow_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
+            workflow_url="${workflow_url}/actions/runs/${GITHUB_RUN_ID}"
+            printf 'Workflow: %s\\n' "$workflow_url"
           } > dist/RELEASE-MANIFEST.txt
 
       - name: Publish GitHub release
