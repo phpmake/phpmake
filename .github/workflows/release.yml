@@ -50,7 +50,7 @@ jobs:
           fi
 
           version="$(tr -d '\r\n' < VERSION.txt)"
-          config_version="$(php -r 'require "src/Config.php"; echo \\PhpMake\\Config::TOOL_VERSION;')"
+          config_version="$(php -r 'require "src/Config.php"; echo \PhpMake\Config::TOOL_VERSION;')"
 
           if [[ "$tag" != "$version" || "$tag" != "$config_version" ]]; then
             echo "::error::Tag, VERSION.txt, and Config::TOOL_VERSION must match."
