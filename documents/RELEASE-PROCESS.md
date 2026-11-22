@@ -15,6 +15,8 @@ publishes a GitHub Release only after it validates the exact tagged commit.
    and the release checklist.
 6. Run the complete validation gates in
    [RELEASE-CHECKLIST.txt](RELEASE-CHECKLIST.txt). Merge the candidate into `main`.
+   Wait for the push-triggered `Build and Test` run for that exact `main` commit
+   to complete successfully before pushing its release tag.
 
 ## Publish
 
