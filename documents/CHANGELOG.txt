@@ -1,5 +1,6 @@
 PHPMake - Unreleased
 --------------------
+* Refactor legacy PHPUnit tests for descriptive names and consistent Arrange / Act / Assert structure.
 * Add debug-only exception class, source location, and argument-free stack trace diagnostics for task failures.
 * Correct POSIX process-group termination to signal the launcher session rather than the child PID.
 * Handle POSIX SIGINT/SIGTERM as cooperative cancellation and clean up the active child process group.

@@ -12,8 +12,8 @@ use PHPUnit\Framework\TestCase;
 /** Tests the public contract implemented by concrete task classes. */
 final class TaskInterfaceTest extends TestCase
 {
-    /** Built-in tasks expose the interface methods and execute through the contract. */
-    public function testEchoTaskImplementsTaskInterface(): void
+    /** Executes an echo task through the task interface and exposes its type. */
+    public function testEchoTaskImplementsAndExecutesTaskInterface(): void
     {
         // Arrange
         $task = new EchoTask(
@@ -21,10 +21,13 @@ final class TaskInterfaceTest extends TestCase
             new Logger(false, true, true)
         );
 
+        // Act
+        $type = $task->getType();
+        $result = $task->execute(false, true);
+
         // Assert
         self::assertInstanceOf(TaskInterface::class, $task);
-        // Act
-        self::assertSame('echo', $task->getType());
-        self::assertTrue($task->execute(false, true));
+        self::assertSame('echo', $type);
+        self::assertTrue($result);
     }
 }
