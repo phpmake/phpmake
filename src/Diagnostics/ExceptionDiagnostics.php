@@ -13,7 +13,7 @@ final class ExceptionDiagnostics
         $trace = $exception->getTraceAsString();
 
         return implode(PHP_EOL, [
-            'Exception: ' . get_class($exception),
+            'Exception: ' . $exception::class,
             sprintf('Location: %s:%d', $exception->getFile(), $exception->getLine()),
             'Stack trace:',
             $trace !== '' ? $trace : '(empty)',

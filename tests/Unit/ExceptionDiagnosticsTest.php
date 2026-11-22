@@ -19,9 +19,9 @@ final class ExceptionDiagnosticsTest extends TestCase
 
         try {
             $this->throwWithSecret($secret);
-        } catch (\RuntimeException $exception) {
+        } catch (\RuntimeException $runtimeException) {
             // Act
-            $diagnostics = ExceptionDiagnostics::format($exception);
+            $diagnostics = ExceptionDiagnostics::format($runtimeException);
         }
 
         // Assert
