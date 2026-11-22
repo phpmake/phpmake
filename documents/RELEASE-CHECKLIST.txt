@@ -1,6 +1,6 @@
 # PHPMake Release Checklist
 
-Use this checklist for every stable or pre-release publication. A release is not ready
+Use this checklist for every stable release publication. A release is not ready
 until all mandatory automated and manual gates have recorded evidence against the exact
 candidate commit.
 
@@ -73,19 +73,47 @@ Record the workflow URL and candidate commit SHA in the release record.
 Only after all mandatory gates pass:
 
 - [ ] Re-run or verify all required checks against the final release commit.
+- [ ] Wait for the push-triggered `Build and Test` run for the exact `main` commit
+      to complete successfully before pushing its release tag.
 - [ ] Create an annotated Git tag matching `VERSION.txt`.
-- [ ] Push the tag and create the Git-host release with the changelog entries.
-- [ ] Verify the release source archive contains the expected files and excludes development-only artifacts.
-- [ ] Verify Packagist sees the intended version and installation works in a fresh consumer project.
-- [ ] Confirm the release page, tag, Packagist version, README badge, and `--version` output agree.
-- [ ] Retain the workflow URL, commit SHA, test matrix results, coverage artifact, audit result, and consumer-install evidence.
+- [ ] Push the annotated tag matching `VERSION.txt`; this triggers
+      `.github/workflows/release.yml`.
+- [ ] Confirm the release workflow validates the exact commit and publishes the
+      GitHub Release with source archives, SHA-256 checksums, manifest, and changelog.
+- [ ] Verify the release source archives contain the expected tracked files.
+- [ ] Verify Packagist sees the intended version and installation works in a fresh
+      consumer project. Packagist synchronization is external to the release workflow.
+- [ ] Confirm the release page, tag, Packagist version, README badge, and
+      `--version` output agree.
+- [ ] Retain the workflow URL, commit SHA, test matrix results, coverage artifact,
+      audit result, and consumer-install evidence.
 
-## 7. Current repository baseline (Phase 9 audit)
+## 7. Phase 9 release-readiness baseline
 
-- Current `main` baseline at the start of Phase 9: `2fa066c634fd5debe4efd4f1148788b549ce42e4`.
-- Current source version: `2.0.2` in both `VERSION.txt` and `PhpMake\\Config::TOOL_VERSION`.
-- Existing Git tags observed: `1.0.0`, `2.0.0`, and `2.0.1`.
-- No GitHub Releases were present at audit time.
-- The existing workflow already defines PHP 8.0–8.5 Linux compatibility, Windows regression tests, Linux/Windows performance baselines, coverage, static analysis, Composer checks, dependency audit, clean consumer installation, and sample-build smoke tests.
-- The post-Phase-8 main workflow failed at PHPStan level 3 in `src/Build/BuildLoader.php:47`: PHPStan treated the decoded `stdClass` target collection as non-iterable. The Phase 9 branch fixes the iteration using `get_object_vars()`; this must be confirmed by the new CI run.
-- No stable release tag or GitHub Release is created by this phase. Publication remains blocked until all gates above pass and the release version is explicitly selected.
+- Phase 9 was merged into `main` as merge commit
+  `ec63634f6f73e3b3dbde92df9668217fab30b496`.
+- The Phase 9 candidate was `048aebedb097d63608b2a046da1a1d42d55535d4`.
+- Workflow run
+  `https://github.com/phpmake/phpmake/actions/runs/45009480697`
+  completed successfully with 26 of 26 jobs passing.
+- The run covered PHP 8.0–8.5 compatibility, Windows filesystem/process tests,
+  Linux/Windows performance baselines, PHPStan, formatting, Rector, Composer checks,
+  PHPUnit, dependency audit, clean consumer installation, and coverage generation.
+- The source version remains `2.0.2` in `VERSION.txt` and
+  `PhpMake\Config::TOOL_VERSION`. Phase 9 did not create a tag or publish a release.
+- The Phase 9 audit observed Git tags `1.0.0`, `2.0.0`, and `2.0.1`, and no
+  GitHub Releases at that time. Recheck Git and Packagist before selecting a version.
+
+## 8. Phase 10 release automation
+
+- `.github/workflows/release.yml` validates strict stable SemVer tags, rejects
+  moved/replaced tags and existing GitHub Releases, requires annotated-tag identity,
+  source version consistency, changelog presence, main-branch ancestry, and a
+  successful `Build and Test` run for the exact commit.
+- The workflow repeats Composer validation, the complete test suite, and the
+  dependency audit before publishing.
+- Successful publication creates a GitHub Release with `.tar.gz` and `.zip`
+  source archives, `SHA256SUMS`, a release manifest, and changelog-derived notes.
+- The workflow does not select or bump versions, create tags, or publish directly
+  to Packagist. These remain explicit maintainer actions.
+- No release is published by Phase 10 itself.
