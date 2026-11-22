@@ -42,7 +42,151 @@ jobs:
           set -euo pipefail
 
           tag="${GITHUB_REF_NAME}"
-          if [[ ! "$tag" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+          semver_pattern='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)
+            echo "::error::Release tags must use strict stable SemVer."
+            exit 1
+          fi
+
+          empty_sha="0000000000000000000000000000000000000000"
+          if [[ "$RELEASE_EVENT_BEFORE" != "$empty_sha" ]]; then
+            echo "::error::Refusing to publish an updated or replaced tag."
+            exit 1
+          fi
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "::error::A GitHub Release already exists for this tag."
+            exit 1
+          fi
+
+          if [[ "$(git cat-file -t "refs/tags/$tag")" != "tag" ]]; then
+            echo "::error::Release tags must be annotated Git tags."
+            exit 1
+          fi
+
+          version="$(tr -d '\r\n' < VERSION.txt)"
+          config_version="$(
+            php -r '
+              require "src/Config.php";
+              echo \PhpMake\Config::TOOL_VERSION;
+            '
+          )"
+
+          if [[ "$tag" != "$version" || "$tag" != "$config_version" ]]; then
+            echo "::error::Tag, VERSION.txt, and config version must match."
+            exit 1
+          fi
+
+          if ! awk -v heading="PHPMake $version -" '
+            index($0, heading) == 1 { found = 1 }
+            END { exit !found }
+          ' documents/CHANGELOG.txt; then
+            echo "::error::The changelog has no section for $version."
+            exit 1
+          fi
+
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::The release tag must be reachable from main."
+            exit 1
+          fi
+
+          main_runs="$(
+            gh run list \
+              --workflow default.yml \
+              --branch main \
+              --commit "$GITHUB_SHA" \
+              --json status,conclusion,event,headBranch \
+              --limit 20
+          )"
+          if ! jq -e '
+            any(.[]; .status == "completed"
+              and .conclusion == "success"
+              and .event == "push"
+              and .headBranch == "main")
+          ' <<< "$main_runs" >/dev/null; then
+            echo "::error::No successful main CI run for this commit."
+            exit 1
+          fi
+
+      - name: Validate Composer metadata
+        run: composer validate --strict
+
+      - name: Install development dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Run test suite
+        run: composer test
+
+      - name: Audit dependencies
+        run: composer audit --abandoned=ignore
+
+      - name: Prepare release notes and source archives
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="${GITHUB_REF_NAME}"
+          mkdir -p dist
+
+          awk -v version="$version" '
+            index($0, "PHPMake " version " -") == 1 {
+              found = 1
+              next
+            }
+            found && index($0, "PHPMake ") == 1 {
+              exit
+            }
+            found {
+              print
+            }
+            END {
+              if (!found) {
+                exit 1
+              }
+            }
+          ' documents/CHANGELOG.txt > dist/release-notes.md
+
+          if [[ ! -s dist/release-notes.md ]]; then
+            echo "::error::The release changelog section is empty."
+            exit 1
+          fi
+
+          git archive --format=tar \
+            --prefix="phpmake-${version}/" \
+            "$GITHUB_SHA" | gzip -n > "dist/phpmake-${version}.tar.gz"
+          git archive --format=zip \
+            --prefix="phpmake-${version}/" \
+            "$GITHUB_SHA" > "dist/phpmake-${version}.zip"
+
+          (
+            cd dist
+            sha256sum "phpmake-${version}.tar.gz" "phpmake-${version}.zip" \
+              > SHA256SUMS
+          )
+
+          {
+            printf 'Package: phpmake/phpmake\n'
+            printf 'Version: %s\n' "$version"
+            printf 'Commit: %s\n' "$GITHUB_SHA"
+            printf 'Tag: %s\n' "$GITHUB_REF"
+            workflow_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}"
+            workflow_url="${workflow_url}/actions/runs/${GITHUB_RUN_ID}"
+            printf 'Workflow: %s\n' "$workflow_url"
+          } > dist/RELEASE-MANIFEST.txt
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --verify-tag \
+            --title "PHPMake ${GITHUB_REF_NAME}" \
+            --notes-file dist/release-notes.md \
+            "dist/phpmake-${GITHUB_REF_NAME}.tar.gz" \
+            "dist/phpmake-${GITHUB_REF_NAME}.zip" \
+            dist/SHA256SUMS \
+            dist/RELEASE-MANIFEST.txt
+
+          if [[ ! "$tag" =~ $semver_pattern ]]; then
             echo "::error::Release tags must use strict stable SemVer."
             exit 1
           fi
