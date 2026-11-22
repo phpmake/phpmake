@@ -4,191 +4,169 @@ declare(strict_types=1);
 
 namespace PhpMake\Tests\Unit;
 
-use PHPUnit\Framework\TestCase;
 use PhpMake\Task\TaskFactory;
-use PhpMake\Utilities\Logger;
-use PhpMake\Task\Types\DeleteTask;
-use PhpMake\Task\Types\CreateDirectoryTask;
 use PhpMake\Task\Types\CopyTask;
-use PhpMake\Task\Types\ExecTask;
+use PhpMake\Task\Types\CreateDirectoryTask;
+use PhpMake\Task\Types\DeleteTask;
 use PhpMake\Task\Types\EchoTask;
+use PhpMake\Task\Types\ExecTask;
 use PhpMake\Task\Types\ZipTask;
+use PhpMake\Utilities\Logger;
+use PHPUnit\Framework\TestCase;
 
-/** Tests creation of supported task types and rejection of unknown types. */
+/** Tests creation of supported task types and rejection of invalid configurations. */
 final class TaskFactoryTest extends TestCase
 {
     private TaskFactory $factory;
 
-    private Logger $logger;
-
-    /** Initializes the logger and factory shared by task creation tests. */
+    /** Initializes the logger and task factory used by each test. */
     protected function setUp(): void
     {
         parent::setUp();
-        $this->logger = new Logger(true, true, true);
-        $this->factory = new TaskFactory($this->logger);
+
+        $logger = new Logger(true, true, true);
+        $this->factory = new TaskFactory($logger);
     }
 
-    /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
-    public function testDeleteTask(): void
+    /** Creates a delete task from a valid task configuration. */
+    public function testCreateBuildsDeleteTask(): void
     {
         // Arrange
-        $taskConfig = [
-            'type'   => 'delete',
+        $config = [
+            'type' => 'delete',
             'params' => ['path' => 'dummyfile.txt'],
         ];
-        // Action
-        $task = $this->factory->create($taskConfig);
+
+        // Act
+        $task = $this->factory->create($config);
+
         // Assert
-        $this->assertInstanceOf(DeleteTask::class, $task);
+        self::assertInstanceOf(DeleteTask::class, $task);
     }
 
-    /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
-    public function testCreateDirectoryTask(): void
+    /** Creates a directory-creation task from a valid task configuration. */
+    public function testCreateBuildsCreateDirectoryTask(): void
     {
         // Arrange
-        $taskConfig = [
-            'type'   => 'create_directory',
-            'params' => ['name'  => 'dummyDir'],
+        $config = [
+            'type' => 'create_directory',
+            'params' => ['name' => 'dummyDir'],
         ];
-        // Action
-        $task = $this->factory->create($taskConfig);
+
+        // Act
+        $task = $this->factory->create($config);
+
         // Assert
-        $this->assertInstanceOf(CreateDirectoryTask::class, $task);
-        $this->assertSame('create_directory', $task->getType());
+        self::assertInstanceOf(CreateDirectoryTask::class, $task);
+        self::assertSame('create_directory', $task->getType());
     }
 
-    /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
-    public function testCopyTask(): void
+    /** Creates a copy task from a valid task configuration. */
+    public function testCreateBuildsCopyTask(): void
     {
         // Arrange
-        $taskConfig = [
-            'type'   => 'copy',
+        $config = [
+            'type' => 'copy',
             'params' => ['source' => 'dummySource', 'dest' => 'dummyDest'],
         ];
-        // Action
-        $task = $this->factory->create($taskConfig);
+
+        // Act
+        $task = $this->factory->create($config);
+
         // Assert
-        $this->assertInstanceOf(CopyTask::class, $task);
+        self::assertInstanceOf(CopyTask::class, $task);
     }
 
-    /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
-    public function testExecTask(): void
+    /** Creates an external-command task from a valid task configuration. */
+    public function testCreateBuildsExecTask(): void
     {
         // Arrange
-        $taskConfig = [
-            'type'   => 'exec',
+        $config = [
+            'type' => 'exec',
             'params' => ['command' => 'echo Hello'],
         ];
-        // Action
-        $task = $this->factory->create($taskConfig);
+
+        // Act
+        $task = $this->factory->create($config);
+
         // Assert
-        $this->assertInstanceOf(ExecTask::class, $task);
+        self::assertInstanceOf(ExecTask::class, $task);
     }
 
-    /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
-    public function testEchoTask(): void
+    /** Creates an echo task from a valid task configuration. */
+    public function testCreateBuildsEchoTask(): void
     {
         // Arrange
-        $taskConfig = [
-            'type'   => 'echo',
+        $config = [
+            'type' => 'echo',
             'params' => ['message' => 'Hello World'],
         ];
-        // Action
-        $task = $this->factory->create($taskConfig);
+
+        // Act
+        $task = $this->factory->create($config);
+
         // Assert
-        $this->assertInstanceOf(EchoTask::class, $task);
+        self::assertInstanceOf(EchoTask::class, $task);
     }
 
-    /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
-    public function testZipTask(): void
+    /** Creates an archive task from a valid task configuration. */
+    public function testCreateBuildsArchiveTask(): void
     {
         // Arrange
-        $taskConfig = [
-            'type'   => 'archive',
+        $config = [
+            'type' => 'archive',
             'params' => ['source' => 'dummySource', 'output' => 'dummyOutput.zip'],
         ];
-        // Action
-        $task = $this->factory->create($taskConfig);
+
+        // Act
+        $task = $this->factory->create($config);
+
         // Assert
-        $this->assertInstanceOf(ZipTask::class, $task);
+        self::assertInstanceOf(ZipTask::class, $task);
     }
 
-    /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
-    public function testUnknownTaskTypeThrowsException(): void
+    /** Rejects an unsupported task type with a descriptive exception. */
+    public function testCreateRejectsUnknownTaskType(): void
     {
+        // Arrange
+        $config = [
+            'type' => 'invalid',
+            'params' => [],
+        ];
+
         // Assert
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Unknown task type 'invalid' in build configuration.");
-        // Arrange
-        $taskConfig = [
-            'type'   => 'invalid',
-            'params' => [],
-        ];
-        // Action
-        $this->factory->create($taskConfig);
+
+        // Act
+        $this->factory->create($config);
     }
 
-    /** Rejects a missing task type before attempting task construction. */
+    /** Rejects a task configuration that omits its required type. */
     public function testCreateRejectsMissingTaskType(): void
     {
         // Arrange
-        $taskConfig = ['params' => []];
+        $config = ['params' => []];
 
         // Assert
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Task configuration requires a non-empty string 'type'.");
 
         // Act
-        $this->factory->create($taskConfig);
+        $this->factory->create($config);
     }
 
-    /** Rejects malformed task parameters instead of passing them to a task. */
-    public function testCreateRejectsNonArrayParameters(): void
+    /** Rejects task parameters that are not supplied as an array. */
+    public function testCreateRejectsNonArrayTaskParameters(): void
     {
         // Arrange
-        $taskConfig = ['type' => 'echo', 'params' => 'invalid'];
+        $config = ['type' => 'echo', 'params' => 'invalid'];
 
         // Assert
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Parameters for task 'echo' must be an array.");
 
         // Act
-        $this->factory->create($taskConfig);
+        $this->factory->create($config);
     }
 }
