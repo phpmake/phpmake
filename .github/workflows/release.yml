@@ -6,6 +6,7 @@ on:
       - '*.*.*'
 
 permissions:
+  actions: read
   contents: write
 
 concurrency:
@@ -57,7 +58,7 @@ jobs:
             exit 1
           fi
 
-          if ! grep -Fq "PHPMake $version -" documents/CHANGELOG.txt; then
+          if ! awk -v heading="PHPMake $version -" 'index($0, heading) == 1 { found = 1 } END { exit !found }' documents/CHANGELOG.txt; then
             echo "::error::The changelog has no section for $version."
             exit 1
           fi
