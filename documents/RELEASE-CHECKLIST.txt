@@ -1,6 +1,6 @@
 # PHPMake Release Checklist
 
-Use this checklist for every stable or pre-release publication. A release is not ready
+Use this checklist for every stable release publication. A release is not ready
 until all mandatory automated and manual gates have recorded evidence against the exact
 candidate commit.
 
@@ -100,15 +100,16 @@ Only after all mandatory gates pass:
   Linux/Windows performance baselines, PHPStan, formatting, Rector, Composer checks,
   PHPUnit, dependency audit, clean consumer installation, and coverage generation.
 - The source version remains `2.0.2` in `VERSION.txt` and
-  `PhpMake\\Config::TOOL_VERSION`. Phase 9 did not create a tag or publish a release.
+  `PhpMake\Config::TOOL_VERSION`. Phase 9 did not create a tag or publish a release.
 - The Phase 9 audit observed Git tags `1.0.0`, `2.0.0`, and `2.0.1`, and no
   GitHub Releases at that time. Recheck Git and Packagist before selecting a version.
 
 ## 8. Phase 10 release automation
 
-- `.github/workflows/release.yml` validates stable SemVer tags, annotated-tag
-  identity, source version consistency, changelog presence, main-branch ancestry,
-  and a successful `Build and Test` run for the exact commit.
+- `.github/workflows/release.yml` validates strict stable SemVer tags, rejects
+  moved/replaced tags and existing GitHub Releases, requires annotated-tag identity,
+  source version consistency, changelog presence, main-branch ancestry, and a
+  successful `Build and Test` run for the exact commit.
 - The workflow repeats Composer validation, the complete test suite, and the
   dependency audit before publishing.
 - Successful publication creates a GitHub Release with `.tar.gz` and `.zip`
