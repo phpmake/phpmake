@@ -1,3 +1,4 @@
+---
 name: Publish Release
 
 "on":
@@ -41,7 +42,7 @@ jobs:
 
           tag="${GITHUB_REF_NAME}"
           if [[ ! "$tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Release tags must use stable SemVer (for example 2.1.0)."
+            echo "::error::Release tags must use stable SemVer."
             exit 1
           fi
 
@@ -51,26 +52,43 @@ jobs:
           fi
 
           version="$(tr -d '\r\n' < VERSION.txt)"
-          config_version="$(php -r 'require "src/Config.php"; echo \PhpMake\Config::TOOL_VERSION;')"
+          config_version="$(
+            php -r 'require "src/Config.php"; echo \PhpMake\Config::TOOL_VERSION;'
+          )"
 
           if [[ "$tag" != "$version" || "$tag" != "$config_version" ]]; then
-            echo "::error::Tag, VERSION.txt, and Config::TOOL_VERSION must match."
+            echo "::error::Tag, VERSION.txt, and config version must match."
             exit 1
           fi
 
-          if ! awk -v heading="PHPMake $version -" 'index($0, heading) == 1 { found = 1 } END { exit !found }' documents/CHANGELOG.txt; then
+          if ! awk -v heading="PHPMake $version -" '
+            index($0, heading) == 1 { found = 1 }
+            END { exit !found }
+          ' documents/CHANGELOG.txt; then
             echo "::error::The changelog has no section for $version."
             exit 1
           fi
 
           if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
-            echo "::error::The release tag must point to a commit reachable from main."
+            echo "::error::The release tag must be reachable from main."
             exit 1
           fi
 
-          main_runs="$(gh run list --workflow default.yml --branch main --commit "$GITHUB_SHA" --json status,conclusion,event,headBranch --limit 20)"
-          if ! jq -e 'any(.[]; .status == "completed" and .conclusion == "success" and .event == "push" and .headBranch == "main")' <<< "$main_runs" >/dev/null; then
-            echo "::error::A successful main-branch Build and Test run for this exact commit is required."
+          main_runs="$(
+            gh run list \
+              --workflow default.yml \
+              --branch main \
+              --commit "$GITHUB_SHA" \
+              --json status,conclusion,event,headBranch \
+              --limit 20
+          )"
+          if ! jq -e '
+            any(.[]; .status == "completed"
+              and .conclusion == "success"
+              and .event == "push"
+              and .headBranch == "main")
+          ' <<< "$main_runs" >/dev/null; then
+            echo "::error::A successful Build and Test run for this commit is required."
             exit 1
           fi
 
@@ -117,10 +135,12 @@ jobs:
             exit 1
           fi
 
-          git archive --format=tar.gz --prefix="phpmake-${version}/" "$GITHUB_SHA" \
-            > "dist/phpmake-${version}.tar.gz"
-          git archive --format=zip --prefix="phpmake-${version}/" "$GITHUB_SHA" \
-            > "dist/phpmake-${version}.zip"
+          git archive --format=tar.gz \
+            --prefix="phpmake-${version}/" \
+            "$GITHUB_SHA" > "dist/phpmake-${version}.tar.gz"
+          git archive --format=zip \
+            --prefix="phpmake-${version}/" \
+            "$GITHUB_SHA" > "dist/phpmake-${version}.zip"
 
           (
             cd dist
