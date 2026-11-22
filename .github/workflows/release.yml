@@ -138,9 +138,9 @@ jobs:
             exit 1
           fi
 
-          git archive --format=tar.gz \
+          git archive --format=tar \
             --prefix="phpmake-${version}/" \
-            "$GITHUB_SHA" > "dist/phpmake-${version}.tar.gz"
+            "$GITHUB_SHA" | gzip -n > "dist/phpmake-${version}.tar.gz"
           git archive --format=zip \
             --prefix="phpmake-${version}/" \
             "$GITHUB_SHA" > "dist/phpmake-${version}.zip"
