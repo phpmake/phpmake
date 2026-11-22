@@ -66,6 +66,55 @@ final class BaseTaskTest extends TestCase
         self::assertFalse($result);
     }
 
+    /** Debug mode records exception context in the log without changing task failure behavior. */
+    public function testBaseTaskLogsExceptionDiagnosticsWhenDebugIsRequested(): void
+    {
+        // Arrange
+        $logFile = $this->root . DIRECTORY_SEPARATOR . 'debug.log';
+        $task = new class (new Logger(true, true, false, $logFile)) extends BaseTaskTestProbe {
+            protected function runTask(bool $debug, bool $silent): bool
+            {
+                throw new \RuntimeException('Expected task failure');
+            }
+        };
+
+        // Act
+        $result = $task->execute(true, true);
+
+        // Assert
+        $log = file_get_contents($logFile);
+        self::assertFalse($result);
+        self::assertIsString($log);
+        self::assertStringContainsString('DEBUG: Exception: RuntimeException', $log);
+        self::assertStringContainsString('Location: ', $log);
+        self::assertStringContainsString('Stack trace:', $log);
+        self::assertStringContainsString(__FILE__, $log);
+        self::assertStringContainsString('ERROR: Expected task failure', $log);
+    }
+
+    /** Normal task failures do not persist stack traces when debug mode is disabled. */
+    public function testBaseTaskOmitsExceptionDiagnosticsWithoutDebug(): void
+    {
+        // Arrange
+        $logFile = $this->root . DIRECTORY_SEPARATOR . 'normal.log';
+        $task = new class (new Logger(false, true, false, $logFile)) extends BaseTaskTestProbe {
+            protected function runTask(bool $debug, bool $silent): bool
+            {
+                throw new \RuntimeException('Expected task failure');
+            }
+        };
+
+        // Act
+        $result = $task->execute(false, true);
+
+        // Assert
+        $log = file_get_contents($logFile);
+        self::assertFalse($result);
+        self::assertIsString($log);
+        self::assertStringContainsString('ERROR: Expected task failure', $log);
+        self::assertStringNotContainsString('Stack trace:', $log);
+    }
+
     /** Existing regular files and directories are not classified as links. */
     public function testDetectsRegularFilesystemEntriesAsNonLinks(): void
     {

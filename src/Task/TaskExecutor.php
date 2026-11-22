@@ -6,6 +6,8 @@ namespace PhpMake\Task;
 
 use PhpMake\Build\BuildConfiguration;
 use PhpMake\Cli\ConsoleOutput;
+use PhpMake\Diagnostics\ExceptionDiagnostics;
+use PhpMake\Utilities\Logger;
 
 /** Executes target tasks and reports their status through the CLI output boundary. */
 final class TaskExecutor
@@ -28,7 +30,8 @@ final class TaskExecutor
         array $executionOrder,
         TaskFactory $taskFactory,
         bool $debug,
-        bool $silent
+        bool $silent,
+        ?Logger $logger = null
     ): int {
         $targets = $config->getTargets();
         foreach ($executionOrder as $targetName) {
@@ -56,6 +59,15 @@ final class TaskExecutor
                 try {
                     $task = $taskFactory->create($taskConfig);
                 } catch (\Throwable $exception) {
+                    if ($debug) {
+                        $diagnostics = ExceptionDiagnostics::format($exception);
+                        if ($logger !== null) {
+                            $logger->debug($diagnostics);
+                        } elseif (!$silent) {
+                            $this->output->error($diagnostics);
+                        }
+                    }
+
                     $this->output->error('Error: ' . $exception->getMessage());
                     return 1;
                 }

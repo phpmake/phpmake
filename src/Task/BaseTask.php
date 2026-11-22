@@ -2,6 +2,7 @@
 
 namespace PhpMake\Task;
 
+use PhpMake\Diagnostics\ExceptionDiagnostics;
 use PhpMake\Utilities\Logger;
 
 /** Provides shared execution, logging, and filesystem-safety behavior for tasks. */
@@ -19,6 +20,10 @@ abstract class BaseTask implements TaskInterface
         try {
             return $this->runTask($debug, $silent);
         } catch (\Throwable $throwable) {
+            if ($debug) {
+                $this->logger->debug(ExceptionDiagnostics::format($throwable));
+            }
+
             $this->logger->error($throwable->getMessage());
             return false;
         }

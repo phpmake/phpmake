@@ -26,6 +26,7 @@ All classes under the Composer PSR-4 namespace are currently autoloadable. Publi
 | Namespace / class | Current public methods and constants |
 |---|---|
 | `PhpMake\Config` | `TOOL_VERSION` |
+| `PhpMake\Diagnostics\ExceptionDiagnostics` | `format` |
 | `PhpMake\Build\BuildConfiguration` | `__construct`, `getName`, `getDescription`, `getVersion`, `getTargets`, `getDefaultTarget` |
 | `PhpMake\Build\BuildExecutor` | `__construct`, `execute` |
 | `PhpMake\Build\BuildLoader` | `load` |
@@ -55,7 +56,7 @@ All classes under the Composer PSR-4 namespace are currently autoloadable. Publi
 | `PhpMake\Task\Types\EchoTask` | `getType` (also inherits `execute`) |
 | `PhpMake\Task\Types\ExecTask` | `getType` (also inherits `execute`) |
 | `PhpMake\Task\Types\ZipTask` | `getType` (also inherits `execute`) |
-| `PhpMake\Utilities\Logger` | `__construct`, `info`, `debug`, `error`, `isDebugEnabled`, `isSilent` |
+| `PhpMake\Utilities\Logger` | `__construct`, `info`, `debug`, `error`, `isDebugRequested`, `isDebugEnabled`, `isSilent` |
 
 This inventory describes the current source surface; it does not promote the implementation-facing classes to stable extension points.
 
