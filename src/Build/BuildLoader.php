@@ -44,7 +44,7 @@ final class BuildLoader
                 throw new \InvalidArgumentException("Field 'targets' must be a JSON object.");
             }
 
-            foreach ($decoded->targets as $targetName => $target) {
+            foreach (get_object_vars($decoded->targets) as $targetName => $target) {
                 if (!($target instanceof \stdClass)) {
                     throw new \InvalidArgumentException(sprintf("Target '%s' must be a JSON object.", $targetName));
                 }

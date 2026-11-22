@@ -1,22 +1,91 @@
-* Checkout target Git branch.
-* Cleanup junk/cache/trash/temp/log files.
-* Update VERSION.txt file.
-* Update README.md file. (Badge, requirements, version)
-* Update /src/Config.php file.
-* Check/Update composer.json file.
-* Check/Update .github/workflows/default.yml
-* Verify Linux and Windows CI jobs.
-* Verify process-tree timeout tests on Windows and POSIX CI runners.
-* Verify UNC, junction-ancestor, and case-sensitive path-boundary tests.
-* Verify logger partial-write and concurrent-process tests.
-* Verify schema/runtime parity tests for every built-in task.
-* Install from a clean Composer consumer project and test the generated vendor/bin proxy.
-* Run the installed binary with --version and validate a consumer build.json.
-* Validate build.json.example and run its default and package targets.
-* Check/Update .styleci.yml
-* Check/Update .php-cs-fixer.php
-* Check/Update rector.php
-* Update documents/CHANGELOG.txt file.
-* Commit changes with message: Release Major.Minor.Micro
-* Create a new version tag.
-* Create a new release on Git host.
+# PHPMake Release Checklist
+
+Use this checklist for every stable or pre-release publication. A release is not ready
+until all mandatory automated and manual gates have recorded evidence against the exact
+candidate commit.
+
+## 1. Candidate identity and source hygiene
+
+- [ ] Confirm the release branch is based on the intended, reviewed `main` commit.
+- [ ] Confirm the working tree contains only intended source, test, and documentation changes.
+- [ ] Confirm no temporary files, generated reports, local configuration, credentials, or logs are included.
+- [ ] Select a version that is not already published on Packagist or tagged in Git.
+- [ ] Update `VERSION.txt` and `src/Config.php` to the same stable SemVer version.
+- [ ] Confirm the Composer package name remains `phpmake/phpmake` and the package metadata is valid.
+- [ ] Confirm the PHP requirement remains `^8.0` unless a separately approved compatibility change is intended.
+- [ ] Confirm the documented runtime extensions (`ctype`, `json`, `zip`) match `composer.json`.
+
+## 2. Mandatory automated gates
+
+Run these checks against the exact candidate commit. A failed or skipped mandatory gate
+blocks publication.
+
+| Gate | Required evidence |
+|---|---|
+| Composer metadata | `composer validate --strict` succeeds |
+| PHP syntax | `composer lint` succeeds |
+| Static analysis | `composer analyse` succeeds at the configured PHPStan level |
+| Formatting | `composer format-check` succeeds |
+| Rector | `composer refactor-check` succeeds |
+| Composer dependency usage | `vendor/bin/composer-unused` succeeds |
+| Composer requirements | `vendor/bin/composer-require-checker check` succeeds |
+| Composer normalization | `composer normalize --dry-run` succeeds |
+| Unit/integration/system/smoke tests | `composer test` succeeds with no failures, errors, risky, or skipped tests |
+| Dependency security | `composer audit --abandoned=ignore` reports no known advisories |
+| Clean consumer install | Fresh Composer consumer installation succeeds and generated `vendor/bin` proxy works |
+| CLI smoke | Installed binary reports the candidate version and `--init` / `--validate-build` succeed |
+| Sample build | `build.json.example` validates; default and `package` targets succeed |
+| Coverage | PHPUnit coverage report is generated and retained as a CI artifact |
+| POSIX fallback | Process-group fallback smoke test succeeds without `ext-posix` |
+
+## 3. Platform matrix
+
+The GitHub Actions run for the candidate commit must show success for:
+
+- [ ] PHP 8.0, 8.1, 8.2, 8.3, 8.4, and 8.5 compatibility jobs on Linux.
+- [ ] Windows filesystem/process regression jobs for PHP 8.0 through 8.5.
+- [ ] Performance baseline jobs on Linux and Windows for PHP 8.0 through 8.5.
+- [ ] The primary Linux build, static analysis, formatting, dependency checks, security audit, and smoke tests.
+- [ ] PHPUnit coverage job.
+
+Do not treat an in-progress, skipped, cancelled, or missing matrix job as a pass.
+Record the workflow URL and candidate commit SHA in the release record.
+
+## 4. Security and regression review
+
+- [ ] Review the current `SECURITY.md` policy and `documents/SECURITY-REVIEW.md`.
+- [ ] Confirm security-sensitive regression tests are included in the complete test suite.
+- [ ] Confirm filesystem containment, symlink/junction handling, archive limits, process timeout/output limits, process-tree cleanup, and logger concurrency tests pass.
+- [ ] Review Composer audit output; record any accepted exception with package, advisory, impact, and mitigation.
+- [ ] Do not claim a third-party penetration test or OS-level sandbox unless one was actually performed.
+
+## 5. Documentation and migration
+
+- [ ] Update `documents/CHANGELOG.txt`: move the completed Unreleased entries under the chosen version and add the release date.
+- [ ] Review README requirements, installation instructions, supported PHP versions, CLI examples, and version badges.
+- [ ] Review `documents/USER-GUIDE.md`, `documents/API-COMPATIBILITY.md`, FAQ, and TSD for consistency.
+- [ ] Add migration notes when a documented behavior, configuration field, CLI option, or stable API changes.
+- [ ] If no migration is required, explicitly record that the release preserves the documented 2.x compatibility contract.
+- [ ] Verify the sample build configuration and all version references are intentional and consistent.
+
+## 6. Final publication
+
+Only after all mandatory gates pass:
+
+- [ ] Re-run or verify all required checks against the final release commit.
+- [ ] Create an annotated Git tag matching `VERSION.txt`.
+- [ ] Push the tag and create the Git-host release with the changelog entries.
+- [ ] Verify the release source archive contains the expected files and excludes development-only artifacts.
+- [ ] Verify Packagist sees the intended version and installation works in a fresh consumer project.
+- [ ] Confirm the release page, tag, Packagist version, README badge, and `--version` output agree.
+- [ ] Retain the workflow URL, commit SHA, test matrix results, coverage artifact, audit result, and consumer-install evidence.
+
+## 7. Current repository baseline (Phase 9 audit)
+
+- Current `main` baseline at the start of Phase 9: `2fa066c634fd5debe4efd4f1148788b549ce42e4`.
+- Current source version: `2.0.2` in both `VERSION.txt` and `PhpMake\\Config::TOOL_VERSION`.
+- Existing Git tags observed: `1.0.0`, `2.0.0`, and `2.0.1`.
+- No GitHub Releases were present at audit time.
+- The existing workflow already defines PHP 8.0–8.5 Linux compatibility, Windows regression tests, Linux/Windows performance baselines, coverage, static analysis, Composer checks, dependency audit, clean consumer installation, and sample-build smoke tests.
+- The post-Phase-8 main workflow failed at PHPStan level 3 in `src/Build/BuildLoader.php:47`: PHPStan treated the decoded `stdClass` target collection as non-iterable. The Phase 9 branch fixes the iteration using `get_object_vars()`; this must be confirmed by the new CI run.
+- No stable release tag or GitHub Release is created by this phase. Publication remains blocked until all gates above pass and the release version is explicitly selected.

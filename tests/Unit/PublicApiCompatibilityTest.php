@@ -22,7 +22,7 @@ final class PublicApiCompatibilityTest extends TestCase
 
         // Act
         $methodNames = array_map(
-            static fn (ReflectionMethod $method): string => $method->getName(),
+            static fn(ReflectionMethod $method): string => $method->getName(),
             $interface->getMethods()
         );
 
@@ -32,11 +32,11 @@ final class PublicApiCompatibilityTest extends TestCase
 
         $execute = $interface->getMethod('execute');
         self::assertSame(['debug', 'silent'], array_map(
-            static fn (ReflectionParameter $parameter): string => $parameter->getName(),
+            static fn(ReflectionParameter $parameter): string => $parameter->getName(),
             $execute->getParameters()
         ));
         self::assertSame(['bool', 'bool'], array_map(
-            static fn (ReflectionParameter $parameter): string => self::typeName($parameter->getType()),
+            static fn(ReflectionParameter $parameter): string => self::typeName($parameter->getType()),
             $execute->getParameters()
         ));
         self::assertSame('bool', self::typeName($execute->getReturnType()));
