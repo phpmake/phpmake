@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpMake\\Tests\\Support;
 
+use PhpMake\\Process\\ProcessLauncher;
 use PhpMake\\Process\\ProcessSupervisor;
 
 /** Runs test subprocesses with bounded execution time and failure-safe cleanup. */
@@ -51,12 +52,18 @@ trait ProcessTestHelper
         }
 
         $process = null;
+        $pidPath = null;
+        $processGroupCreated = false;
         $timedOut = false;
         $exitCode = -1;
 
         try {
+            $launch = ProcessLauncher::prepare($command);
+            $pidPath = $launch['pidPath'];
+            $processGroupCreated = $launch['processGroupCreated'];
+
             $process = proc_open(
-                $command,
+                $launch['argv'],
                 [
                     0 => ['pipe', 'r'],
                     1 => ['file', $stdoutPath, 'w'],
@@ -84,12 +91,31 @@ trait ProcessTestHelper
 
                 if (hrtime(true) >= $deadline) {
                     $timedOut = true;
-                    $this->terminateTestProcessTree($process, (int) $status['pid'], $stdoutPath, $stderrPath);
+                    $this->terminateTestProcessTree(
+                        $process,
+                        (int) $status['pid'],
+                        $processGroupCreated,
+                        $pidPath,
+                        $stdoutPath,
+                        $stderrPath
+                    );
                     break;
                 }
 
                 usleep(10000);
             } while (true);
+
+            if ($processGroupCreated && !$timedOut) {
+                $status = proc_get_status($process);
+                $this->terminateTestProcessTree(
+                    $process,
+                    (int) $status['pid'],
+                    true,
+                    $pidPath,
+                    $stdoutPath,
+                    $stderrPath
+                );
+            }
 
             $closedExitCode = proc_close($process);
             $process = null;
@@ -108,10 +134,21 @@ trait ProcessTestHelper
             if (is_resource($process)) {
                 $status = proc_get_status($process);
                 if ($status['running']) {
-                    $this->terminateTestProcessTree($process, (int) $status['pid'], $stdoutPath, $stderrPath);
+                    $this->terminateTestProcessTree(
+                        $process,
+                        (int) $status['pid'],
+                        $processGroupCreated,
+                        $pidPath,
+                        $stdoutPath,
+                        $stderrPath
+                    );
                 }
 
                 proc_close($process);
+            }
+
+            if (is_string($pidPath) && is_file($pidPath)) {
+                unlink($pidPath);
             }
 
             unlink($stdoutPath);
@@ -120,65 +157,56 @@ trait ProcessTestHelper
     }
 
     /**
-     * Terminates the process tree before returning control to the test runner.
+     * Terminates the isolated process group or all discovered descendants.
      *
      * @param resource $process
      */
-    private function terminateTestProcessTree($process, int $processId, string $stdoutPath, string $stderrPath): void
-    {
-        if (PHP_OS_FAMILY === 'Windows') {
-            $taskkill = $this->findTestExecutable('taskkill.exe');
-            if ($taskkill !== null) {
-                $terminator = @proc_open(
-                    [$taskkill, '/PID', (string) $processId, '/T', '/F'],
-                    [
-                        0 => ['file', 'NUL', 'r'],
-                        1 => ['file', $stdoutPath, 'a'],
-                        2 => ['file', $stderrPath, 'a'],
-                    ],
-                    $pipes,
-                    null,
-                    null,
-                    ['bypass_shell' => true]
-                );
+    private function terminateTestProcessTree(
+        $process,
+        int $processId,
+        bool $processGroupCreated,
+        ?string $pidPath,
+        string $stdoutPath,
+        string $stderrPath
+    ): void {
+        $launcherPid = $this->resolveTestLauncherPid($processId, $processGroupCreated, $pidPath);
+        $hasProcessGroup = $processGroupCreated && $launcherPid !== null;
+        $descendants = $hasProcessGroup || PHP_OS_FAMILY === 'Windows'
+            ? []
+            : ProcessSupervisor::getDescendantProcessIds($processId);
 
-                if (is_resource($terminator)) {
-                    proc_close($terminator);
-                }
-            }
+        ProcessSupervisor::terminate(
+            $process,
+            $processId,
+            $hasProcessGroup,
+            $launcherPid,
+            $descendants
+        );
 
-            if (proc_get_status($process)['running'] ?? false) {
-                proc_terminate($process, 9);
-            }
-
-            return;
-        }
-
-        $descendants = ProcessSupervisor::getDescendantProcessIds($processId);
-        ProcessSupervisor::terminate($process, $processId, false, null, $descendants);
-
-        if (proc_get_status($process)['running'] ?? false) {
+        if (PHP_OS_FAMILY === 'Windows' && (proc_get_status($process)['running'] ?? false)) {
             proc_terminate($process, 9);
         }
     }
 
-    private function findTestExecutable(string $name): ?string
+    private function resolveTestLauncherPid(int $processId, bool $processGroupCreated, ?string $pidPath): ?int
     {
-        $path = getenv('PATH');
-        if (!is_string($path) || $path === '') {
+        if (!$processGroupCreated) {
             return null;
         }
 
-        foreach (explode(PATH_SEPARATOR, $path) as $directory) {
-            if ($directory === '') {
-                continue;
+        if ($pidPath === null) {
+            return $processId;
+        }
+
+        $deadline = hrtime(true) + 500_000_000;
+        do {
+            if (is_file($pidPath)) {
+                $launcherPid = (int) file_get_contents($pidPath);
+                return $launcherPid > 0 ? $launcherPid : null;
             }
 
-            $candidate = rtrim($directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $name;
-            if (is_file($candidate) && is_executable($candidate)) {
-                return $candidate;
-            }
-        }
+            usleep(10000);
+        } while (hrtime(true) < $deadline);
 
         return null;
     }
