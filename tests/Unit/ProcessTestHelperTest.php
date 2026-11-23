@@ -96,26 +96,18 @@ final class ProcessTestHelperTest extends TestCase
     {
         // Arrange
         $invalidTimeouts = [0.0, -1.0, INF, NAN];
-        $exceptions = [];
 
-        // Act
+        // Act / Assert
         foreach ($invalidTimeouts as $timeout) {
             try {
                 $this->runTestProcess([PHP_BINARY, '-r', 'exit(0);'], getcwd() ?: sys_get_temp_dir(), $timeout);
-                $exceptions[] = null;
+                self::fail('An invalid timeout must be rejected.');
             } catch (\InvalidArgumentException $exception) {
-                $exceptions[] = $exception;
+                self::assertSame(
+                    'The subprocess timeout must be a finite positive number.',
+                    $exception->getMessage()
+                );
             }
-        }
-
-        // Assert
-        self::assertCount(count($invalidTimeouts), $exceptions);
-        foreach ($exceptions as $exception) {
-            self::assertInstanceOf(\InvalidArgumentException::class, $exception);
-            self::assertSame(
-                'The subprocess timeout must be a finite positive number.',
-                $exception->getMessage()
-            );
         }
     }
 
@@ -128,22 +120,15 @@ final class ProcessTestHelperTest extends TestCase
             [[PHP_BINARY, '-r', 'exit(0);'], sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'missing-' . bin2hex(random_bytes(4))],
             [[PHP_BINARY, 42], getcwd() ?: sys_get_temp_dir()],
         ];
-        $exceptions = [];
 
-        // Act
+        // Act / Assert
         foreach ($invalidCalls as [$command, $workingDirectory]) {
             try {
                 $this->runTestProcess($command, $workingDirectory);
-                $exceptions[] = null;
-            } catch (\InvalidArgumentException $exception) {
-                $exceptions[] = $exception;
+                self::fail('Invalid process arguments must be rejected.');
+            } catch (\InvalidArgumentException) {
+                self::assertTrue(true);
             }
-        }
-
-        // Assert
-        self::assertCount(count($invalidCalls), $exceptions);
-        foreach ($exceptions as $exception) {
-            self::assertInstanceOf(\InvalidArgumentException::class, $exception);
         }
     }
 }
