@@ -14,13 +14,13 @@ trait TemporaryDirectoryTestHelper
     {
         $path = sys_get_temp_dir() . DIRECTORY_SEPARATOR . $prefix . bin2hex(random_bytes(8));
         if (!mkdir($path, 0777, true)) {
-            throw new \\RuntimeException(sprintf('Unable to create temporary test directory "%s".', $path));
+            throw new \RuntimeException(sprintf('Unable to create temporary test directory "%s".', $path));
         }
 
         $canonicalPath = realpath($path);
         if ($canonicalPath === false) {
             FilesystemTree::remove($path);
-            throw new \\RuntimeException(sprintf('Unable to resolve temporary test directory "%s".', $path));
+            throw new \RuntimeException(sprintf('Unable to resolve temporary test directory "%s".', $path));
         }
 
         return $canonicalPath;
@@ -30,7 +30,7 @@ trait TemporaryDirectoryTestHelper
     private function removeTemporaryDirectory(string $path): void
     {
         if (!FilesystemTree::remove($path)) {
-            throw new \\RuntimeException(sprintf('Unable to remove temporary test directory "%s".', $path));
+            throw new \RuntimeException(sprintf('Unable to remove temporary test directory "%s".', $path));
         }
     }
 }
