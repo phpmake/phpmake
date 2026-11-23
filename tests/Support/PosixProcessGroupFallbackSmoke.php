@@ -16,6 +16,8 @@ require dirname(__DIR__, 2) . '/src/Process/ProcessLauncher.php';
 require dirname(__DIR__, 2) . '/src/Process/ProcessSupervisor.php';
 require dirname(__DIR__, 2) . '/src/Task/Types/ExecTask.php';
 
+\PhpMake\PlatformSupport::assertSupported();
+
 if (PHP_OS_FAMILY !== 'Linux') {
     exit(0);
 }
