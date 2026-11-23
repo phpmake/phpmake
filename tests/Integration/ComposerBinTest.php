@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace PhpMake\Tests\Integration;
 
+use PhpMake\Tests\Support\ProcessTestHelper;
 use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
 use PHPUnit\Framework\TestCase;
 
 /** Verifies the Composer-installed binary entry point. */
 final class ComposerBinTest extends TestCase
 {
-    use ProcessTestHelper;\n    use TemporaryDirectoryTestHelper;
+    use ProcessTestHelper;
+    use TemporaryDirectoryTestHelper;
 
     /** Runs the package binary with the consuming project's Composer autoloader. */
     public function testComposerInstalledBinaryUsesConsumerAutoloader(): void
@@ -21,8 +23,6 @@ final class ComposerBinTest extends TestCase
         $autoloadDirectory = $temporaryRoot . DIRECTORY_SEPARATOR . 'vendor';
         $packageBinDirectory = $autoloadDirectory . DIRECTORY_SEPARATOR . 'phpmake' . DIRECTORY_SEPARATOR . 'phpmake' . DIRECTORY_SEPARATOR . 'bin';
 
-        // Assert
-        // Act
         self::assertTrue(mkdir($packageBinDirectory, 0777, true));
 
         $autoload = <<<'PHP'
@@ -75,7 +75,7 @@ final class ComposerBinTest extends TestCase
             // Assert
             self::assertFalse($result['timedOut'], $result['stderr']);
             self::assertSame(0, $result['exitCode'], $result['stderr']);
-            self::assertSame(\PhpMake\Config::TOOL_VERSION . PHP_EOL, $stdout);
+            self::assertSame(\PhpMake\Config::TOOL_VERSION . PHP_EOL, $result['stdout']);
         } finally {
             $this->removeTemporaryDirectory($temporaryRoot);
         }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpMake\Tests\Integration;
 
+use PhpMake\Tests\Support\ProcessTestHelper;
 use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
@@ -11,7 +12,8 @@ use ZipArchive;
 /** Exercises the real PHPMake CLI and its complete build pipeline. */
 final class CliBuildIntegrationTest extends TestCase
 {
-    use ProcessTestHelper;\n    use TemporaryDirectoryTestHelper;
+    use ProcessTestHelper;
+    use TemporaryDirectoryTestHelper;
 
     private string $projectDirectory;
 
@@ -71,7 +73,9 @@ final class CliBuildIntegrationTest extends TestCase
         $result = $this->runCli(['--silent', '--no-log']);
 
         // Assert
-        self::assertFalse($result['timedOut'], $result['stderr']);\n        self::assertSame(0, $result['exitCode'], $result['stderr']);
+        self::assertFalse($result['timedOut'], $result['stderr']);
+        self::assertFalse($result['timedOut'], $result['stderr']);
+        self::assertSame(0, $result['exitCode'], $result['stderr']);
         self::assertFileExists($this->projectDirectory . DIRECTORY_SEPARATOR . 'build' . DIRECTORY_SEPARATOR . 'copied.txt');
         self::assertSame(
             'source-content',
@@ -130,7 +134,9 @@ final class CliBuildIntegrationTest extends TestCase
         $result = $this->runCli(['--silent', '--no-log']);
 
         // Assert
-        self::assertFalse($result['timedOut'], $result['stderr']);\n        self::assertSame(1, $result['exitCode']);
+        self::assertFalse($result['timedOut'], $result['stderr']);
+        self::assertFalse($result['timedOut'], $result['stderr']);
+        self::assertSame(1, $result['exitCode']);
         self::assertDirectoryDoesNotExist($this->projectDirectory . DIRECTORY_SEPARATOR . 'must-not-exist');
     }
 

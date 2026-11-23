@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PhpMake\\Tests\\Support;
+namespace PhpMake\Tests\Support;
 
 /** Runs test subprocesses with bounded execution time and failure-safe cleanup. */
 trait ProcessTestHelper
@@ -26,7 +26,7 @@ trait ProcessTestHelper
                 unlink($stderrPath);
             }
 
-            throw new \\RuntimeException('Unable to create temporary subprocess output files.');
+            throw new \RuntimeException('Unable to create temporary subprocess output files.');
         }
 
         $process = null;
@@ -48,7 +48,7 @@ trait ProcessTestHelper
             );
 
             if (!is_resource($process)) {
-                throw new \\RuntimeException('Unable to start test subprocess.');
+                throw new \RuntimeException('Unable to start test subprocess.');
             }
 
             fclose($pipes[0]);
