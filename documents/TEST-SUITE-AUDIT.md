@@ -1,12 +1,17 @@
 # Test Suite Audit
 
 **Baseline:** `main` at `41864c31ef5a2a4c9b2e106a634006bfaf920d58`  
-**Current follow-up branch:** `quality/phase-17-process-tree-cleanup`  
+**Current follow-up branch:** `quality/phase-19-ci-failure-triage`  
 **Scope:** PHPUnit unit, integration, system, and smoke tests.  
 **Compatibility:** PHP 8.0–8.5; Windows and Linux.  
 **Constraints:** PHPUnit retained; no mocks introduced; production source unchanged.
 
 ## Changes in this pass
+
+- Phase 19 fixes the YAML lint failure in the coverage-summary step by shortening the overlong diagnostic line.
+- The Windows process-tree helper regression test now allows a bounded startup window for the PowerShell Job Object launcher before timing out; its child marker deadline remains later than the parent timeout so descendant cleanup is still verified.
+- CI run #587 confirmed the PHP 8.3 coverage report generation, Clover summary, and artifact upload steps succeed. Linux PHP 8.0–8.5 compatibility and the performance matrix passed.
+- CI run #587 exposed the YAML line-length issue and the Windows process-helper test's 0.4-second startup assumption on PHP 8.3 and 8.4. The changes above address those two observed failures; a fresh CI run is required to verify the fixes.
 
 - Phase 17 routes test subprocesses through the existing `ProcessLauncher` and `ProcessSupervisor`: Windows uses the kill-on-close Job Object launcher; POSIX uses an isolated session/process group where supported, with descendant discovery as a fallback. Timed-out processes and remaining descendants are terminated before returning.
 - Validate subprocess command lists, working directories, and finite positive timeout values before creating output files or launching a process.

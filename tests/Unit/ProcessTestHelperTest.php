@@ -53,7 +53,7 @@ final class ProcessTestHelperTest extends TestCase
         // Arrange
         $pidFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-child-' . bin2hex(random_bytes(8)) . '.pid';
         $marker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-child-marker-' . bin2hex(random_bytes(8));
-        $childCode = 'usleep(1200000); file_put_contents($argv[1], "survived");';
+        $childCode = 'usleep(5000000); file_put_contents($argv[1], "survived");';
         $parentCode = '$pipes = []; '
             . '$child = proc_open([PHP_BINARY, "-r", ' . var_export($childCode, true) . ', ' . var_export($marker, true) . '], '
             . '[0 => ["pipe", "r"], 1 => ["pipe", "w"], 2 => ["pipe", "w"]], $pipes); '
@@ -67,9 +67,9 @@ final class ProcessTestHelperTest extends TestCase
             $result = $this->runTestProcess(
                 [PHP_BINARY, '-r', $parentCode],
                 getcwd() ?: sys_get_temp_dir(),
-                0.4
+                3.0
             );
-            usleep(1500000);
+            usleep(5500000);
 
             // Assert
             self::assertTrue($result['timedOut']);

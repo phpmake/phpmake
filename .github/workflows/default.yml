@@ -212,7 +212,7 @@ jobs:
           $statements = (int) $metrics["statements"];
           $covered = (int) $metrics["coveredstatements"];
           if ($statements < 1 || $covered < 0 || $covered > $statements) {
-              fwrite(STDERR, "Clover report contains invalid statement metrics.\n");
+              fwrite(STDERR, "Invalid Clover statement metrics.\n");
               exit(1);
           }
           $percentage = number_format(($covered / $statements) * 100, 2);
