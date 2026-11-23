@@ -200,7 +200,7 @@ jobs:
             --coverage-text
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: phpunit-coverage
           path: build/coverage.xml
@@ -239,7 +239,7 @@ jobs:
           composer benchmark | tee benchmark-results.json
 
       - name: Retain performance baseline
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: performance-${{ runner.os }}-php-${{ matrix.php-version }}
           path: benchmark-results.json
