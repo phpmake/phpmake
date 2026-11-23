@@ -25,6 +25,15 @@ The Composer scripts provide:
 
 CI also validates YAML, XML, and JSON files; Composer metadata and dependency declarations; unused Composer dependencies (`composer-unused`); dependency advisories; and a clean Composer consumer installation.
 
+## Cleanup findings
+
+- Removed the unused `ConsoleOutput::stderr()` wrapper; error output is already centralized by `ConsoleOutput::error()`.
+- Removed the one-call `ZipTask::publishArchive()` wrapper and call the shared atomic publisher directly.
+- Consolidated task-level link/junction detection and removal in `FilesystemTree`, eliminating duplicate platform-specific logic from `BaseTask`.
+- Simplified test bootstrap autoload path construction; `addslashes()` was not needed for a literal filesystem path.
+- Reviewed private/protected source methods for unreferenced declarations. No additional unused private/protected methods were identified.
+- Reviewed overlapping tests. The similar-looking publisher, filesystem-task, and helper tests exercise different layers or failure guarantees, so they were retained rather than deleting useful regression coverage.
+
 ## Confirmed test-quality baseline
 
 The Phase 26 audit covered 50 PHP test files and 268 test methods. All audited methods had explicit Arrange / Act / Assert sections. No PHPUnit mock objects or mocking-framework usage were found. These are structural audit results, not proof of complete behavioral coverage.
