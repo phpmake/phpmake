@@ -1,5 +1,6 @@
 PHPMake - Unreleased
 --------------------
+* Fix PHPUnit 9.6/13 data-provider compatibility in ExecTask validation tests and suppress captured output prefixes after subprocess output-limit violations.
 * Expand ExecTask coverage for invalid constructor configuration, successful stderr capture, and stderr output-limit enforcement.
 * Fix the coverage workflow YAML lint violation and make the Windows process-tree regression test tolerate PowerShell Job Object launcher startup latency.
 * Reuse the platform process launchers for test subprocesses, ensuring Windows Job Object and POSIX session cleanup; validate commands, working directories, and deadlines before launch.
