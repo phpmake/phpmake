@@ -56,8 +56,7 @@ final class BaseTaskTest extends TestCase
         // Arrange
         $task = new class (new Logger(false, true, true)) extends BaseTaskTestProbe {
             /** Simulates a task implementation that throws during execution. */
-            /** Returns a successful result for the base task probe. */
-    protected function runTask(bool $debug, bool $silent): bool
+            protected function runTask(bool $debug, bool $silent): bool
             {
                 throw new \RuntimeException('Expected task failure');
             }
