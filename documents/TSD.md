@@ -35,6 +35,7 @@ CLI → BuildLoader → BuildValidator → BuildExecutor → DependencyResolver 
 | Component | Responsibility |
 | --- | --- |
 | Config | Application configuration and version information |
+| PlatformSupport | Enforce the Windows/Linux operating-system support boundary |
 | CLI | Parse arguments and dispatch CLI operations |
 | Build | Load, validate, and execute build configurations |
 | Target | Resolve dependency order and detect cycles |
