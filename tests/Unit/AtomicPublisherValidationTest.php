@@ -38,8 +38,9 @@ final class AtomicPublisherValidationTest extends TestCase
         $staged = $this->base . DIRECTORY_SEPARATOR . 'missing.tmp';
         $destination = $this->base . DIRECTORY_SEPARATOR . 'result.txt';
 
-        // Act / Assert
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
+        // Act
         AtomicFilePublisher::publish($staged, $destination);
     }
 
@@ -94,6 +95,7 @@ final class AtomicPublisherValidationTest extends TestCase
 
         // Act / Assert
         $this->expectException(\InvalidArgumentException::class);
+        // Act
         AtomicDirectoryPublisher::publish($staging, $destination);
     }
 
@@ -175,11 +177,12 @@ final class AtomicPublisherValidationTest extends TestCase
         }
 
         try {
-            // Assert
+            // Act
             try {
                 AtomicFilePublisher::publish($staged, $destination);
                 self::fail('A destination file link must not be replaced.');
             } catch (\InvalidArgumentException $invalidArgumentException) {
+                // Assert
                 self::assertStringContainsString('Destination must not be a symbolic link', $invalidArgumentException->getMessage());
             }
 
@@ -202,9 +205,11 @@ final class AtomicPublisherValidationTest extends TestCase
         self::assertSame(3, file_put_contents($staged, 'new'));
         self::assertTrue(mkdir($destination));
 
-        // Act / Assert
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Existing destination must be a regular file.');
+
+        // Act
         AtomicFilePublisher::publish($staged, $destination);
     }
 
@@ -221,7 +226,7 @@ final class AtomicPublisherValidationTest extends TestCase
         $this->createDirectoryLink($target, $destination);
 
         try {
-            // Assert
+            // Act
             try {
                 AtomicDirectoryPublisher::publish($staging, $destination);
                 self::fail('A destination directory link must not be replaced.');
@@ -247,9 +252,11 @@ final class AtomicPublisherValidationTest extends TestCase
         self::assertTrue(mkdir($staging));
         self::assertSame(7, file_put_contents($destination, 'blocker'));
 
-        // Act / Assert
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Existing destination must be a directory.');
+
+        // Act
         AtomicDirectoryPublisher::publish($staging, $destination);
     }
 

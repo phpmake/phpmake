@@ -140,6 +140,7 @@ final class PathSafetyTest extends TestCase
                 self::assertTrue($this->isDirectoryJunction($link));
             }
 
+            // Assert
             $this->expectException(\InvalidArgumentException::class);
             $this->expectExceptionMessage('Safety Violation');
             // Act
@@ -179,7 +180,10 @@ final class PathSafetyTest extends TestCase
             $this->createDirectoryLink($outside, $source . DIRECTORY_SEPARATOR . 'linked');
             $task = new CopyTask(['source' => $source, 'dest' => $dest], $this->logger);
             // Act
-            $this->assertFalse($task->execute(false, true));
+            $copied = $task->execute(false, true);
+
+            // Assert
+            $this->assertFalse($copied);
             $this->assertDirectoryDoesNotExist($dest);
             $this->assertFileDoesNotExist($dest . DIRECTORY_SEPARATOR . 'linked' . DIRECTORY_SEPARATOR . 'secret.txt');
         } finally {
@@ -224,7 +228,10 @@ final class PathSafetyTest extends TestCase
             $this->createDirectoryLink($target, $link);
             $task = new DeleteTask(['path' => $link], $this->logger);
             // Act
-            $this->assertTrue($task->execute(false, true));
+            $deleted = $task->execute(false, true);
+
+            // Assert
+            $this->assertTrue($deleted);
             $this->assertDirectoryDoesNotExist($link);
             $this->assertFileExists($target . DIRECTORY_SEPARATOR . 'keep.txt');
             $this->assertSame('keep me', file_get_contents($target . DIRECTORY_SEPARATOR . 'keep.txt'));
@@ -318,6 +325,7 @@ final class PathSafetyTest extends TestCase
     /** Rejects UNC paths as external Windows paths. */
     public function testRejectsUncPathOnWindows(): void
     {
+        // Arrange
         if (PHP_OS_FAMILY !== 'Windows') {
             self::markTestSkipped('UNC path handling is Windows-specific.');
         }
@@ -378,6 +386,7 @@ final class PathSafetyTest extends TestCase
     /** Rejects extended-length UNC paths as external Windows paths. */
     public function testRejectsExtendedUncPathOnWindows(): void
     {
+        // Arrange
         if (PHP_OS_FAMILY !== 'Windows') {
             self::markTestSkipped('Extended UNC path handling is Windows-specific.');
         }
@@ -394,6 +403,7 @@ final class PathSafetyTest extends TestCase
     /** Rejects Windows drive-relative paths with ambiguous per-drive bases. */
     public function testRejectsDriveRelativePathOnWindows(): void
     {
+        // Arrange
         if (PHP_OS_FAMILY !== 'Windows') {
             self::markTestSkipped('Drive-relative path handling is Windows-specific.');
         }
