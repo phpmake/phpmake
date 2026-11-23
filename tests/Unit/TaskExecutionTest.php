@@ -63,24 +63,38 @@ final class TaskExecutionTest extends TestCase
     public function testExecTaskRunsConfiguredCommandSuccessfully(): void
     {
         // Arrange
-        $params = ['command' => PHP_BINARY, 'args' => ['-r', 'echo "Test";']];
-        $task = new ExecTask($params, $this->logger);
+        $logFile = $this->workspace . DIRECTORY_SEPARATOR . 'exec-success.log';
+        $logger = new Logger(false, true, false, $logFile);
+        $params = ['command' => PHP_BINARY, 'args' => ['-r', 'echo "observable-output";']];
+        $task = new ExecTask($params, $logger);
+
         // Act
         $result = $task->execute(false, true);
+
         // Assert
-        $this->assertTrue($result);
+        self::assertTrue($result);
+        $log = file_get_contents($logFile);
+        self::assertIsString($log);
+        self::assertStringContainsString('observable-output', $log);
     }
 
     /** Executes an echo task with the configured message. */
     public function testEchoTaskExecutesConfiguredMessageSuccessfully(): void
     {
         // Arrange
-        $params = ['message' => 'Test message'];
-        $task = new EchoTask($params, $this->logger);
+        $logFile = $this->workspace . DIRECTORY_SEPARATOR . 'echo-success.log';
+        $logger = new Logger(false, true, false, $logFile);
+        $params = ['message' => 'observable-echo-message'];
+        $task = new EchoTask($params, $logger);
+
         // Act
         $result = $task->execute(false, true);
+
         // Assert
-        $this->assertTrue($result);
+        self::assertTrue($result);
+        $log = file_get_contents($logFile);
+        self::assertIsString($log);
+        self::assertStringContainsString('INFO: observable-echo-message', $log);
     }
 
     /** Returns failure when a regular file blocks directory creation. */
