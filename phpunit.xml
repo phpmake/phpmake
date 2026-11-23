@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!-- Platform-specific tests may skip when the host lacks the required OS or filesystem capability. -->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.6/phpunit.xsd"
     bootstrap="tests/bootstrap.php"
@@ -25,7 +26,6 @@
         </testsuite>
     </testsuites>
 
-    <!-- Platform-specific tests may skip when the host lacks the required OS or filesystem capability. -->
     <coverage processUncoveredFiles="true">
         <include>
             <directory suffix=".php">src</directory>
