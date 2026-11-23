@@ -36,6 +36,19 @@ final class CommandLineParserTest extends TestCase
         self::assertFalse($balanced);
     }
 
+    /** Accepts escaped quotes and backslashes inside a quoted argument. */
+    public function testHasBalancedQuotesWithEscapedCharacters(): void
+    {
+        // Arrange
+        $command = 'php "escaped \\"quote\\" and \\\\ path"';
+
+        // Act
+        $balanced = CommandLineParser::hasBalancedQuotes($command);
+
+        // Assert
+        self::assertTrue($balanced);
+    }
+
     /** Preserves spaces inside quoted tokens and Windows path separators. */
     public function testTokenizePreservesQuotedArgumentsAndWindowsPaths(): void
     {

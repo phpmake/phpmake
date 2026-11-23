@@ -92,6 +92,15 @@ The latest numeric baseline previously recorded in this repository is from Phase
 
 This is historical, not a current measurement of merged `main` or this branch. CI generates JUnit, Clover, and HTML reports and publishes statement coverage. It does not currently publish branch coverage or enforce an 80% threshold.
 
+## Coverage policy added in Phase 29
+
+- Overall executable-line coverage is enforced at a minimum of 80% by `tools/check-coverage.php`.
+- Xdebug branch coverage is collected in the dedicated PHP 8.3 coverage job and published separately in the CI summary and Clover report.
+- Seven critical contract files have a 100% executable-line coverage requirement enforced by the coverage gate. The exact list and rationale are documented in `documents/CODE-COVERAGE.md`.
+- Branch coverage is reported but does not yet have a project-wide percentage gate. The first stable branch measurement will be used to set a defensible target.
+- The available pre-Phase-28 Clover artifact measured 1,284 / 1,594 statements (80.55%). Branch coverage was not collected. This is a pre-additional-tests baseline, not the post-Phase-28 measurement.
+- The post-Phase-28 and branch-enabled measurement must be taken from the new CI artifact. No post-change percentage is claimed until that artifact is available.
+
 ## Remaining work
 
 - Review the fresh CI Clover and HTML reports for exact uncovered source lines and branches.

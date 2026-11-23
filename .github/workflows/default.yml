@@ -195,11 +195,14 @@ jobs:
           XDEBUG_MODE: coverage
         run: |
           mkdir -p build
-          vendor/bin/phpunit --configuration phpunit.xml \
+          vendor/bin/phpunit --configuration phpunit.xml --branch-coverage \
             --log-junit=build/junit.xml \
             --coverage-clover=build/coverage.xml \
             --coverage-html=build/coverage-html \
             --coverage-text
+
+      - name: Enforce line and critical-path coverage
+        run: composer coverage-check
 
       - name: Publish coverage summary
         shell: bash
@@ -217,13 +220,22 @@ jobs:
               fwrite(STDERR, "Invalid Clover statement metrics.\n");
               exit(1);
           }
+          $conditionals = (int) $metrics["conditionals"];
+          $coveredConditionals = (int) $metrics["coveredconditionals"];
+          if ($conditionals < 1 || $coveredConditionals < 0 || $coveredConditionals > $conditionals) {
+              fwrite(STDERR, "Invalid Clover branch metrics.\n");
+              exit(1);
+          }
           $percentage = number_format(($covered / $statements) * 100, 2);
+          $branchPercentage = number_format(($coveredConditionals / $conditionals) * 100, 2);
           file_put_contents(
               getenv("GITHUB_STEP_SUMMARY"),
               "## PHPUnit coverage\n\n"
               . "| Metric | Result |\n|---|---:|\n"
               . "| Covered statements | {$covered} / {$statements} |\n"
-              . "| Statement coverage | {$percentage}% |\n"
+              . "| Line coverage | {$percentage}% (minimum 80%) |\n"
+              . "| Covered branches | {$coveredConditionals} / {$conditionals} |\n"
+              . "| Branch coverage | {$branchPercentage}% |\n"
           );
           '
 

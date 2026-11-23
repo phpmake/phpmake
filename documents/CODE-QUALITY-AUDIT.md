@@ -28,13 +28,20 @@ CI also validates YAML, XML, and JSON files; Composer metadata and dependency de
 
 The Phase 26 audit covered 50 PHP test files and 268 test methods. All audited methods had explicit Arrange / Act / Assert sections. No PHPUnit mock objects or mocking-framework usage were found. These are structural audit results, not proof of complete behavioral coverage.
 
+## Coverage policy
+
+- CI collects line and branch coverage with Xdebug on the PHP 8.3 coverage job.
+- Overall executable-line coverage must remain at or above 80%; the coverage job fails below this threshold.
+- The following critical contracts must retain 100% executable-line coverage: build execution dispatch, build configuration validation, CLI parsing, shell-free command parsing, Windows process argument transport, dependency resolution, and the task-definition registry. The enforced file list lives in `tools/check-coverage.php`.
+- Branch coverage is reported separately. No global branch percentage threshold is imposed yet; the report is used to prioritize untested decisions.
+- High-risk filesystem, archive, and process lifecycle paths are 100% coverage targets, but they are not yet included in the hard 100% file gate because their current coverage is materially below target. See `documents/CODE-COVERAGE.md`.
+
 ## Remaining work
 
-1. Produce a fresh class/method coverage inventory and add missing tests.
-2. Add branch coverage reporting and an enforced line-coverage threshold.
-3. Review skipped tests and platform-specific execution evidence.
-4. Complete a focused security review of filesystem operations, process execution, archive creation, and JSON configuration validation.
-5. Keep documentation and examples aligned with the runtime, schema, Composer metadata, and CI matrix.
+1. Raise coverage of atomic publishers, filesystem traversal, process supervision, and archive creation toward 100% line and branch coverage.
+2. Review skipped tests and platform-specific execution evidence.
+3. Complete a focused security review of filesystem operations, process execution, archive creation, and JSON configuration validation.
+4. Keep documentation and examples aligned with the runtime, schema, Composer metadata, and CI matrix.
 
 ## Constraints
 
