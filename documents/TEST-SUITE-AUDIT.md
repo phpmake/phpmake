@@ -8,7 +8,7 @@
 
 - 50 PHP files under `tests/` were included in the source inventory.
 - The current source inventory contains 272 PHPUnit test methods across the configured unit, integration, system, and smoke suites. All test methods have explicit Arrange / Act / Assert sections.
-- The prior audit found no PHPUnit mock objects, mock-builder usage, Mockery, or Prophecy references. This phase introduces no mocks.
+- No PHPUnit mock objects, mock-builder usage, Mockery, or Prophecy references were found in the current test inventory.
 - The source inventory is a static audit, not a fresh coverage measurement. The latest numeric line-coverage baseline recorded below is historical; use the most recent successful CI Clover artifact for current line and branch percentages.
 
 ## Recent test and maintenance changes
@@ -93,14 +93,14 @@ The older Phase 19 numeric baseline recorded in this repository is:
 
 This Phase 19 result is historical and predates the current branch-coverage reporting and coverage gates. Current CI generates JUnit, Clover, and HTML reports, publishes line and branch coverage, enforces at least 80% overall executable-line coverage, and requires 100% line coverage in seven designated critical contract files. See `documents/CODE-COVERAGE.md` for the enforced list and current policy.
 
-## Coverage policy added in Phase 29
+## Current coverage policy
 
 - Overall executable-line coverage is enforced at a minimum of 80% by `tools/check-coverage.php`.
 - Xdebug branch coverage is collected in the dedicated PHP 8.3 coverage job and published separately in the CI summary and Clover report.
 - Seven critical contract files have a 100% executable-line coverage requirement enforced by the coverage gate. The exact list and rationale are documented in `documents/CODE-COVERAGE.md`.
 - Branch coverage is reported but does not yet have a project-wide percentage gate. The first stable branch measurement will be used to set a defensible target.
 - The available pre-Phase-28 Clover artifact measured 1,284 / 1,594 statements (80.55%). Branch coverage was not collected. This is a pre-additional-tests baseline, not the post-Phase-28 measurement.
-- The post-Phase-28 and branch-enabled measurement must be taken from the new CI artifact. No post-change percentage is claimed until that artifact is available.
+- A post-Phase-29/30 measurement must be taken from a successful CI coverage artifact. No current-main percentage is claimed until that artifact is available.
 
 ## Remaining work
 
