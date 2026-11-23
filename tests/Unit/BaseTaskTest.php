@@ -140,6 +140,29 @@ final class BaseTaskTest extends TestCase
         self::assertFalse($missingIsLink);
     }
 
+    /** Detects directory links through the shared filesystem implementation. */
+    public function testDetectsDirectoryLinks(): void
+    {
+        // Arrange
+        $target = $this->root . DIRECTORY_SEPARATOR . 'link-target';
+        $link = $this->root . DIRECTORY_SEPARATOR . 'directory-link';
+        self::assertTrue(mkdir($target));
+        $this->createDirectoryLink($target, $link);
+
+        try {
+            // Act
+            $isLink = $this->task->isLinkOrJunction($link);
+
+            // Assert
+            self::assertTrue($isLink);
+            self::assertDirectoryExists($target);
+        } finally {
+            if (FilesystemTree::isLink($link)) {
+                $this->removeDirectoryLink($link);
+            }
+        }
+    }
+
     /** Accepts an existing path contained by the current project directory. */
     public function testAcceptsPathInsideProject(): void
     {
