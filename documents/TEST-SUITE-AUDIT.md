@@ -8,7 +8,7 @@
 
 ## Changes in this pass
 
-- Phase 17 extends `ProcessTestHelper` to terminate timed-out process trees: Windows uses `taskkill /T /F`; POSIX uses the existing descendant discovery and termination support before terminating the root process.
+- Phase 17 routes test subprocesses through the existing `ProcessLauncher` and `ProcessSupervisor`: Windows uses the kill-on-close Job Object launcher; POSIX uses an isolated session/process group where supported, with descendant discovery as a fallback. Timed-out processes and remaining descendants are terminated before returning.
 - Validate subprocess command lists, working directories, and finite positive timeout values before creating output files or launching a process.
 - Added regression coverage for descendant termination on timeout and invalid process arguments/timeouts.
 - Retained file-backed stdout/stderr capture, monotonic deadlines, and finally-based temporary output cleanup from Phase 16.
