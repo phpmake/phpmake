@@ -3,6 +3,7 @@
 namespace PhpMake\Task;
 
 use PhpMake\Diagnostics\ExceptionDiagnostics;
+use PhpMake\PlatformSupport;
 use PhpMake\Utilities\Logger;
 
 /** Provides shared execution, logging, and filesystem-safety behavior for tasks. */
@@ -18,6 +19,7 @@ abstract class BaseTask implements TaskInterface
     public function execute(bool $debug, bool $silent): bool
     {
         try {
+            PlatformSupport::assertSupported();
             return $this->runTask($debug, $silent);
         } catch (\Throwable $throwable) {
             if ($debug) {
