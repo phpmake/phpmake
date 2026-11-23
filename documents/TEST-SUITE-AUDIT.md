@@ -10,7 +10,7 @@
 
 - Phase 17 routes test subprocesses through the existing `ProcessLauncher` and `ProcessSupervisor`: Windows uses the kill-on-close Job Object launcher; POSIX uses an isolated session/process group where supported, with descendant discovery as a fallback. Timed-out processes and remaining descendants are terminated before returning.
 - Validate subprocess command lists, working directories, and finite positive timeout values before creating output files or launching a process.
-- Added regression coverage for descendant termination on timeout and invalid process arguments/timeouts.
+- Added regression coverage for descendant termination on timeout and successful exit, plus invalid process arguments/timeouts.
 - Retained file-backed stdout/stderr capture, monotonic deadlines, and finally-based temporary output cleanup from Phase 16.
 
 - Phase 16 added `ProcessTestHelper` for real subprocess tests. It captures stdout/stderr to temporary files to avoid pipe-buffer deadlocks, applies a monotonic execution deadline, terminates timed-out processes, and removes capture files in a finally block.
