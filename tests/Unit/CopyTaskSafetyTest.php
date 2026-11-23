@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace PhpMake\Tests\Unit;
 
-use PhpMake\Filesystem\FilesystemTree;
 use PhpMake\Task\Types\CopyTask;
 use PhpMake\Utilities\Logger;
 use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
@@ -14,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 final class CopyTaskSafetyTest extends TestCase
 {
     use TemporaryDirectoryTestHelper;
+
     private string $root;
 
     private string $originalWorkingDirectory;

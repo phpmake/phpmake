@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace PhpMake\Tests\Integration;
 
+use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
 
 /** Exercises the real PHPMake CLI and its complete build pipeline. */
 final class CliBuildIntegrationTest extends TestCase
 {
+    use TemporaryDirectoryTestHelper;
+
     private string $projectDirectory;
 
     private string $cliPath;
@@ -19,12 +22,7 @@ final class CliBuildIntegrationTest extends TestCase
     {
         parent::setUp();
 
-        $this->projectDirectory = sys_get_temp_dir()
-            . DIRECTORY_SEPARATOR
-            . 'phpmake-integration-'
-            . bin2hex(random_bytes(8));
-
-        self::assertTrue(mkdir($this->projectDirectory, 0777, true));
+        $this->projectDirectory = $this->createTemporaryDirectory('phpmake-integration-');
         $this->cliPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'phpmake.php';
         self::assertFileExists($this->cliPath);
     }
@@ -32,7 +30,7 @@ final class CliBuildIntegrationTest extends TestCase
     /** Removes the isolated project and every artifact created by the CLI. */
     protected function tearDown(): void
     {
-        $this->removeDirectory($this->projectDirectory);
+        $this->removeTemporaryDirectory($this->projectDirectory);
         parent::tearDown();
     }
 
@@ -201,30 +199,4 @@ final class CliBuildIntegrationTest extends TestCase
         ];
     }
 
-    /** Recursively removes a test project without following symbolic links. */
-    private function removeDirectory(string $directory): void
-    {
-        if (!is_dir($directory) || is_link($directory)) {
-            if (file_exists($directory) || is_link($directory)) {
-                unlink($directory);
-            }
-
-            return;
-        }
-
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::CHILD_FIRST
-        );
-
-        foreach ($iterator as $item) {
-            if ($item->isLink() || $item->isFile()) {
-                unlink($item->getPathname());
-            } elseif ($item->isDir()) {
-                rmdir($item->getPathname());
-            }
-        }
-
-        rmdir($directory);
-    }
 }
