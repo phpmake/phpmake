@@ -8,6 +8,9 @@
 
 ## Changes in this pass
 
+- Phase 24 addresses the Windows stderr-overflow stall identified by Phase 23 CI run #629. ExecTask now drains stdout and stderr independently on every polling pass and no longer uses feof() as the non-blocking read-loop guard. The stderr-overflow regression test has a 15-second task deadline and asserts the explicit 1 MiB overflow diagnostic, so a timeout cannot be mistaken for successful overflow detection.
+- Phase 23 CI run #629 confirmed all six Windows PHP 8.0–8.5 jobs stalled at TaskExecutionTest::testExecTaskRejectsExcessiveStderrOutput. Linux compatibility, coverage, static analysis, build/test, and performance jobs passed.
+
 - Phase 23 adds PHPUnit debug events to the Windows PHP 8.0–8.5 test command (`--debug --testdox`). Phase 22's TestDox output shows each Windows run completed through `TaskExecutionTest::testExecTaskCapturesStderrOnSuccessfulExit`, but emitted no completion line for the next method, `testExecTaskRejectsExcessiveStderrOutput`. This strongly narrows the suspect path but does not prove where execution blocks. Debug events will show the test-start event and help distinguish a hang in the stderr overflow execution from a later suite/teardown issue.
 - Phase 22 CI run #623: all six Windows filesystem jobs failed; the six Linux PHP compatibility jobs, coverage, static analysis, and performance matrix passed. Ubuntu PHP 8.0 performance also passed on this run, so the earlier HTTP 429 was transient.
 
