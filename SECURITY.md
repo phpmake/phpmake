@@ -1,27 +1,38 @@
 # Security Policy
 
-## Supported Versions
+## Supported versions
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 2.x.x   | :white_check_mark: |
+| Version | Security fixes |
+|---|---|
+| 2.x | Supported |
 
-## Security Model and Deployment
+Report issues against the latest available 2.x release or current `main`.
 
-A `build.json` file is executable input. The `exec` task can launch arbitrary local programs with the permissions and environment of the PHPMake process. PHPMake does not sandbox child processes and does not enforce network egress, DNS/hostname allowlists, or API rate limits.
+## Security model
 
-Only execute build configurations from trusted sources. In CI/CD:
-- Run PHPMake with a least-privilege account.
-- Do not expose deployment credentials or other secrets to builds from untrusted pull requests.
-- Use isolated, disposable runners or containers when executing untrusted or third-party build logic.
-- Apply outbound network restrictions at the runner, container, or infrastructure boundary when required.
+PHPMake is a local build automation tool, not a sandbox. A `build.json` file is executable input: its `exec` task can launch arbitrary programs with the permissions and inherited environment of the PHPMake process.
 
-Built-in filesystem tasks enforce project-working-directory containment, but that restriction does not constrain commands launched by `exec`. Process-tree cleanup is best-effort, not a security boundary: POSIX descendants can escape by creating a new session, and Windows cleanup cannot guarantee termination of detached descendants. Do not rely on PHPMake to contain hostile processes.
+Built-in filesystem tasks enforce project-directory path boundaries and reject symlink/junction escapes. Those checks do not constrain commands started by `exec`. PHPMake does not isolate credentials, restrict network egress, enforce DNS policies, or provide OS-level process containment.
 
-PHPMake has no Forgejo API integration; Forgejo server-version compatibility is not applicable.
+## Deployment guidance
 
-## Reporting a Vulnerability
+- Execute only build configurations from trusted sources.
+- Run builds as a least-privilege user.
+- Do not expose deployment credentials or secrets to untrusted pull requests.
+- Use disposable, isolated CI runners or containers for third-party build logic.
+- Apply filesystem and outbound-network restrictions at the runner/container/host layer.
+- Treat process-tree cleanup as best-effort; detached descendants may escape cleanup.
+- Treat generated ZIP files as untrusted at extraction boundaries. The extracting application must enforce path, link, and decompressed-size limits.
+- Review build output before retaining logs; child-process output and exception messages may contain secrets. Use `--no-log` when persistent logs are not appropriate.
 
-If you discover a potential vulnerability, email <phpmake.github@gmail.com> with a description, impact, and reproduction steps.
+See [the security review](documents/SECURITY-REVIEW.md) for implementation details and residual limitations.
 
-Please do not disclose the issue publicly until the maintainers have investigated it and coordinated a fix or disclosure timeline.
+## Report a vulnerability
+
+Email **phpmake.github@gmail.com** with:
+- A concise description and affected version/commit.
+- Security impact and attack prerequisites.
+- Reproduction steps or a proof of concept.
+- Any suggested mitigation.
+
+Do not publish exploit details or open a public issue before maintainers have had an opportunity to investigate and coordinate disclosure. Avoid sending real credentials or sensitive production data.
