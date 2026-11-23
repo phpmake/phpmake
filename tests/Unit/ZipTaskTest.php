@@ -85,7 +85,7 @@ final class ZipTaskTest extends TestCase
         // Arrange
         self::assertTrue(class_exists(\ZipArchive::class), 'ext-zip is a required runtime dependency.');
 
-        if (!in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true)) {
+        if (PHP_OS_FAMILY !== 'Windows') {
             self::markTestSkipped('Case-variant filesystem test requires a case-insensitive filesystem.');
         }
 
