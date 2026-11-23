@@ -1,92 +1,60 @@
-# Software Requirements Specification (SRS)
+# Software Requirements
 
-**Product:** PHPMake
-**Version:** 2.0.x
-**Document:** Software Requirements Specification
-**Status:** Active
+**Product:** PHPMake 2.x  
+**Platforms:** Windows and GNU/Linux  
+**Runtime:** PHP 8.0+ (`^8.0`)
 
-## 1. Purpose
+## Functional requirements
 
-This document specifies the functional and non-functional requirements of PHPMake, a PHP-based build automation system.
+| ID | Requirement |
+|---|---|
+| FR-01 | Load a JSON build definition from the current working directory. |
+| FR-02 | Validate configuration structure, properties, task types, and parameters before execution. |
+| FR-03 | Execute a named target or the configured default target. |
+| FR-04 | Resolve target dependencies and reject missing or circular dependencies. |
+| FR-05 | Execute tasks in declared order and report failure when a task fails. |
+| FR-06 | Provide the six built-in tasks: create_directory, delete, copy, exec, echo, archive. |
+| FR-07 | Provide CLI help, version, diagnostics, validation, debug, silent, no-log, and init options. |
+| FR-08 | Write logs with serialized updates and bounded rotation. |
+| FR-09 | Bound external process duration and captured stdout/stderr. |
+| FR-10 | Create ZIP archives with explicit input-count, depth, and size limits. |
 
-## 2. Functional Requirements
+## Non-functional requirements
 
-| ID    | Requirement                                                                         |
-| ----- | ----------------------------------------------------------------------------------- |
-| FR-01 | The system shall load build definitions from `build.json`.                          |
-| FR-02 | The system shall validate configuration structure and required properties.          |
-| FR-03 | The system shall support multiple named build targets.                              |
-| FR-04 | The system shall execute a specified target or the default target.                  |
-| FR-05 | The system shall resolve target dependencies before execution.                      |
-| FR-06 | The system shall detect circular and invalid dependencies.                          |
-| FR-07 | The system shall execute tasks in their declared order.                             |
-| FR-08 | The system shall support all six built-in task types.                               |
-| FR-09 | The system shall stop the build when a task fails.                                  |
-| FR-10 | The system shall provide CLI help and version information.                          |
-| FR-11 | The system shall generate a sample configuration using `--init`.                    |
-| FR-12 | The system shall provide build validation through `--validate-build`.               |
-| FR-13 | The system shall provide environment diagnostics.                                   |
-| FR-14 | The system shall support debug, silent, and no-log options.                         |
-| FR-15 | The system shall support custom task implementations through its task architecture. |
-| FR-16 | The system shall cap captured stdout and stderr independently at 1 MiB per process. |
-| FR-17 | The system shall enforce a default process timeout of 300 seconds and a maximum of 86400 seconds. |
-| FR-18 | On process timeout or output overflow, the system shall terminate the process tree using platform-supported process-group or tree termination. |
-| FR-19 | The logger shall serialize concurrent file writes and rotation using a persistent lock file.
+### Security
 
-## 3. Non-Functional Requirements
+- Built-in filesystem operations must remain within the working directory.
+- Symlink and Windows junction escapes must be rejected.
+- Destructive operations must protect the project root.
+- External processes must be launched without implicit shell interpretation.
+- Process cleanup must be attempted using supported platform mechanisms.
+- PHPMake must clearly document that external commands are not sandboxed.
 
-### 3.1 Security
+### Reliability
 
-- Filesystem operations must remain within the permitted working directory.
-- Paths must be normalized and resolved within the working directory; symlink and Windows junction ancestor escapes must be rejected.
-- Project-root deletion and replacement must be rejected.
-- External processes must be executed without unintended shell interpretation.
-- Process execution must support configurable timeouts and bounded output capture.
-- Process-tree termination must be attempted on supported Windows and POSIX platforms.
-- Errors must not be silently converted into successful execution results.
-
-### 3.2 Performance
-
-- Dependency resolution should avoid unnecessary repeated work.
-- Filesystem operations should handle normal project-sized workloads efficiently.
-- Logging should avoid unnecessary overhead and preserve complete entries when writes are partial or concurrent.
-
-### 3.3 Reliability
-
-- Invalid configurations must be rejected before build execution.
+- Invalid configuration must fail before task execution.
 - Task failures must propagate to the build result.
-- Partial filesystem and archive operations must be handled safely.
-- Dependency cycles must be detected.
+- Failed copy/archive publication must preserve an existing destination where transactional publication is supported.
+- Timeouts and output-limit violations must fail the process task.
+- Temporary process and staging files must be cleaned up on success and failure.
 
-### 3.4 Compatibility
+### Compatibility
 
-- Active development version must support PHP 8.0 or later.
-- Composer 2 or later must be supported.
-- The `ctype`, `json`, and `zip` PHP extensions must be available.
-- The product targets Microsoft Windows and GNU/Linux environments.
+- PHP constraint: `^8.0`.
+- Composer 2 or newer.
+- Required extensions: `ctype`, `json`, and `zip`.
+- Supported operating systems: Windows and GNU/Linux.
+- CI currently tests PHP 8.0–8.5.
 
-### 3.5 Maintainability
+### Maintainability
 
-- The architecture must remain modular and object-oriented.
-- Tasks must follow a common task interface.
-- Components must be independently testable.
-- Code changes must include appropriate regression tests.
+- Keep task metadata centralized and aligned with the published JSON Schema.
+- Keep tests isolated, deterministic, bounded, and free of mocks.
+- Update user documentation when CLI, task, configuration, or compatibility behavior changes.
 
-### 3.6 Usability
+## Interfaces
 
-- Build definitions must use readable JSON.
-- CLI commands and options must be documented.
-- Errors must provide useful diagnostic information.
-- Installation must be straightforward through Composer.
-
-## 4. External Interfaces
-
-**User Interface:** Command-line interface.
-
-**Configuration Interface:** JSON build definition.
-
-**Package Interface:** Composer package and executable.
-
-**Execution Interface:** Operating-system process execution.
-
-**Logging Interface:** Console output and project-level log files.
+- CLI: command-line arguments, stdout, stderr, and process exit status.
+- Configuration: JSON build file and published JSON Schema.
+- Distribution: Composer package and executable proxy.
+- Logging: console output and project-local log files.
