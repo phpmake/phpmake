@@ -12,6 +12,7 @@ abstract class BaseTask implements TaskInterface
     /** Initializes the task and validates its parameters. */
     public function __construct(protected array $params, protected Logger $logger)
     {
+        PlatformSupport::assertSupported();
         $this->validateParams();
     }
 
