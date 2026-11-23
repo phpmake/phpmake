@@ -32,7 +32,7 @@
 - AAA markers and ordering remain inconsistent in several legacy test classes. In particular, exception expectation setup is frequently placed before Arrange comments, some methods combine multiple scenarios, and several fixture assertions are interleaved with behavior assertions.
 - Continue the remaining suite-wide review for AAA ordering and test names; this pass addressed the remaining generic dependency-resolution and built-in task execution names identified in the legacy unit tests.
 - Path-safety and smoke-test fixtures now use the shared workspace lifecycle; keep platform-specific junction creation/removal in `DirectoryLinkTestHelper` rather than merging it into generic directory cleanup.
-- Process-tree and filesystem capability tests use explicit skips when platform prerequisites are absent; CI must still exercise each supported platform-specific path.
+- Process-tree and filesystem capability tests use explicit skips when platform prerequisites are absent; `failOnSkipped` is disabled so justified platform skips do not fail otherwise-valid matrix jobs. CI must still exercise each supported platform-specific path.
 - Continue auditing integration process tests and remaining legacy unit classes for fixture isolation, AAA ordering, and behavior-focused method names.
 - No production implementation changes are included in this test-only pass.
 

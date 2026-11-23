@@ -6,7 +6,7 @@
     colors="true"
     testdox="true"
     stopOnError="true" stopOnFailure="false" stopOnSkipped="false" stopOnRisky="false"
-    failOnWarning="true" failOnRisky="false" failOnSkipped="true"
+    failOnWarning="true" failOnRisky="false" failOnSkipped="false"
     timeoutForSmallTests="5" timeoutForMediumTests="30" timeoutForLargeTests="60"
     beStrictAboutTestsThatDoNotTestAnything="true" beStrictAboutOutputDuringTests="false">
     <!-- Test suite configuration -->
@@ -25,6 +25,7 @@
         </testsuite>
     </testsuites>
 
+    <!-- Platform-specific tests may skip when the host lacks the required OS or filesystem capability. -->
     <coverage processUncoveredFiles="true">
         <include>
             <directory suffix=".php">src</directory>
