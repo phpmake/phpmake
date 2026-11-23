@@ -19,6 +19,7 @@ final class BaseTaskTest extends TestCase
 
     private BaseTaskTestProbe $task;
 
+    /** Creates the task fixture and its temporary project root. */
     protected function setUp(): void
     {
         parent::setUp();
@@ -27,6 +28,7 @@ final class BaseTaskTest extends TestCase
         $this->task = new BaseTaskTestProbe(new Logger(false, true, true));
     }
 
+    /** Removes the temporary project root after each test. */
     protected function tearDown(): void
     {
         FilesystemTree::remove($this->root);
@@ -53,7 +55,9 @@ final class BaseTaskTest extends TestCase
     {
         // Arrange
         $task = new class (new Logger(false, true, true)) extends BaseTaskTestProbe {
-            protected function runTask(bool $debug, bool $silent): bool
+            /** Simulates a task implementation that throws during execution. */
+            /** Returns a successful result for the base task probe. */
+    protected function runTask(bool $debug, bool $silent): bool
             {
                 throw new \RuntimeException('Expected task failure');
             }
@@ -72,6 +76,7 @@ final class BaseTaskTest extends TestCase
         // Arrange
         $logFile = $this->root . DIRECTORY_SEPARATOR . 'debug.log';
         $task = new class (new Logger(true, true, false, $logFile)) extends BaseTaskTestProbe {
+            /** Simulates a task failure while debug logging is enabled. */
             protected function runTask(bool $debug, bool $silent): bool
             {
                 throw new \RuntimeException('Expected task failure');
@@ -98,6 +103,7 @@ final class BaseTaskTest extends TestCase
         // Arrange
         $logFile = $this->root . DIRECTORY_SEPARATOR . 'normal.log';
         $task = new class (new Logger(false, true, false, $logFile)) extends BaseTaskTestProbe {
+            /** Simulates a task failure while debug logging is disabled. */
             protected function runTask(bool $debug, bool $silent): bool
             {
                 throw new \RuntimeException('Expected task failure');
@@ -269,26 +275,31 @@ final class BaseTaskTest extends TestCase
 /** Exposes protected BaseTask path helpers for focused unit tests. */
 class BaseTaskTestProbe extends BaseTask
 {
+    /** Creates the probe task with the supplied logger. */
     public function __construct(Logger $logger)
     {
         parent::__construct([], $logger);
     }
 
+    /** Exposes the base task link check to unit tests. */
     public function isLinkOrJunction(string $path): bool
     {
         return $this->isSymbolicLinkOrJunction($path);
     }
 
+    /** Exposes the base task path-safety validation to unit tests. */
     public function assertPathIsSafe(string $path, string $label, bool $allowProjectRoot = true): void
     {
         $this->assertSafePath($path, $label, $allowProjectRoot);
     }
 
+    /** Exposes filesystem-order path resolution to unit tests. */
     public function resolvePath(string $path, string $label): string
     {
         return $this->resolvePathInFilesystemOrder($path, $label);
     }
 
+    /** Exposes safe link removal to unit tests. */
     public function removeLinkOrJunction(string $path): bool
     {
         return $this->removeSymbolicLinkOrJunction($path);
@@ -299,5 +310,6 @@ class BaseTaskTestProbe extends BaseTask
         return true;
     }
 
+    /** Accepts the empty parameter set used by the test probe. */
     protected function validateParams(): void {}
 }
