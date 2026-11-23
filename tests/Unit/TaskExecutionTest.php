@@ -160,7 +160,7 @@ final class TaskExecutionTest extends TestCase
     public function testTaskExecutorRejectsMissingExecutionTarget(): void
     {
         // Arrange
-        $config = new \PhpMake\Build\BuildConfiguration(
+        $config = new \\PhpMake\\Build\\BuildConfiguration(
             'InvalidOrder',
             'Missing target',
             '1.0.0',
@@ -168,24 +168,28 @@ final class TaskExecutionTest extends TestCase
             'build'
         );
 
+        ob_start();
+
         // Act
-        $exitCode = (new \PhpMake\Task\TaskExecutor())->executeTasks(
+        $exitCode = (new \\PhpMake\\Task\\TaskExecutor())->executeTasks(
             $config,
             ['missing'],
-            new \PhpMake\Task\TaskFactory($this->logger),
+            new \\PhpMake\\Task\\TaskFactory($this->logger),
             false,
             true
         );
+        $output = ob_get_clean();
 
         // Assert
         self::assertSame(1, $exitCode);
+        self::assertSame("Error: Execution order references missing target 'missing'." . PHP_EOL, $output);
     }
 
     /** Targets without a task list fail instead of being silently skipped. */
     public function testTaskExecutorRejectsMalformedTaskList(): void
     {
         // Arrange
-        $config = new \PhpMake\Build\BuildConfiguration(
+        $config = new \\PhpMake\\Build\\BuildConfiguration(
             'MalformedTasks',
             'Malformed task list',
             '1.0.0',
@@ -193,17 +197,21 @@ final class TaskExecutionTest extends TestCase
             'build'
         );
 
+        ob_start();
+
         // Act
-        $exitCode = (new \PhpMake\Task\TaskExecutor())->executeTasks(
+        $exitCode = (new \\PhpMake\\Task\\TaskExecutor())->executeTasks(
             $config,
             ['build'],
-            new \PhpMake\Task\TaskFactory($this->logger),
+            new \\PhpMake\\Task\\TaskFactory($this->logger),
             false,
             true
         );
+        $output = ob_get_clean();
 
         // Assert
         self::assertSame(1, $exitCode);
+        self::assertSame("Error: Target 'build' has no valid tasks array." . PHP_EOL, $output);
     }
 
     /** Debug mode records diagnostics when task construction throws before execution. */
@@ -396,17 +404,22 @@ final class TaskExecutionTest extends TestCase
     public function testExecTaskEnforcesTimeout(): void
     {
         // Arrange
+        $logFile = $this->workspace . DIRECTORY_SEPARATOR . 'exec-timeout.log';
+        $logger = new Logger(false, true, false, $logFile);
         $task = new ExecTask([
             'command' => PHP_BINARY,
             'args' => ['-r', 'sleep(2);'],
             'timeout' => 0.1,
-        ], $this->logger);
+        ], $logger);
 
         // Act
         $result = $task->execute(false, true);
 
         // Assert
         self::assertFalse($result);
+        $log = file_get_contents($logFile);
+        self::assertIsString($log);
+        self::assertStringContainsString('Command timed out after 0.1 seconds', $log);
     }
 
     /** Rejects unbalanced quotes before attempting to launch a process. */
