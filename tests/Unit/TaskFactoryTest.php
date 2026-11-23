@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpMake\Tests\Unit;
 
 use PhpMake\Task\TaskFactory;
+use PhpMake\Task\TaskDefinitionRegistry;
 use PhpMake\Task\Types\CopyTask;
 use PhpMake\Task\Types\CreateDirectoryTask;
 use PhpMake\Task\Types\DeleteTask;
@@ -26,6 +27,33 @@ final class TaskFactoryTest extends TestCase
 
         $logger = new Logger(true, true, true);
         $this->factory = new TaskFactory($logger);
+    }
+
+    /** Keeps registry identifiers, definitions, and concrete task classes synchronized. */
+    public function testTaskDefinitionRegistryExposesConsistentBuiltInDefinitions(): void
+    {
+        // Arrange
+        $expected = [
+            'delete' => DeleteTask::class,
+            'create_directory' => CreateDirectoryTask::class,
+            'copy' => CopyTask::class,
+            'exec' => ExecTask::class,
+            'echo' => EchoTask::class,
+            'archive' => ZipTask::class,
+        ];
+
+        // Act
+        $types = TaskDefinitionRegistry::types();
+        $definitions = TaskDefinitionRegistry::all();
+
+        // Assert
+        self::assertSame(array_keys($expected), $types);
+        self::assertSame($types, array_keys($definitions));
+        foreach ($expected as $type => $class) {
+            self::assertSame($class, $definitions[$type]['class']);
+            self::assertSame($definitions[$type], TaskDefinitionRegistry::find($type));
+        }
+        self::assertNull(TaskDefinitionRegistry::find('unknown'));
     }
 
     /** Creates a delete task from a valid task configuration. */

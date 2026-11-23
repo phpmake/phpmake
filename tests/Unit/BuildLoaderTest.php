@@ -197,6 +197,31 @@ final class BuildLoaderTest extends TestCase
         (new BuildLoader())->load($this->buildFile);
     }
 
+    /** Accepts a valid build file whose size is exactly the configured maximum. */
+    public function testAcceptsBuildFileAtSizeLimit(): void
+    {
+        // Arrange
+        $json = json_encode([
+            'name' => 'BoundaryProject',
+            'description' => 'Exact size boundary',
+            'version' => '1.0.0',
+            'targets' => ['build' => ['tasks' => [['type' => 'echo', 'params' => ['message' => '']]]]],
+            'default_target' => 'build',
+        ], JSON_THROW_ON_ERROR);
+        $maximumBytes = 2097152;
+        self::assertLessThanOrEqual($maximumBytes, strlen($json));
+        $contents = $json . str_repeat(' ', $maximumBytes - strlen($json));
+        self::assertSame($maximumBytes, strlen($contents));
+        self::assertSame($maximumBytes, file_put_contents($this->buildFile, $contents));
+
+        // Act
+        $config = (new BuildLoader())->load($this->buildFile);
+
+        // Assert
+        self::assertSame('BoundaryProject', $config->getName());
+        self::assertSame('build', $config->getDefaultTarget());
+    }
+
     /** Rejects a missing build file before attempting to read it. */
     public function testRejectsMissingBuildFile(): void
     {

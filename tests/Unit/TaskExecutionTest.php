@@ -63,24 +63,38 @@ final class TaskExecutionTest extends TestCase
     public function testExecTaskRunsConfiguredCommandSuccessfully(): void
     {
         // Arrange
-        $params = ['command' => PHP_BINARY, 'args' => ['-r', 'echo "Test";']];
-        $task = new ExecTask($params, $this->logger);
+        $logFile = $this->workspace . DIRECTORY_SEPARATOR . 'exec-success.log';
+        $logger = new Logger(false, true, false, $logFile);
+        $params = ['command' => PHP_BINARY, 'args' => ['-r', 'echo "observable-output";']];
+        $task = new ExecTask($params, $logger);
+
         // Act
         $result = $task->execute(false, true);
+
         // Assert
-        $this->assertTrue($result);
+        self::assertTrue($result);
+        $log = file_get_contents($logFile);
+        self::assertIsString($log);
+        self::assertStringContainsString('observable-output', $log);
     }
 
     /** Executes an echo task with the configured message. */
     public function testEchoTaskExecutesConfiguredMessageSuccessfully(): void
     {
         // Arrange
-        $params = ['message' => 'Test message'];
-        $task = new EchoTask($params, $this->logger);
+        $logFile = $this->workspace . DIRECTORY_SEPARATOR . 'echo-success.log';
+        $logger = new Logger(false, true, false, $logFile);
+        $params = ['message' => 'observable-echo-message'];
+        $task = new EchoTask($params, $logger);
+
         // Act
         $result = $task->execute(false, true);
+
         // Assert
-        $this->assertTrue($result);
+        self::assertTrue($result);
+        $log = file_get_contents($logFile);
+        self::assertIsString($log);
+        self::assertStringContainsString('INFO: observable-echo-message', $log);
     }
 
     /** Returns failure when a regular file blocks directory creation. */
@@ -146,7 +160,7 @@ final class TaskExecutionTest extends TestCase
     public function testTaskExecutorRejectsMissingExecutionTarget(): void
     {
         // Arrange
-        $config = new \PhpMake\Build\BuildConfiguration(
+        $config = new \PhpMake\Build\\BuildConfiguration(
             'InvalidOrder',
             'Missing target',
             '1.0.0',
@@ -154,24 +168,28 @@ final class TaskExecutionTest extends TestCase
             'build'
         );
 
+        ob_start();
+
         // Act
-        $exitCode = (new \PhpMake\Task\TaskExecutor())->executeTasks(
+        $exitCode = (new \PhpMake\Task\\TaskExecutor())->executeTasks(
             $config,
             ['missing'],
-            new \PhpMake\Task\TaskFactory($this->logger),
+            new \PhpMake\Task\\TaskFactory($this->logger),
             false,
             true
         );
+        $output = ob_get_clean();
 
         // Assert
         self::assertSame(1, $exitCode);
+        self::assertSame("Error: Execution order references missing target 'missing'." . PHP_EOL, $output);
     }
 
     /** Targets without a task list fail instead of being silently skipped. */
     public function testTaskExecutorRejectsMalformedTaskList(): void
     {
         // Arrange
-        $config = new \PhpMake\Build\BuildConfiguration(
+        $config = new \PhpMake\Build\\BuildConfiguration(
             'MalformedTasks',
             'Malformed task list',
             '1.0.0',
@@ -179,17 +197,21 @@ final class TaskExecutionTest extends TestCase
             'build'
         );
 
+        ob_start();
+
         // Act
-        $exitCode = (new \PhpMake\Task\TaskExecutor())->executeTasks(
+        $exitCode = (new \PhpMake\Task\\TaskExecutor())->executeTasks(
             $config,
             ['build'],
-            new \PhpMake\Task\TaskFactory($this->logger),
+            new \PhpMake\Task\\TaskFactory($this->logger),
             false,
             true
         );
+        $output = ob_get_clean();
 
         // Assert
         self::assertSame(1, $exitCode);
+        self::assertSame("Error: Target 'build' has no valid tasks array." . PHP_EOL, $output);
     }
 
     /** Debug mode records diagnostics when task construction throws before execution. */
@@ -342,6 +364,29 @@ final class TaskExecutionTest extends TestCase
     }
 
 
+    /** Accepts stdout at exactly the configured per-stream capture limit. */
+    public function testExecTaskAcceptsOutputAtExactCaptureLimit(): void
+    {
+        // Arrange
+        $logFile = $this->workspace . DIRECTORY_SEPARATOR . 'exec-exact-output-limit.log';
+        $logger = new Logger(false, true, false, $logFile);
+        $payload = str_repeat('x', 1048576);
+        $task = new ExecTask([
+            'command' => PHP_BINARY,
+            'args' => ['-r', 'echo str_repeat("x", 1048576);'],
+            'timeout' => 15,
+        ], $logger);
+
+        // Act
+        $result = $task->execute(false, true);
+
+        // Assert
+        self::assertTrue($result);
+        $log = file_get_contents($logFile);
+        self::assertIsString($log);
+        self::assertStringContainsString($payload, $log);
+    }
+
     /** Terminates commands that exceed the bounded output capture limit. */
     public function testExecTaskRejectsExcessiveOutput(): void
     {
@@ -382,17 +427,22 @@ final class TaskExecutionTest extends TestCase
     public function testExecTaskEnforcesTimeout(): void
     {
         // Arrange
+        $logFile = $this->workspace . DIRECTORY_SEPARATOR . 'exec-timeout.log';
+        $logger = new Logger(false, true, false, $logFile);
         $task = new ExecTask([
             'command' => PHP_BINARY,
             'args' => ['-r', 'sleep(2);'],
             'timeout' => 0.1,
-        ], $this->logger);
+        ], $logger);
 
         // Act
         $result = $task->execute(false, true);
 
         // Assert
         self::assertFalse($result);
+        $log = file_get_contents($logFile);
+        self::assertIsString($log);
+        self::assertStringContainsString('Command timed out after 0.1 seconds', $log);
     }
 
     /** Rejects unbalanced quotes before attempting to launch a process. */
