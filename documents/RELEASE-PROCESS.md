@@ -1,7 +1,8 @@
 # PHPMake Release Process
 
-This document describes the release procedure for maintainers. The release workflow
-publishes a GitHub Release only after it validates the exact tagged commit.
+This document describes the release procedure for maintainers. The release job in
+`.github/workflows/default.yml` publishes a GitHub Release only after the tagged
+commit passes the required Linux and Windows validation jobs.
 
 ## Before selecting a version
 
@@ -16,7 +17,8 @@ publishes a GitHub Release only after it validates the exact tagged commit.
 6. Run the complete validation gates in
    [RELEASE-CHECKLIST.txt](RELEASE-CHECKLIST.txt). Merge the candidate into `main`.
    Wait for the push-triggered `Build and Test` run for that exact `main` commit
-   to complete successfully before pushing its release tag.
+   to complete successfully before pushing its release tag. The tag-triggered
+   workflow then repeats the required release gates against the tagged commit.
 
 ## Publish
 
@@ -31,17 +33,17 @@ git tag -a "$VERSION" -m "PHPMake $VERSION"
 git push origin "$VERSION"
 ```
 
-The `.github/workflows/release.yml` workflow runs when a stable SemVer tag is pushed.
-It refuses to publish unless all of the following are true:
+The `.github/workflows/default.yml` workflow runs when a stable SemVer tag is pushed.
+Its release job refuses to publish unless all of the following are true:
 
 - The tag uses strict stable SemVer, is newly created (not moved or replaced),
   is annotated, and points to a commit reachable from `main`.
 - No GitHub Release already exists for the tag.
 - The tag, `VERSION.txt`, and `PhpMake\Config::TOOL_VERSION` match exactly.
 - The changelog contains a non-empty section for that version.
-- The exact commit has a successful `Build and Test` workflow run on `main`.
-- Composer metadata validation, the complete PHPUnit suite, and Composer security
-  audit pass again on the tagged source.
+- The tagged workflow's build, coverage, PHP 8.0–8.5 Linux compatibility, and
+  Windows PHP 8.0–8.5 test jobs all complete successfully. The shared build job
+  performs Composer validation, the full quality checks, PHPUnit, and dependency audit.
 
 On success, the workflow creates a GitHub Release with:
 
@@ -63,7 +65,7 @@ or publish to Packagist on its own.
    the version does not appear.
 3. Verify the README version badge and the installed `php vendor/bin/phpmake.php --version`
    output agree with the release.
-4. Retain the release workflow URL, commit SHA, CI run, coverage artifact, audit result,
+4. Retain the unified workflow URL, commit SHA, CI run, coverage artifact, audit result,
    and consumer-install evidence.
 
 ## Rollback
