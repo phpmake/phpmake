@@ -20,9 +20,10 @@ The Composer scripts provide:
 - PHPStan: `composer analyse`
 - PHP-CS-Fixer check: `composer format-check`
 - Rector dry run: `composer refactor-check`
+- Coverage enforcement: `composer coverage-check` (after generating a Clover report with Xdebug)
 - Performance measurements: `composer benchmark`
 
-CI also validates YAML, XML, and JSON files; Composer metadata and dependency declarations; dependency advisories; and a clean Composer consumer installation.
+CI also validates YAML, XML, and JSON files; Composer metadata and dependency declarations; unused Composer dependencies (`composer-unused`); dependency advisories; and a clean Composer consumer installation.
 
 ## Confirmed test-quality baseline
 
