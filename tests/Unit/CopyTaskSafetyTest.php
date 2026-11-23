@@ -20,6 +20,7 @@ final class CopyTaskSafetyTest extends TestCase
 
     private Logger $logger;
 
+    /** Creates an isolated working directory and logger for each test. */
     protected function setUp(): void
     {
         parent::setUp();
@@ -32,6 +33,7 @@ final class CopyTaskSafetyTest extends TestCase
         $this->logger = new Logger(false, true, true);
     }
 
+    /** Restores the working directory and removes test fixtures. */
     protected function tearDown(): void
     {
         chdir($this->originalWorkingDirectory);
