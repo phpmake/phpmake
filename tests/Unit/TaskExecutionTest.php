@@ -582,7 +582,7 @@ final class TaskExecutionTest extends TestCase
 
         $marker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-cancel-' . bin2hex(random_bytes(8));
         $workerPidFile = $marker . '.worker';
-        $autoload = getcwd() . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
+        $autoload = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
         $workerCode = <<<'PHP_WRAP'
             require $argv[1];
             $logger = new \PhpMake\Utilities\Logger(false, true, true);

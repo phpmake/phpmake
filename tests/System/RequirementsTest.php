@@ -64,12 +64,11 @@ namespace PhpMake\Tests\System {
             ));
 
             // Assert
-            foreach ($missingDirectories as $directory) {
-                self::assertDirectoryExists(
-                    $projectRoot . DIRECTORY_SEPARATOR . $directory,
-                    sprintf('Required project directory "%s" is missing.', $directory)
-                );
-            }
+            self::assertSame(
+                [],
+                array_values($missingDirectories),
+                sprintf('Required project directories are missing: %s', implode(', ', $missingDirectories))
+            );
         }
 
         /** Checks repository files at their actual tracked locations. */
@@ -111,12 +110,11 @@ namespace PhpMake\Tests\System {
             ));
 
             // Assert
-            foreach ($missingFiles as $file) {
-                self::assertFileExists(
-                    $projectRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $file),
-                    sprintf('Required project file "%s" is missing.', $file)
-                );
-            }
+            self::assertSame(
+                [],
+                array_values($missingFiles),
+                sprintf('Required project files are missing: %s', implode(', ', $missingFiles))
+            );
         }
     }
 }
