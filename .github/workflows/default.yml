@@ -6,13 +6,9 @@ permissions:
 
 "on":
   push:
-    paths-ignore:
-      - "*.md"
     branches:
       - main
   pull_request:
-    paths-ignore:
-      - "*.md"
     branches:
       - main
   workflow_dispatch:
@@ -190,20 +186,51 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
 
-      - name: Generate PHPUnit coverage reports
+      - name: Generate PHPUnit test and coverage reports
         env:
           XDEBUG_MODE: coverage
         run: |
           mkdir -p build
           vendor/bin/phpunit --configuration phpunit.xml \
+            --log-junit=build/junit.xml \
             --coverage-clover=build/coverage.xml \
+            --coverage-html=build/coverage-html \
             --coverage-text
 
-      - name: Upload coverage report
+      - name: Publish coverage summary
+        shell: bash
+        run: |
+          php -r '
+          $xml = simplexml_load_file("build/coverage.xml");
+          if ($xml === false || !isset($xml->project->metrics)) {
+              fwrite(STDERR, "Invalid or missing Clover coverage metrics.\\n");
+              exit(1);
+          }
+          $metrics = $xml->project->metrics;
+          $statements = (int) $metrics["statements"];
+          $covered = (int) $metrics["coveredstatements"];
+          if ($statements < 1 || $covered < 0 || $covered > $statements) {
+              fwrite(STDERR, "Clover report contains invalid statement metrics.\\n");
+              exit(1);
+          }
+          $percentage = number_format(($covered / $statements) * 100, 2);
+          file_put_contents(
+              getenv("GITHUB_STEP_SUMMARY"),
+              "## PHPUnit coverage\\n\\n"
+              . "| Metric | Result |\\n|---|---:|\\n"
+              . "| Covered statements | {$covered} / {$statements} |\\n"
+              . "| Line/statement coverage | {$percentage}% |\\n"
+          );
+          '
+
+      - name: Upload PHPUnit reports
         uses: actions/upload-artifact@v4
         with:
-          name: phpunit-coverage
-          path: build/coverage.xml
+          name: phpunit-reports
+          path: |
+            build/junit.xml
+            build/coverage.xml
+            build/coverage-html/
           if-no-files-found: error
           retention-days: 14
 
