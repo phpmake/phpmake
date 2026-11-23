@@ -156,6 +156,7 @@ final class ProcessSupervisor
         }
     }
 
+    /** Sends a signal to one process using the available platform utility. */
     private static function signalProcess(string $signal, int $processId): bool
     {
         $kill = self::findExecutable('kill');
@@ -175,6 +176,7 @@ final class ProcessSupervisor
         return is_resource($terminator) && proc_close($terminator) === 0;
     }
 
+    /** Sends a signal to a process group using the available platform utility. */
     private static function signalProcessGroup(string $signal, int $processGroupId): bool
     {
         $kill = self::findExecutable('kill');
@@ -194,6 +196,7 @@ final class ProcessSupervisor
         return is_resource($terminator) && proc_close($terminator) === 0;
     }
 
+    /** Resolves an executable through the current PATH environment. */
     private static function findExecutable(string $name): ?string
     {
         $path = getenv('PATH');

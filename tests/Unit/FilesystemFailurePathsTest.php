@@ -21,6 +21,7 @@ final class FilesystemFailurePathsTest extends TestCase
 
     private string $originalWorkingDirectory;
 
+    /** Creates an isolated workspace for filesystem failure scenarios. */
     protected function setUp(): void
     {
         parent::setUp();
@@ -28,6 +29,7 @@ final class FilesystemFailurePathsTest extends TestCase
         $this->base = $this->createTemporaryDirectory('phpmake-failure-paths-');
     }
 
+    /** Restores directory permissions and removes the failure-test workspace. */
     protected function tearDown(): void
     {
         chdir($this->originalWorkingDirectory);
@@ -51,11 +53,12 @@ final class FilesystemFailurePathsTest extends TestCase
         self::assertTrue(chmod($this->base, 0500));
 
         try {
-            // Act / Assert
+            // Act
             try {
                 AtomicFilePublisher::publish($staged, $destination);
                 self::fail('The publisher must reject a recovery path outside the destination directory.');
             } catch (\RuntimeException $runtimeException) {
+                // Assert
                 self::assertStringContainsString('Unable to create recovery path', $runtimeException->getMessage());
             }
 
@@ -85,11 +88,12 @@ final class FilesystemFailurePathsTest extends TestCase
         self::assertTrue(chmod($this->base, 0500));
 
         try {
-            // Act / Assert
+            // Act
             try {
                 AtomicDirectoryPublisher::publish($staging, $destination);
                 self::fail('The publisher must fail when the destination parent cannot be modified.');
             } catch (\RuntimeException $runtimeException) {
+                // Assert
                 self::assertStringContainsString('Unable to preserve existing destination', $runtimeException->getMessage());
             }
 

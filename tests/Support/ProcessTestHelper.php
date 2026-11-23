@@ -176,6 +176,7 @@ trait ProcessTestHelper
         );
     }
 
+    /** Resolves the process-group launcher PID from its marker file. */
     private function resolveTestLauncherPid(int $processId, bool $processGroupCreated, ?string $pidPath): ?int
     {
         if (!$processGroupCreated) {

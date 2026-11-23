@@ -16,6 +16,7 @@ final class AtomicDirectoryPublisherTest extends TestCase
 
     private string $base;
 
+    /** Creates an isolated staging and destination directory for each test. */
     protected function setUp(): void
     {
         parent::setUp();
@@ -24,6 +25,7 @@ final class AtomicDirectoryPublisherTest extends TestCase
         self::assertTrue(mkdir($this->base, 0777, true));
     }
 
+    /** Removes the temporary publication directories after each test. */
     protected function tearDown(): void
     {
         FilesystemTree::remove($this->base);

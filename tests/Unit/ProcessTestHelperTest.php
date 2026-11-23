@@ -97,12 +97,13 @@ final class ProcessTestHelperTest extends TestCase
         // Arrange
         $invalidTimeouts = [0.0, -1.0, INF, NAN];
 
-        // Act / Assert
+        // Act
         foreach ($invalidTimeouts as $timeout) {
             try {
                 $this->runTestProcess([PHP_BINARY, '-r', 'exit(0);'], getcwd() ?: sys_get_temp_dir(), $timeout);
                 self::fail('An invalid timeout must be rejected.');
             } catch (\InvalidArgumentException $exception) {
+                // Assert
                 self::assertSame(
                     'The subprocess timeout must be a finite positive number.',
                     $exception->getMessage()
@@ -121,13 +122,14 @@ final class ProcessTestHelperTest extends TestCase
             [[PHP_BINARY, 42], getcwd() ?: sys_get_temp_dir()],
         ];
 
-        // Act / Assert
+        // Act
         foreach ($invalidCalls as [$command, $workingDirectory]) {
             try {
                 $this->runTestProcess($command, $workingDirectory);
                 self::fail('Invalid process arguments must be rejected.');
-            } catch (\InvalidArgumentException) {
-                self::assertTrue(true);
+            } catch (\InvalidArgumentException $exception) {
+                // Assert
+                self::assertInstanceOf(\InvalidArgumentException::class, $exception);
             }
         }
     }

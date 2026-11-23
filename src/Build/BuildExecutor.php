@@ -10,6 +10,7 @@ use PhpMake\Utilities\Logger;
 /** Coordinates target resolution and task execution for a build. */
 final class BuildExecutor
 {
+    /** Creates the build executor with its configuration and task dependencies. */
     public function __construct(
         private TaskFactory $taskFactory,
         private DependencyResolver $dependencyResolver,

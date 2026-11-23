@@ -1,12 +1,15 @@
 # Test Suite Audit
 
-**Baseline:** `main` at `ec78e61509dae3fcec59243f4a5e6243db215ac0`  
-**Current follow-up branch:** `quality/phase-25-workflow-platform-consolidation`  
+**Baseline:** `main` at `a9dc3e463358e4bef075f81e1e174d1eeb8e7cc5`  
+**Current follow-up branch:** `quality/phase-26-test-quality-and-phpdocs`  
 **Scope:** PHPUnit unit, integration, system, and smoke tests.  
 **Compatibility:** PHP 8.0–8.5; Windows and Linux.  
 **Constraints:** PHPUnit retained; no mocks introduced; PHP `^8.0` retained; Windows and Linux only.
 
 ## Changes in this pass
+
+- Phase 26 audited all 50 PHP files under `tests/`. All 268 test methods across the 50 PHP test files use explicit Arrange, Act, and Assert sections; combined Act/Assert labels were separated. A source scan found no PHPUnit mock objects, Mockery/Prophecy usage, or mock-builder calls. Existing stream-wrapper fixtures remain concrete test fixtures for filesystem failure-path coverage.
+- Added concise PHPDoc to all previously undocumented named classes and methods in the test suite and application source. Test setup/teardown hooks, the BaseTask probe methods, process test helper, BuildExecutor constructor, and ProcessSupervisor helper methods are now documented. No production behavior was changed.
 
 - Phase 25 consolidates release validation and publishing into `.github/workflows/default.yml`; the release job depends on the shared build, coverage, PHP compatibility, and Windows test jobs instead of repeating dependency installation and test execution. The separate `release.yml` workflow is removed.
 - Phase 25 explicitly supports only Windows and Linux. `PlatformSupport` rejects other operating-system families in CLI/task execution, process launch/supervision, filesystem-tree operations, benchmarks, and PHPUnit bootstrap. The case-insensitive filesystem test is restricted to Windows, and POSIX-only tests are scoped to Linux.
