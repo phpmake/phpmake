@@ -17,6 +17,7 @@ final class AtomicPublisherValidationTest extends TestCase
 
     private string $base;
 
+    /** Creates a temporary directory for publication validation cases. */
     protected function setUp(): void
     {
         parent::setUp();
@@ -25,6 +26,7 @@ final class AtomicPublisherValidationTest extends TestCase
         self::assertTrue(mkdir($this->base, 0777, true));
     }
 
+    /** Removes the temporary publication fixtures after each test. */
     protected function tearDown(): void
     {
         FilesystemTree::remove($this->base);
