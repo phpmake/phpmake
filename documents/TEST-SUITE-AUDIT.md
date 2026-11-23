@@ -1,22 +1,68 @@
 # Test Suite Audit
 
-**Scope:** PHPUnit unit, integration, system, and smoke tests.  
+**Scope:** PHPUnit unit, integration, system, and smoke tests, plus source-to-test mapping.  
 **Supported matrix:** PHP 8.0–8.5; Windows and GNU/Linux.  
 **Constraints:** PHP `^8.0`; PHPUnit retained; no mocks.
 
-## Confirmed work
+## Audit baseline
 
-- 50 PHP files under `tests/` were audited.
-- All 268 test methods in that audit contain explicit Arrange, Act, and Assert sections.
-- The audit found no PHPUnit mock objects, mock-builder usage, Mockery, or Prophecy references. Concrete stream-wrapper fixtures are used for filesystem failure scenarios.
-- Previously undocumented named test classes and methods were documented.
-- Integration subprocesses use bounded execution and temporary output capture.
-- Filesystem tests use isolated temporary workspaces and shared cleanup helpers.
-- ZIP tests require `ext-zip`, which is a declared runtime dependency; they do not silently skip when it is missing.
+- 50 PHP files under `tests/` were included in the source inventory.
+- The prior structural audit counted 268 test methods with explicit Arrange, Act, and Assert sections. This phase adds two tests, bringing the audited total to 270 test methods.
+- The prior audit found no PHPUnit mock objects, mock-builder usage, Mockery, or Prophecy references. This phase introduces no mocks.
+- This is a source-level audit and targeted test improvement, not a fresh coverage measurement. No current line, branch, method, or class coverage percentage is claimed.
 
-## Coverage evidence and gaps
+## Changes in this phase
 
-The latest numeric baseline recorded in this repository is from Phase 19:
+- Improved the successful `ExecTask` test to assert the actual child-process output persisted by the logger, rather than only asserting a successful return value.
+- Improved the `EchoTask` test to assert the exact observable log message.
+- Improved the timeout test to assert the timeout diagnostic, not just a false return value.
+- Improved malformed execution-order and task-list tests to assert their exact error output.
+- Added an exact 2 MiB `BuildLoader` input-boundary test. The existing over-limit test continues to verify rejection above the limit.
+- Added a task-definition registry contract test that checks all six identifiers, their concrete task classes, lookup consistency, and unknown-type behavior.
+
+## Source-to-test coverage findings
+
+The source inventory contains 38 production PHP files. Most public behavior has at least one direct unit test or is exercised through the CLI integration/system suite. The following areas remain weaker or depend on indirect/platform-specific coverage:
+
+| Production area | Current evidence | Remaining limitation |
+|---|---|---|
+| `BuildExecutor::execute()` | Missing target, numeric target, default target tests; end-to-end dependency execution | No dedicated assertion for every logger mode and resolver/factory failure interaction |
+| `BuildLoader::load()` | Valid/invalid JSON shapes, missing file, malformed JSON, over-limit file, exact-limit file | Unreadable/open/read-stream failure paths are difficult to induce portably without mocks |
+| `FilesystemIdentity::sameFile()` | Same and different file identity; exercised by copy/archive/publisher tests | Stat-failure fallback and Windows case-insensitive fallback are not exhaustively isolated |
+| `FilesystemTree` and atomic publishers | Copy/remove/link/path, collision, rollback, and failure-path tests | OS-specific permission failures are not portable; some cleanup and rollback failure combinations remain difficult to induce deterministically |
+| `ProcessSupervisor` | Real process termination, descendant discovery, tracked descendants, PATH-unavailable behavior | Linux process-table and signal branches are Linux-only; Windows Job Object behavior is tested separately |
+| `PosixProcessLauncher` | Current-platform launcher test and no-`ext-posix` fallback smoke test in CI | Not every PATH/setsid/kill availability combination has an isolated assertion |
+| `WindowsProcessLauncher` | PowerShell argument payload and command construction test | Actual Job Object process-tree behavior can only execute on Windows CI |
+| `ExecTask` | Success, non-zero exit, timeout, stdout/stderr overflow, cancellation, process-tree cleanup, argument secrecy | Process-start failure and every exact capture-buffer boundary are not independently isolated |
+| `ZipTask` | Archive contents, output-inside-source, input limit, snapshots, cleanup, preservation of previous output | Not every archive count/depth/per-file/aggregate-size boundary is independently tested |
+| `ConsoleOutput` | Informational/success output and task-level error output | Direct tests for every low-level stream method are not comprehensive |
+
+The table identifies remaining test depth, not confirmed production defects. The fresh CI coverage artifact should be used to refine this inventory before treating any method as untested.
+
+## Platform-dependent skips
+
+Skips were reviewed by capability rather than removed indiscriminately:
+
+| Skip category | Why it is skipped | Validation path |
+|---|---|---|
+| POSIX process-table discovery and tracked-descendant signaling | Requires Linux process-table behavior and POSIX signaling | Linux test job; Windows process cleanup is covered by the Job Object test |
+| POSIX signal cancellation and detached-session cleanup | Requires Linux plus the relevant `pcntl`/`posix` functions | Linux CI where extensions are available; the no-`ext-posix` fallback smoke check runs separately |
+| Windows Job Object descendant cleanup | Requires Windows process/job APIs | Windows test matrix |
+| POSIX directory permission failures (four tests) | `chmod(0500)`/directory write-denial semantics are not equivalent on Windows | Linux test job; these tests remain legitimately skipped on Windows |
+| Symbolic-link creation | Windows privilege/configuration may prevent link creation | Tests run where the host permits link creation; unavailable capability is explicitly skipped |
+| Case-variant archive alias | Requires a case-insensitive filesystem | Windows test matrix; Linux case-sensitive filesystems skip it |
+
+These skips are not evidence that the behavior passed on the skipped platform. The Windows and Linux jobs are complementary. The remaining gap is Windows-specific failure testing for filesystem operations that currently rely on POSIX permission denial; do not replace those tests with assumptions that NTFS permissions behave like POSIX modes.
+
+## Assertion quality findings
+
+The earlier suite included tests that asserted only a success boolean even when the behavior produced observable output. This phase strengthens the ExecTask and EchoTask tests to verify the actual output, strengthens timeout and task-executor failure tests to verify diagnostics, and adds registry and size-boundary assertions.
+
+Other tests that assert only an exit code are retained where the test's contract is the process result and the same behavior is verified more deeply by integration tests. Future additions should assert resulting files, archive entries, process state, preserved data, emitted diagnostics, or other observable outcomes whenever those are the actual contract.
+
+## Historical coverage evidence
+
+The latest numeric baseline previously recorded in this repository is from Phase 19:
 
 | Metric | Recorded result |
 |---|---:|
@@ -27,16 +73,16 @@ The latest numeric baseline recorded in this repository is from Phase 19:
 | Class coverage | 36.67% (11 / 30) |
 | Platform skips | 6 |
 
-This is a historical measurement, not a current measurement of the merged `main` branch. The CI coverage job generates JUnit, Clover, and HTML reports and publishes statement coverage. It does not currently publish branch coverage or enforce an 80% threshold.
+This is historical, not a current measurement of merged `main` or this branch. CI generates JUnit, Clover, and HTML reports and publishes statement coverage. It does not currently publish branch coverage or enforce an 80% threshold.
 
-## Remaining audit work
+## Remaining work
 
-- Generate a fresh coverage report from current `main`.
-- Report line, branch, method, and class coverage separately.
-- Inventory source classes and methods with no tests or insufficient meaningful assertions.
-- Review every skip and retain only skips justified by unavailable platform capabilities. Ensure the Windows and Linux jobs collectively exercise platform-specific paths.
-- Add missing edge-case and failure-path tests based on the coverage report and security review.
-- Identify critical paths and define explicit coverage expectations for them.
+- Review the fresh CI Clover and HTML reports for exact uncovered source lines and branches.
+- Report current line, branch, method, and class coverage separately.
+- Add deterministic tests for uncovered high-risk branches, especially process startup failures, archive resource limits, and rollback/cleanup failures.
+- Add Windows-specific filesystem failure tests where a deterministic Windows-native failure condition can be created without mocks.
+- Keep platform-specific tests assigned to the matching CI runner; do not count a skipped test as platform validation.
+- Define explicit coverage expectations for critical security and destructive filesystem paths.
 
 ## Test requirements
 
