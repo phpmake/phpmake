@@ -21,6 +21,7 @@ final class FilesystemFailurePathsTest extends TestCase
 
     private string $originalWorkingDirectory;
 
+    /** Creates an isolated workspace for filesystem failure scenarios. */
     protected function setUp(): void
     {
         parent::setUp();
@@ -28,6 +29,7 @@ final class FilesystemFailurePathsTest extends TestCase
         $this->base = $this->createTemporaryDirectory('phpmake-failure-paths-');
     }
 
+    /** Restores directory permissions and removes the failure-test workspace. */
     protected function tearDown(): void
     {
         chdir($this->originalWorkingDirectory);
