@@ -97,7 +97,7 @@ final class ProcessTestHelperTest extends TestCase
         // Arrange
         $invalidTimeouts = [0.0, -1.0, INF, NAN];
 
-        // Act / Assert
+        // Act
         foreach ($invalidTimeouts as $timeout) {
             try {
                 $this->runTestProcess([PHP_BINARY, '-r', 'exit(0);'], getcwd() ?: sys_get_temp_dir(), $timeout);
@@ -121,7 +121,7 @@ final class ProcessTestHelperTest extends TestCase
             [[PHP_BINARY, 42], getcwd() ?: sys_get_temp_dir()],
         ];
 
-        // Act / Assert
+        // Act
         foreach ($invalidCalls as [$command, $workingDirectory]) {
             try {
                 $this->runTestProcess($command, $workingDirectory);
