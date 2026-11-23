@@ -9,7 +9,7 @@
 ## Changes in this pass
 
 - Phase 20 uses the measured Phase 19 coverage report to target `ExecTask` configuration validation and the independently bounded stderr stream. It adds data-driven constructor rejection cases, verifies stderr diagnostics on a successful exit, and verifies stderr overflow is rejected. No production behavior is changed.
-- Phase 19 coverage baseline: 263 tests, 1,244 assertions, 6 platform skips; 80.35% statement/line coverage (1,280/1,593), 52.14% method coverage (61/117), and 36.67% class coverage (11/30). `ExecTask` was at 81.71% line coverage; Phase 20 adds coverage for constructor rejection paths and stderr handling/limits.
+- Phase 19 coverage baseline: 263 tests, 1,244 assertions, 6 platform skips; 80.35% PHPUnit line coverage (1,280/1,593), 52.14% method coverage (61/117), and 36.67% class coverage (11/30). `ExecTask` was at 81.71% line coverage; Phase 20 adds coverage for constructor rejection paths and stderr handling/limits.
 
 - Phase 19 fixes the YAML lint failure in the coverage-summary step by shortening the overlong diagnostic line.
 - The Windows process-tree helper regression test now allows a bounded startup window for the PowerShell Job Object launcher before timing out; its child marker deadline remains later than the parent timeout so descendant cleanup is still verified.
