@@ -1,5 +1,6 @@
 PHPMake - Unreleased
 --------------------
+* Emit PHPUnit TestDox output in the Windows PHP 8.0–8.5 test matrix to identify the test reached before the CI timeout.
 * Fix PHPUnit 9.6/13 data-provider compatibility in ExecTask validation tests and suppress captured output prefixes after subprocess output-limit violations.
 * Expand ExecTask coverage for invalid constructor configuration, successful stderr capture, and stderr output-limit enforcement.
 * Fix the coverage workflow YAML lint violation and make the Windows process-tree regression test tolerate PowerShell Job Object launcher startup latency.
