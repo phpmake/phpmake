@@ -160,7 +160,7 @@ final class TaskExecutionTest extends TestCase
     public function testTaskExecutorRejectsMissingExecutionTarget(): void
     {
         // Arrange
-        $config = new \\PhpMake\\Build\\BuildConfiguration(
+        $config = new \PhpMake\Build\\BuildConfiguration(
             'InvalidOrder',
             'Missing target',
             '1.0.0',
@@ -171,10 +171,10 @@ final class TaskExecutionTest extends TestCase
         ob_start();
 
         // Act
-        $exitCode = (new \\PhpMake\\Task\\TaskExecutor())->executeTasks(
+        $exitCode = (new \PhpMake\Task\\TaskExecutor())->executeTasks(
             $config,
             ['missing'],
-            new \\PhpMake\\Task\\TaskFactory($this->logger),
+            new \PhpMake\Task\\TaskFactory($this->logger),
             false,
             true
         );
@@ -189,7 +189,7 @@ final class TaskExecutionTest extends TestCase
     public function testTaskExecutorRejectsMalformedTaskList(): void
     {
         // Arrange
-        $config = new \\PhpMake\\Build\\BuildConfiguration(
+        $config = new \PhpMake\Build\\BuildConfiguration(
             'MalformedTasks',
             'Malformed task list',
             '1.0.0',
@@ -200,10 +200,10 @@ final class TaskExecutionTest extends TestCase
         ob_start();
 
         // Act
-        $exitCode = (new \\PhpMake\\Task\\TaskExecutor())->executeTasks(
+        $exitCode = (new \PhpMake\Task\\TaskExecutor())->executeTasks(
             $config,
             ['build'],
-            new \\PhpMake\\Task\\TaskFactory($this->logger),
+            new \PhpMake\Task\\TaskFactory($this->logger),
             false,
             true
         );
