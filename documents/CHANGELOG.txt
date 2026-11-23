@@ -1,5 +1,6 @@
 PHPMake - Unreleased
 --------------------
+* Reuse the platform process launchers for test subprocesses, ensuring Windows Job Object and POSIX session cleanup; validate commands, working directories, and deadlines before launch.
 * Add bounded subprocess execution and file-backed output capture to integration tests; terminate timed-out test processes and verify cleanup behavior.
 * Isolate path-safety, smoke, and task-execution fixtures with shared temporary workspaces; use explicit platform prerequisite skips and fix the FilesystemTree test import.
 * Normalize Arrange / Act / Assert sections and behavior-focused test names across the remaining legacy test classes.
