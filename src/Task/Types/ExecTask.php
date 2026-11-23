@@ -242,24 +242,25 @@ final class ExecTask extends BaseTask
         // A non-blocking pipe may temporarily have no bytes available while
         // its writer is still active. Do not use feof() as a read-loop guard:
         // on Windows it can report EOF between writes and stop future draining.
-        while (true) {
-            $chunk = fread($pipe, 65536);
-            if ($chunk === false || $chunk === '') {
-                break;
-            }
-
-            $remaining = self::MAX_CAPTURE_BYTES - strlen($buffer);
-            if (strlen($chunk) > $remaining) {
-                if ($remaining > 0) {
-                    $buffer .= substr($chunk, 0, $remaining);
-                }
-
-                return true;
-            }
-
-            $buffer .= $chunk;
+        // Read only one bounded chunk per polling pass. Windows anonymous
+        // pipes do not consistently honor non-blocking reads when draining
+        // until empty; a second fread can wait indefinitely while the child
+        // is blocked writing to the same pipe.
+        $remaining = self::MAX_CAPTURE_BYTES - strlen($buffer);
+        $chunk = fread($pipe, min(65536, $remaining + 1));
+        if ($chunk === false || $chunk === '') {
+            return false;
         }
 
+        if (strlen($chunk) > $remaining) {
+            if ($remaining > 0) {
+                $buffer .= substr($chunk, 0, $remaining);
+            }
+
+            return true;
+        }
+
+        $buffer .= $chunk;
         return false;
     }
 
