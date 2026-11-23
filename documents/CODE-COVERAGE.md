@@ -85,7 +85,7 @@ The available pre-Phase-28 Clover artifact was generated from commit `ec78e61509
 | Line coverage | 80.55% |
 | Branch coverage | Not collected |
 
-The 80% line threshold is therefore based on an observed baseline that was already slightly above the required minimum. The Phase 28 tests and this phase's escaped-argument test are included in the next CI measurement. No post-change percentage is claimed until that coverage job completes and its Clover artifact is inspected.
+The 80% line threshold is based on the latest available pre-Phase-28 baseline, which was already slightly above the required minimum. This value is not a current-main measurement. The Phase 28 tests, the Phase 29 escaped-argument test, and the Phase 30 link-detection regression test are included in the next CI measurement. No post-change percentage is claimed until a successful coverage job completes and its Clover artifact is inspected.
 
 ## Constraints
 
