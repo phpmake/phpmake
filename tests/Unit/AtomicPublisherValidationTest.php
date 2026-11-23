@@ -53,7 +53,7 @@ final class AtomicPublisherValidationTest extends TestCase
         $path = $this->base . DIRECTORY_SEPARATOR . 'same.txt';
         self::assertSame(4, file_put_contents($path, 'keep'));
 
-        // Act / Assert
+        // Act
         try {
             AtomicFilePublisher::publish($path, $path);
             self::fail('A staged file must not replace itself.');
@@ -114,7 +114,7 @@ final class AtomicPublisherValidationTest extends TestCase
         $this->createDirectoryLink($target, $staging);
 
         try {
-            // Act / Assert
+            // Act
             try {
                 AtomicDirectoryPublisher::publish($staging, $destination);
                 self::fail('A staged directory link must not be published.');
