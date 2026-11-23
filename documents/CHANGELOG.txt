@@ -7,7 +7,8 @@ PHPMake - Unreleased
 * Expand PHPUnit coverage for filesystem failure paths, process behavior, configuration validation, logging, and Composer-installed CLI usage.
 * Standardize the audited test suite on Arrange / Act / Assert; retain PHPUnit without mocks.
 * Add PHP 8.0–8.5 Linux compatibility and Windows filesystem/process CI coverage; consolidate release validation and publishing in the default workflow.
-* Synchronize user, security, compatibility, contributor, and release documentation with the current PHP ^8.0, Windows/Linux, and task behavior contract.
+* Synchronize user, security, compatibility, contributor, release, and coverage documentation with the current PHP ^8.0, Windows/Linux, task, and coverage contracts.
+* Remove duplicate task-level link/junction handling by reusing the shared filesystem implementation; simplify test bootstrap path loading and expand link-detection regression coverage.
 
 PHPMake 2.0.2 - 2026-11-07
 -------------------------
