@@ -57,3 +57,4 @@ The repository-connected editing environment does not provide a local PHP runtim
 - [ ] Fixtures are isolated and reliably cleaned up on success and failure.
 - [ ] No mocks; platform-specific tests use explicit, justified skips only when their prerequisites are unavailable.
 - [ ] Full PHPUnit, formatting, lint, and supported-platform matrix pass.
+- [ ] Review the retained JUnit and HTML coverage artifacts; set a coverage threshold only after reviewing a stable baseline.
