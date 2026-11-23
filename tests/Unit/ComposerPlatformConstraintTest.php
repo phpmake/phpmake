@@ -14,7 +14,10 @@ final class ComposerPlatformConstraintTest extends TestCase
     public function testComposerMetadataPreservesInstallationContract(): void
     {
         // Arrange
-        $composer = $this->readComposerManifest();
+        $composerPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'composer.json';
+
+        // Act
+        $composer = $this->readComposerManifest($composerPath);
 
         // Assert
         self::assertSame('phpmake/phpmake', $composer['name'] ?? null);
@@ -47,11 +50,8 @@ final class ComposerPlatformConstraintTest extends TestCase
     }
 
     /** Loads the repository Composer manifest for compatibility assertions. */
-    private function readComposerManifest(): array
+    private function readComposerManifest(string $composerPath): array
     {
-        // Arrange
-        $composerPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'composer.json';
-
         // Act
         $composer = json_decode(
             (string) file_get_contents($composerPath),
