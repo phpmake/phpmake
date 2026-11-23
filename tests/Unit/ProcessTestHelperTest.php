@@ -131,4 +131,52 @@ final class ProcessTestHelperTest extends TestCase
             }
         }
     }
+
+    /** Cleans up descendants that remain after a subprocess exits successfully. */
+    public function testRunTestProcessCleansDescendantsAfterSuccessfulExit(): void
+    {
+        // Arrange
+        if (PHP_OS_FAMILY !== 'Windows') {
+            $launcher = \PhpMake\Process\ProcessLauncher::prepare([PHP_BINARY, '-r', 'exit(0);']);
+            if (!$launcher['processGroupCreated']) {
+                if (is_string($launcher['pidPath']) && is_file($launcher['pidPath'])) {
+                    unlink($launcher['pidPath']);
+                }
+
+                self::markTestSkipped('POSIX process-group isolation is unavailable.');
+            }
+
+            if (is_string($launcher['pidPath']) && is_file($launcher['pidPath'])) {
+                unlink($launcher['pidPath']);
+            }
+        }
+
+        $marker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-child-marker-' . bin2hex(random_bytes(8));
+        $childCode = 'usleep(1200000); file_put_contents($argv[1], "survived");';
+        $parentCode = '$pipes = []; '
+            . '$child = proc_open([PHP_BINARY, "-r", ' . var_export($childCode, true) . ', ' . var_export($marker, true) . '], '
+            . '[0 => ["pipe", "r"], 1 => ["pipe", "w"], 2 => ["pipe", "w"]], $pipes); '
+            . 'if (!is_resource($child)) { exit(9); } '
+            . 'foreach ($pipes as $pipe) { fclose($pipe); } '
+            . 'exit(0);';
+
+        try {
+            // Act
+            $result = $this->runTestProcess(
+                [PHP_BINARY, '-r', $parentCode],
+                getcwd() ?: sys_get_temp_dir()
+            );
+            usleep(1500000);
+
+            // Assert
+            self::assertFalse($result['timedOut']);
+            self::assertSame(0, $result['exitCode']);
+            self::assertFileDoesNotExist($marker);
+        } finally {
+            if (is_file($marker)) {
+                unlink($marker);
+            }
+        }
+    }
+
 }
