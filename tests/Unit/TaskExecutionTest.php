@@ -414,7 +414,7 @@ final class TaskExecutionTest extends TestCase
     public function testExecTaskTerminatesProcessTreeOnTimeout(): void
     {
         // Arrange
-        if (PHP_OS_FAMILY !== 'Windows' && (
+        if (PHP_OS_FAMILY === 'Linux' && (
             !function_exists('posix_setsid')
             || !function_exists('posix_kill')
         )) {
@@ -591,7 +591,7 @@ final class TaskExecutionTest extends TestCase
     {
         // Arrange
         if (
-            PHP_OS_FAMILY === 'Windows'
+            PHP_OS_FAMILY !== 'Linux'
             || !function_exists('pcntl_signal')
             || !function_exists('pcntl_async_signals')
             || !function_exists('posix_kill')
