@@ -364,6 +364,29 @@ final class TaskExecutionTest extends TestCase
     }
 
 
+    /** Accepts stdout at exactly the configured per-stream capture limit. */
+    public function testExecTaskAcceptsOutputAtExactCaptureLimit(): void
+    {
+        // Arrange
+        $logFile = $this->workspace . DIRECTORY_SEPARATOR . 'exec-exact-output-limit.log';
+        $logger = new Logger(false, true, false, $logFile);
+        $payload = str_repeat('x', 1048576);
+        $task = new ExecTask([
+            'command' => PHP_BINARY,
+            'args' => ['-r', 'echo str_repeat("x", 1048576);'],
+            'timeout' => 15,
+        ], $logger);
+
+        // Act
+        $result = $task->execute(false, true);
+
+        // Assert
+        self::assertTrue($result);
+        $log = file_get_contents($logFile);
+        self::assertIsString($log);
+        self::assertStringContainsString($payload, $log);
+    }
+
     /** Terminates commands that exceed the bounded output capture limit. */
     public function testExecTaskRejectsExcessiveOutput(): void
     {
