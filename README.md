@@ -75,7 +75,7 @@ composer format-check
 composer refactor-check
 ```
 
-For coverage, run PHPUnit with Xdebug and `--branch-coverage` to generate `build/coverage.xml`, then enforce the project thresholds with `composer coverage-check`. See the [Code Coverage Policy](documents/CODE-COVERAGE.md).
+For coverage, run PHPUnit with Xdebug and `--branch-coverage --coverage-clover=build/coverage.xml`, then enforce the project thresholds with `composer coverage-check`. See the [Code Coverage Policy](documents/CODE-COVERAGE.md).
 
 Run performance benchmarks with `composer benchmark`.
 
