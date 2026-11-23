@@ -397,7 +397,9 @@ jobs:
               "s/^[[:space:]]*public const TOOL_VERSION = '([^']+)';$/\1/p" \
               src/Config.php
           )"
-          if [[ -z "$config_version" || "$tag" != "$version" || "$tag" != "$config_version" ]]; then
+          if [[ -z "$config_version" \
+            || "$tag" != "$version" \
+            || "$tag" != "$config_version" ]]; then
             echo "::error::Tag, VERSION.txt, and config version must match."
             exit 1
           fi
