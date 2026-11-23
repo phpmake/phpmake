@@ -17,12 +17,14 @@ final class FilesystemTreeTest extends TestCase
 
     private string $base;
 
+    /** Creates an isolated filesystem tree for each test. */
     protected function setUp(): void
     {
         parent::setUp();
         $this->base = $this->createTemporaryDirectory('phpmake-filesystem-tree-');
     }
 
+    /** Removes the isolated filesystem tree after each test. */
     protected function tearDown(): void
     {
         $this->removeTemporaryDirectory($this->base);
