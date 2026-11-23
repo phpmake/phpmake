@@ -1,6 +1,6 @@
 # Test Suite Audit
 
-**Baseline:** `main` at `ec78e61509dae3fcec59243f4a5e6243db215ac0`  
+**Baseline:** `main` at `a9dc3e463358e4bef075f81e1e174d1eeb8e7cc5`  
 **Current follow-up branch:** `quality/phase-26-test-quality-and-phpdocs`  
 **Scope:** PHPUnit unit, integration, system, and smoke tests.  
 **Compatibility:** PHP 8.0–8.5; Windows and Linux.  
