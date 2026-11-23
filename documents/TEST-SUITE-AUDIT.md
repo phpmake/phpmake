@@ -1,12 +1,17 @@
 # Test Suite Audit
 
 **Baseline:** `main` at `41864c31ef5a2a4c9b2e106a634006bfaf920d58`  
-**Current follow-up branch:** `quality/phase-16-integration-process-isolation`  
+**Current follow-up branch:** `quality/phase-17-process-tree-cleanup`  
 **Scope:** PHPUnit unit, integration, system, and smoke tests.  
 **Compatibility:** PHP 8.0–8.5; Windows and Linux.  
 **Constraints:** PHPUnit retained; no mocks introduced; production source unchanged.
 
 ## Changes in this pass
+
+- Phase 17 routes test subprocesses through the existing `ProcessLauncher` and `ProcessSupervisor`: Windows uses the kill-on-close Job Object launcher; POSIX uses an isolated session/process group where supported, with descendant discovery as a fallback. Timed-out processes and remaining descendants are terminated before returning.
+- Validate subprocess command lists, working directories, and finite positive timeout values before creating output files or launching a process.
+- Added regression coverage for descendant termination on timeout and invalid process arguments/timeouts.
+- Retained file-backed stdout/stderr capture, monotonic deadlines, and finally-based temporary output cleanup from Phase 16.
 
 - Phase 16 added `ProcessTestHelper` for real subprocess tests. It captures stdout/stderr to temporary files to avoid pipe-buffer deadlocks, applies a monotonic execution deadline, terminates timed-out processes, and removes capture files in a finally block.
 - Migrated CLI build, Composer-installed binary, and `--init` integration tests to the shared bounded subprocess runner; each now fails explicitly if the process exceeds its deadline.
@@ -43,7 +48,7 @@
 
 ## Validation
 
-The repository-connected editing environment does not provide a local PHP runtime or Composer installation. Run the complete PHPUnit suite and formatter/linter on the branch, including the PHP 8.0–8.5 Windows/Linux matrix, before treating this audit as complete. Do not infer a passing test result from the edits alone. Phase 13–16 changes require CI confirmation of fixture cleanup and bounded subprocess behavior on both Windows and Linux.
+The repository-connected editing environment does not provide a local PHP runtime or Composer installation. Run the complete PHPUnit suite and formatter/linter on the branch, including the PHP 8.0–8.5 Windows/Linux matrix, before treating this audit as complete. Do not infer a passing test result from the edits alone. Phase 13–17 changes require CI confirmation of fixture cleanup and bounded subprocess behavior on both Windows and Linux.
 
 ## Completion criteria
 
