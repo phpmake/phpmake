@@ -335,5 +335,5 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
 
-      - name: Run PHPUnit tests
-        run: composer test
+      - name: Run PHPUnit tests with active-test diagnostics
+        run: composer test -- --debug --testdox
