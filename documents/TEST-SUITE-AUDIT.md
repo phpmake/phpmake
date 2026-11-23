@@ -8,7 +8,7 @@
 
 ## Changes in this pass
 
-- Phase 26 audited all 50 PHP files under `tests/`. Test methods use explicit Arrange, Act, and Assert sections; combined Act/Assert labels were separated where needed. A source scan found no PHPUnit mock objects, Mockery/Prophecy usage, or mock-builder calls. Existing stream-wrapper fixtures remain concrete test fixtures for filesystem failure-path coverage.
+- Phase 26 audited all 50 PHP files under `tests/`. All 268 test methods across the 50 PHP test files use explicit Arrange, Act, and Assert sections; combined Act/Assert labels were separated. A source scan found no PHPUnit mock objects, Mockery/Prophecy usage, or mock-builder calls. Existing stream-wrapper fixtures remain concrete test fixtures for filesystem failure-path coverage.
 - Added concise PHPDoc to all previously undocumented named classes and methods in the test suite and application source. Test setup/teardown hooks, the BaseTask probe methods, process test helper, BuildExecutor constructor, and ProcessSupervisor helper methods are now documented. No production behavior was changed.
 
 - Phase 25 consolidates release validation and publishing into `.github/workflows/default.yml`; the release job depends on the shared build, coverage, PHP compatibility, and Windows test jobs instead of repeating dependency installation and test execution. The separate `release.yml` workflow is removed.
