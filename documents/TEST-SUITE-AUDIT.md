@@ -1,12 +1,18 @@
 # Test Suite Audit
 
 **Baseline:** `main` at `41864c31ef5a2a4c9b2e106a634006bfaf920d58`  
-**Current follow-up branch:** `quality/phase-17-process-tree-cleanup`  
+**Current follow-up branch:** `quality/phase-18-coverage-and-ci-audit`  
 **Scope:** PHPUnit unit, integration, system, and smoke tests.  
 **Compatibility:** PHP 8.0–8.5; Windows and Linux.  
 **Constraints:** PHPUnit retained; no mocks introduced; production source unchanged.
 
 ## Changes in this pass
+
+- Phase 18 removes Markdown-only path exclusions so documentation and configuration-only pull requests also run CI.
+- The PHP 8.3 coverage job now emits PHPUnit JUnit XML, Clover XML, and browsable HTML coverage output as one retained artifact.
+- The coverage job publishes covered-statement totals and the calculated statement-coverage percentage to the GitHub Actions job summary.
+- Coverage report validation fails the job when Clover metrics are missing or invalid; no arbitrary coverage threshold is imposed before a measured baseline is reviewed.
+- The existing PHP 8.0–8.5 compatibility matrix and Windows/Linux test jobs remain unchanged.
 
 - Phase 17 routes test subprocesses through the existing `ProcessLauncher` and `ProcessSupervisor`: Windows uses the kill-on-close Job Object launcher; POSIX uses an isolated session/process group where supported, with descendant discovery as a fallback. Timed-out processes and remaining descendants are terminated before returning.
 - Validate subprocess command lists, working directories, and finite positive timeout values before creating output files or launching a process.
@@ -58,3 +64,4 @@ The repository-connected editing environment does not provide a local PHP runtim
 - [ ] Fixtures are isolated and reliably cleaned up on success and failure.
 - [ ] No mocks; platform-specific tests use explicit, justified skips only when their prerequisites are unavailable.
 - [ ] Full PHPUnit, formatting, lint, and supported-platform matrix pass.
+- [ ] Review the retained JUnit and HTML coverage artifacts; set a coverage threshold only after reviewing a stable baseline.
