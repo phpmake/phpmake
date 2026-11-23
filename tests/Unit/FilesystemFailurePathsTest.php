@@ -6,7 +6,6 @@ namespace PhpMake\Tests\Unit;
 
 use PhpMake\Filesystem\AtomicDirectoryPublisher;
 use PhpMake\Filesystem\AtomicFilePublisher;
-use PhpMake\Filesystem\FilesystemTree;
 use PhpMake\Task\Types\DeleteTask;
 use PhpMake\Utilities\Logger;
 use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
@@ -16,6 +15,7 @@ use PHPUnit\Framework\TestCase;
 final class FilesystemFailurePathsTest extends TestCase
 {
     use TemporaryDirectoryTestHelper;
+
     private string $base;
 
     private string $originalWorkingDirectory;

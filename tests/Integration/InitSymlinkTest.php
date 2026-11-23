@@ -4,22 +4,26 @@ declare(strict_types=1);
 
 namespace PhpMake\Tests\Integration;
 
+use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
 use PHPUnit\Framework\TestCase;
 
 /** Verifies that --init never follows an existing dangling destination symlink. */
 final class InitSymlinkTest extends TestCase
 {
+    use TemporaryDirectoryTestHelper;
+
     /** A dangling build.json symlink is rejected without creating its target. */
     public function testInitRejectsDanglingBuildConfigSymlink(): void
     {
         // Arrange
         $root = dirname(__DIR__, 2);
-        $project = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-init-' . bin2hex(random_bytes(8));
-        $target = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-target-' . bin2hex(random_bytes(8));
+        $workspace = $this->createTemporaryDirectory('phpmake-init-');
+        $project = $workspace . DIRECTORY_SEPARATOR . 'project';
+        $target = $workspace . DIRECTORY_SEPARATOR . 'target';
         self::assertTrue(mkdir($project));
         $link = $project . DIRECTORY_SEPARATOR . 'build.json';
         if (!@symlink($target, $link)) {
-            rmdir($project);
+            $this->removeTemporaryDirectory($workspace);
             self::assertFalse(is_link($link));
             return;
         }
@@ -51,7 +55,7 @@ final class InitSymlinkTest extends TestCase
                 unlink($target);
             }
 
-            rmdir($project);
+            $this->removeTemporaryDirectory($workspace);
         }
     }
 }

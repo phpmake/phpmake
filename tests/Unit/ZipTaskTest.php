@@ -7,12 +7,35 @@ namespace PhpMake\Tests\Unit;
 use PHPUnit\Framework\TestCase;
 use PhpMake\Task\Types\ZipTask;
 use PhpMake\Tests\Support\DirectoryLinkTestHelper;
+use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
 use PhpMake\Utilities\Logger;
 
 /** Tests ZIP task structure, archive contents, and symlink handling. */
 final class ZipTaskTest extends TestCase
 {
     use DirectoryLinkTestHelper;
+    use TemporaryDirectoryTestHelper;
+
+    private string $root;
+
+    private string $originalCwd;
+
+    /** Creates an isolated workspace for archive tests. */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->originalCwd = (string) getcwd();
+        $this->root = $this->createTemporaryDirectory('phpmake-zip-tests-');
+        self::assertTrue(chdir($this->root));
+    }
+
+    /** Restores the working directory and removes archive test fixtures. */
+    protected function tearDown(): void
+    {
+        chdir($this->originalCwd);
+        $this->removeTemporaryDirectory($this->root);
+        parent::tearDown();
+    }
 
 
 
@@ -24,8 +47,8 @@ final class ZipTaskTest extends TestCase
         // Arrange
         self::assertTrue(class_exists(\ZipArchive::class), 'ext-zip is a required runtime dependency.');
 
-        $root = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-self-' . uniqid('', true);
-        mkdir($root);
+        $root = $this->root . DIRECTORY_SEPARATOR . 'self';
+        self::assertTrue(mkdir($root));
         file_put_contents($root . DIRECTORY_SEPARATOR . 'input.txt', 'content');
         $output = $root . DIRECTORY_SEPARATOR . 'archive.zip';
         try {
@@ -63,8 +86,8 @@ final class ZipTaskTest extends TestCase
             return;
         }
 
-        $root = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-case-' . bin2hex(random_bytes(6));
-        mkdir($root);
+        $root = $this->root . DIRECTORY_SEPARATOR . 'case';
+        self::assertTrue(mkdir($root));
         file_put_contents($root . DIRECTORY_SEPARATOR . 'input.txt', 'content');
         $actualOutput = $root . DIRECTORY_SEPARATOR . 'archive.zip';
         $configuredOutput = $root . DIRECTORY_SEPARATOR . 'ARCHIVE.ZIP';
@@ -119,7 +142,7 @@ final class ZipTaskTest extends TestCase
         // Some Windows workspaces are mounted on filesystems that cannot host
         // NTFS junctions, while the system temporary volume supports them.
         $originalCwd = getcwd();
-        $base = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-zip-transaction-' . bin2hex(random_bytes(6));
+        $base = $this->root . DIRECTORY_SEPARATOR . 'transaction';
         $root = $base . DIRECTORY_SEPARATOR . 'project';
         $outside = $base . DIRECTORY_SEPARATOR . 'outside';
         self::assertTrue(mkdir($base));
@@ -181,8 +204,8 @@ final class ZipTaskTest extends TestCase
         self::assertTrue(class_exists(\ZipArchive::class), 'ext-zip is a required runtime dependency.');
 
         $suffix = bin2hex(random_bytes(8));
-        $source = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-oversized-' . $suffix;
-        $output = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-preserve-' . $suffix . '.zip';
+        $source = $this->root . DIRECTORY_SEPARATOR . '.phpmake-zip-oversized-' . $suffix;
+        $output = $this->root . DIRECTORY_SEPARATOR . '.phpmake-zip-preserve-' . $suffix . '.zip';
         $handle = fopen($source, 'wb');
         self::assertIsResource($handle);
         self::assertTrue(ftruncate($handle, 536870913));
@@ -222,7 +245,7 @@ final class ZipTaskTest extends TestCase
         // Arrange
         self::assertTrue(class_exists(\ZipArchive::class), 'ext-zip is a required runtime dependency.');
 
-        $root = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-zip-snapshot-' . bin2hex(random_bytes(6));
+        $root = $this->root . DIRECTORY_SEPARATOR . 'snapshot';
         self::assertTrue(mkdir($root));
         $source = $root . DIRECTORY_SEPARATOR . 'input.txt';
         $output = $root . DIRECTORY_SEPARATOR . 'archive.zip';

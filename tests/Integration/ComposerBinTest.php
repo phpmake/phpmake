@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace PhpMake\Tests\Integration;
 
+use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
 use PHPUnit\Framework\TestCase;
 
 /** Verifies the Composer-installed binary entry point. */
 final class ComposerBinTest extends TestCase
 {
+    use TemporaryDirectoryTestHelper;
+
     /** Runs the package binary with the consuming project's Composer autoloader. */
     public function testComposerInstalledBinaryUsesConsumerAutoloader(): void
     {
         // Arrange
         $projectRoot = dirname(__DIR__, 2);
-        $temporaryRoot = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-composer-bin-' . bin2hex(random_bytes(8));
+        $temporaryRoot = $this->createTemporaryDirectory('phpmake-composer-bin-');
         $autoloadDirectory = $temporaryRoot . DIRECTORY_SEPARATOR . 'vendor';
         $packageBinDirectory = $autoloadDirectory . DIRECTORY_SEPARATOR . 'phpmake' . DIRECTORY_SEPARATOR . 'phpmake' . DIRECTORY_SEPARATOR . 'bin';
 
@@ -85,14 +88,7 @@ final class ComposerBinTest extends TestCase
             self::assertSame(0, $exitCode, $stderr);
             self::assertSame(\PhpMake\Config::TOOL_VERSION . PHP_EOL, $stdout);
         } finally {
-            @unlink($temporaryRoot . DIRECTORY_SEPARATOR . 'run.php');
-            @unlink($packageBinDirectory . DIRECTORY_SEPARATOR . 'phpmake.php');
-            @unlink($autoloadDirectory . DIRECTORY_SEPARATOR . 'autoload.php');
-            @rmdir($packageBinDirectory);
-            @rmdir(dirname($packageBinDirectory));
-            @rmdir(dirname($packageBinDirectory, 2));
-            @rmdir($autoloadDirectory);
-            @rmdir($temporaryRoot);
+            $this->removeTemporaryDirectory($temporaryRoot);
         }
     }
 }
