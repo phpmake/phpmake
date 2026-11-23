@@ -41,15 +41,16 @@ final class CopyTaskSafetyTest extends TestCase
     public function testCopyToHardlinkAliasDoesNotTruncateSource(): void
     {
         // Arrange
-        self::assertTrue(function_exists('link'), 'Hardlink creation is unavailable in this PHP runtime.');
+        if (!function_exists('link')) {
+            self::markTestSkipped('Hardlink creation is unavailable in this PHP runtime.');
+        }
 
         $source = $this->root . DIRECTORY_SEPARATOR . 'source.txt';
         $destination = $this->root . DIRECTORY_SEPARATOR . 'destination.txt';
         self::assertSame(10, file_put_contents($source, 'preserved!'));
-        self::assertTrue(
-            @link($source, $destination),
-            'The system temporary filesystem must support hardlinks for this safety test.'
-        );
+        if (!@link($source, $destination)) {
+            self::markTestSkipped('The system temporary filesystem does not support hardlinks.');
+        }
 
         $task = new CopyTask(['source' => $source, 'dest' => $destination], $this->logger);
 
@@ -110,8 +111,7 @@ final class CopyTaskSafetyTest extends TestCase
     {
         // Arrange
         if (PHP_OS_FAMILY === 'Windows') {
-            self::assertTrue(true, 'File symbolic-link creation is not assumed on Windows.');
-            return;
+            self::markTestSkipped('File symbolic-link creation is not assumed on Windows.');
         }
 
         $source = $this->root . DIRECTORY_SEPARATOR . 'source.txt';
@@ -120,8 +120,7 @@ final class CopyTaskSafetyTest extends TestCase
         self::assertSame(6, file_put_contents($source, 'source'));
         self::assertSame(6, file_put_contents($target, 'target'));
         if (!@symlink($target, $destination)) {
-            self::assertTrue(true, 'File symbolic-link creation is unavailable in this environment.');
-            return;
+            self::markTestSkipped('File symbolic-link creation is unavailable in this environment.');
         }
 
         try {
@@ -146,8 +145,7 @@ final class CopyTaskSafetyTest extends TestCase
     {
         // Arrange
         if (PHP_OS_FAMILY === 'Windows' || !function_exists('posix_mkfifo')) {
-            self::assertTrue(true, 'Named-pipe creation is not available on this platform.');
-            return;
+            self::markTestSkipped('Named-pipe creation is not available on this platform.');
         }
 
         $source = $this->root . DIRECTORY_SEPARATOR . 'source.pipe';

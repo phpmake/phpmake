@@ -46,15 +46,13 @@ final class LoggerSecurityTest extends TestCase
     {
         // Arrange
         if (PHP_OS_FAMILY === 'Windows') {
-            self::assertTrue(true, 'POSIX file symbolic-link creation is not assumed on Windows.');
-            return;
+            self::markTestSkipped('POSIX file symbolic-link creation is not assumed on Windows.');
         }
 
         $target = $this->temporaryDirectory . DIRECTORY_SEPARATOR . 'protected.txt';
         self::assertSame(8, file_put_contents($target, 'original'));
         if (!@symlink($target, 'linked.log')) {
-            self::assertTrue(true, 'File symbolic-link creation is unavailable.');
-            return;
+            self::markTestSkipped('File symbolic-link creation is unavailable.');
         }
 
         if (!@symlink($target, 'blocked.log.lock')) {
@@ -78,15 +76,13 @@ final class LoggerSecurityTest extends TestCase
     {
         // Arrange
         if (PHP_OS_FAMILY === 'Windows') {
-            self::assertTrue(true, 'POSIX hardlink semantics are not assumed on Windows.');
-            return;
+            self::markTestSkipped('POSIX hardlink semantics are not assumed on Windows.');
         }
 
         $target = $this->temporaryDirectory . DIRECTORY_SEPARATOR . 'protected.txt';
         self::assertSame(8, file_put_contents($target, 'original'));
         if (!@link($target, 'linked.log')) {
-            self::assertTrue(true, 'Hardlink creation is unavailable.');
-            return;
+            self::markTestSkipped('Hardlink creation is unavailable.');
         }
 
         // Act
@@ -102,8 +98,7 @@ final class LoggerSecurityTest extends TestCase
     {
         // Arrange
         if (PHP_OS_FAMILY === 'Windows' || !function_exists('posix_mkfifo')) {
-            self::assertTrue(true, 'POSIX FIFO creation is unavailable on this platform.');
-            return;
+            self::markTestSkipped('POSIX FIFO creation is unavailable on this platform.');
         }
 
         self::assertTrue(posix_mkfifo('blocked.log.lock', 0600));
