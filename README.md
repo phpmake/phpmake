@@ -1,274 +1,102 @@
-# [PHPMake](https://github.com/phpmake/phpmake/)
+# PHPMake
 
-A PHP build automation tool using JSON configuration file.
+[![Packagist](https://img.shields.io/packagist/v/phpmake/phpmake.svg)](https://packagist.org/packages/phpmake/phpmake)
+[![Build and Test](https://github.com/phpmake/phpmake/actions/workflows/default.yml/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/default.yml)
+[![CodeQL](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql)
+[![PHP](https://img.shields.io/badge/PHP-8.0%2B-617CBE)](https://php.net/)
+[![License](https://img.shields.io/github/license/phpmake/phpmake)](LICENSE)
 
-[![current version](https://img.shields.io/packagist/v/phpmake/phpmake.svg)](https://packagist.org/packages/phpmake/phpmake) [![Build and Test](https://github.com/phpmake/phpmake/actions/workflows/default.yml/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/default.yml) [![CodeQL](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql)
-[![PHP](https://img.shields.io/badge/PHP-8.0%2B-617CBE)](https://php.net/) [![issues](https://img.shields.io/github/issues/phpmake/phpmake)](https://github.com/phpmake/phpmake/issues) ![repo size](https://img.shields.io/github/repo-size/phpmake/phpmake) [![GitHub license](https://img.shields.io/github/license/phpmake/phpmake)](LICENSE) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](documents/CONTRIBUTING.txt)
+PHPMake is a lightweight PHP build automation tool. Define named targets, dependencies, and tasks in a JSON file, then run them from the command line.
 
-![Logo](resources/images/logo.png)
+## Requirements and support
 
-## Contents
+- PHP **8.0 or newer** (Composer constraint: `^8.0`).
+- Composer 2 or newer.
+- PHP extensions: `ctype`, `json`, and `zip`.
+- Supported operating systems: **Windows and GNU/Linux**.
+- CI matrix: PHP 8.0–8.5 on Linux and Windows.
 
-* [Overview](#overview)
-* [Features](#features)
-* [Requirements](#requirements)
-* [Installation](#installation)
-* [Usage](#usage)
-* [User Guide](documents/USER-GUIDE.md)
-* [API and Backward Compatibility](documents/API-COMPATIBILITY.md)
-* [Release Checklist](documents/RELEASE-CHECKLIST.txt)
-* [Release Process](documents/RELEASE-PROCESS.md)
-* [Migration Guide](documents/MIGRATION-GUIDE.md)
-* [FAQ](#faq)
-* [Support](#support)
-* [Changelog](#changelog)
-* [ToDo](#todo)
-* [Contributing](#contributing)
-* [Code of Conduct](#code-of-conduct)
-* [DCO](#dco)
-* [Contributors](#contributors)
-* [Notice](#notice)
-* [License](#license)
+## Install
 
-## Overview
+Project-local: `composer require --dev phpmake/phpmake`
 
-A lightweight PHP build automation tool inspired by GNU Make and Apache Ant, using JSON configuration files. It supports common tasks like file operations, command execution, and dependency management on Microsoft Windows and GNU/Linux.
+Global: `composer global require phpmake/phpmake`
 
-PHPMake provides a modular task architecture, dependency-aware targets, filesystem safeguards, and a command-line interface for repeatable build workflows.
+## Quick start
 
-## Features
-
-* No third-party PHP package dependencies at runtime; Composer is used for installation and PHP extensions are required.
-* Define build processes in human-readable JSON
-* Specify execution order with dependencies
-* Works on Microsoft Windows and GNU+Linux
-* Built-in tasks:
-  * `create_directory` (create directories)
-  * `delete` (remove files/directories)
-  * `copy` (file/directory copying)
-  * `exec` (execute processes without a shell)
-  * `echo` (output messages)
-  * `archive` (archive/compress a file or directory)
-* Filesystem tasks are restricted to paths inside the project directory (CWD)
-* Logging options:
-  * `-d`/`--debug` for detailed logs
-  * `-nl`/`--no-log` to disable file logging
-  * `-s`/`--silent` to suppress normal console output (errors remain visible on STDERR)
-* `-vb`/`--validate-build` to check configuration syntax
-* `--diagnostics` to show environment info
-* `--init` to create a sample `build.json`
-* CI/CD pipeline integration
-* PHP 8.0+ (active)
-
-## Requirements
-
-1. PHP >= 8.0
-2. Composer >= 2
-3. PHP extensions: `ctype`, `json`, and `zip`
-
-### Versions
-
-| Package version | Branch        | PHP version | Status         |
-|-----------------|---------------|-------------|----------------|
-| dev-main        | `main`        | 8.0+ (CI: 8.0–8.5) | Active         |
-| 2.*             | `main`        | 8.0+ (CI: 8.0–8.5) | Active         |
-
-* **Active**: Full support
-* **Maintenance**: Bug/Security fixes only
-* **EOL**: Unsupported
-
-## Installation
-
-By [Composer](https://getcomposer.org/) project-specific installation:
-
-```shell
-composer require --dev phpmake/phpmake
-```
-
-By [Composer](https://getcomposer.org/) global installation:
-
-```shell
-composer global require phpmake/phpmake
-```
-
-## Usage
-
-For the complete build-file reference, task parameters, CLI behavior, troubleshooting, and extension instructions, see the [PHPMake User Guide](documents/USER-GUIDE.md).
-
-1. **Create a `build.json` file** (or generate a sample):
-
-    ```sh
-    php vendor/bin/phpmake.php --init
-    ```
-
-    Example configuration:
-
-    ```json
-    {
-        "name": "MyProject",
-        "description": "Sample project build configuration",
-        "version": "2.0.2",
-        "targets": {
-            "clean": {
-                "tasks": [{ "type": "delete", "params": { "path": "build" } }]
-            },
-            "build": {
-                "depends": ["clean"],
-                "tasks": [
-                    { "type": "create_directory", "params": { "name": "build" } },
-                    { "type": "copy", "params": { "source": "src/", "dest": "build/" } },
-                    { "type": "echo", "params": { "message": "Replace this step with your project's compiler command." } }
-                ]
-            }
-        },
-        "default_target": "build"
-    }
-    ```
-
-2. **Run the builder**:
-
-For GNU+Linux:
+Create a sample `build.json` in the current working directory:
 
 ```sh
-chmod +x bin/phpmake.php
-```
-
-Then
-
-```sh
-vendor/bin/phpmake.php
-```
-
-Or
-
-```sh
-php vendor/bin/phpmake.php
-```
-
-Or
-
-```sh
-# Validate configuration.
+php vendor/bin/phpmake.php --init
 php vendor/bin/phpmake.php --validate-build
-
-# Run default target with debug logging.
-php vendor/bin/phpmake.php --debug
+php vendor/bin/phpmake.php
+php vendor/bin/phpmake.php build
 ```
 
-Or
+PHPMake reads `build.json` and resolves filesystem task paths relative to the process's current working directory.
+
+## Built-in tasks
+
+| Task | Purpose | Parameters |
+|---|---|---|
+| `create_directory` | Create a directory | `name` |
+| `delete` | Delete a file or directory tree | `path` |
+| `copy` | Copy a file or directory tree | `source`, `dest` |
+| `exec` | Run a process without a shell | `command`, optional `args`, `timeout` |
+| `echo` | Write a message | `message` |
+| `archive` | Create a ZIP archive | `source`, `output` |
+
+Filesystem tasks require paths to remain inside the working directory. Symlink/junction escapes are rejected, and destructive tasks cannot target the project root.
+
+The `exec` task passes arguments directly; shell operators and expansions are not interpreted. Its default timeout is 300 seconds (maximum 86,400 seconds). Captured stdout and stderr are each limited to 1 MiB. Process-tree cleanup is platform-dependent and best-effort, not a security sandbox.
+
+ZIP creation is bounded to 10,000 files, 20,000 filesystem entries, depth 256, 512 MiB per input file, and 2 GiB total uncompressed input. Build configuration files are limited to 2 MiB.
+
+## CLI options
+
+| Option | Alias | Purpose |
+|---|---|---|
+| `--help` | `-h` | Show usage |
+| `--version` | `-v` | Show version |
+| `--diagnostics` | — | Show runtime information |
+| `--validate-build` | `-vb` | Validate `build.json` |
+| `--debug` | `-d` | Enable debug diagnostics |
+| `--silent` | `-s` | Suppress normal output; errors remain on STDERR |
+| `--no-log` | `-nl` | Disable file logging |
+| `--init` | — | Create a sample configuration without overwriting an existing file |
+
+## Development
 
 ```sh
-# Run test target silently.
-php vendor/bin/phpmake.php test --silent
-```
-
-### QA/QC test
-
-Run tests to ensure everything works as expected:
-
-```shell
+composer install
 composer test
+composer lint
+composer analyse
+composer format-check
+composer refactor-check
 ```
 
-Run the repeatable performance benchmark (file writes, ZIP creation, process startup, concurrent workers, and peak memory):
+Run performance benchmarks with `composer benchmark`.
 
-```shell
-composer benchmark
-```
+## Documentation
 
-The concurrency measurement runs four independent PHPMake worker processes; tasks within a single build remain sequential. The memory metric is the benchmark process's peak allocation, not aggregate worker RSS. Results are runner-specific and should be compared only across similar environments.
+- [User Guide](documents/USER-GUIDE.md) — configuration, tasks, CLI, troubleshooting.
+- [FAQ](documents/FAQ.txt)
+- [Security Policy](SECURITY.md)
+- [Security Review](documents/SECURITY-REVIEW.md)
+- [API Compatibility](documents/API-COMPATIBILITY.md)
+- [Migration Guide](documents/MIGRATION-GUIDE.md)
+- [Contributing](documents/CONTRIBUTING.txt)
+- [Release Checklist](documents/RELEASE-CHECKLIST.txt)
+- [Release Process](documents/RELEASE-PROCESS.md)
+- [Changelog](documents/CHANGELOG.txt)
 
-Or
+## Security
 
-```shell
-vendor/bin/phpunit tests/
-```
+A build configuration is executable input. The `exec` task can launch arbitrary programs with the permissions and environment of PHPMake. Run only trusted configurations, use least-privilege isolated runners, and do not expose secrets to untrusted builds. See [SECURITY.md](SECURITY.md).
 
-### Commands
+## Support and license
 
-| Command                      | Description                      |
-| ---------------------------- | -------------------------------- |
-| `php vendor/bin/phpmake.php`  | Run default target               |
-| `php vendor/bin/phpmake.php <target>` | Run specific target       |
-| `php vendor/bin/phpmake.php --help` / `-h` | Show help menu      |
-| `php vendor/bin/phpmake.php --version` / `-v` | Show PHPMake version |
-| `php vendor/bin/phpmake.php --validate-build` / `-vb` | Validate build file |
-| `php vendor/bin/phpmake.php --diagnostics` | Show system information |
-| `php vendor/bin/phpmake.php -d` / `--debug` | Enable debug/verbose logging |
-| `php vendor/bin/phpmake.php -nl` / `--no-log` | Disable file logging |
-| `php vendor/bin/phpmake.php -s` / `--silent` | Suppress normal output; errors remain visible on STDERR |
-| `php vendor/bin/phpmake.php --init` | Create sample build.json file |
+Report bugs and request features through [GitHub Issues](https://github.com/phpmake/phpmake/issues). Report vulnerabilities using the private process in [SECURITY.md](SECURITY.md).
 
-### Supported tasks
-
-| Task type          | Parameters                                   | Description            |
-| ------------------ | -------------------------------------------- | ---------------------- |
-| `create_directory` | `name` (string)                              | Create directory       |
-| `delete`           | `path` (string)                              | Delete file/directory  |
-| `copy`             | `source` (string), `dest` (string)           | Copy files/directories |
-| `exec`             | `command` (string), optional `args` (scalar array), `timeout` (seconds, greater than 0 and at most 86400) | Execute a process without a shell |
-| `echo`             | `message` (string)                           | Output message         |
-| `archive`          | `source` (string), `output` (string)         | Archive a file/directory to ZIP |
-
-`exec` passes an argument vector directly to the process (no shell expansion or pipelines). Its default timeout is 300 seconds (maximum 86400); each output stream is capped at 1 MiB. On Windows, PHPMake uses a kill-on-close Job Object to terminate the target process and remaining descendants. On Linux, it uses a POSIX process group (using the POSIX extension, or the `setsid` and `kill` utilities when available). If neither POSIX mechanism is available, only the direct process can be terminated. On POSIX CLI runtimes with `pcntl`, `SIGINT` and `SIGTERM` request cooperative cancellation and trigger child-process cleanup. Host-process termination on Windows or runtimes without `pcntl` cannot guarantee descendant cleanup. ZIP creation is limited to 10,000 files, 20,000 filesystem entries, a directory depth of 256, 512 MiB per input file, and 2 GiB total uncompressed input. Build configuration files are limited to 2 MiB. Filesystem task paths are normalized and must resolve inside the project working directory. Symlink/junction ancestors that escape the project are rejected. UNC and drive-relative Windows paths are rejected. Destructive tasks reject the project root; `..` is permitted only when the normalized result remains inside CWD.
-
-## Security considerations
-
-See [SECURITY.md](SECURITY.md) for supported-version policy, deployment guidance, and vulnerability reporting instructions.
-
-
-A `build.json` file is executable input, not a passive data file. The `exec` task can launch arbitrary programs with the permissions and environment of the PHPMake process. It does not provide a sandbox, network policy, DNS/hostname allowlist, or API rate limiting.
-
-Only run build configurations from trusted sources. In CI/CD, isolate jobs that execute untrusted pull-request content, run with least-privilege credentials, avoid exposing deployment secrets to untrusted builds, and use container or runner isolation when builds need a stronger boundary. PHPMake does not integrate with Forgejo APIs; Forgejo server-version compatibility is therefore not applicable to this project.
-
-The process cleanup mechanisms are best-effort rather than an OS security boundary. POSIX process groups cannot terminate descendants that deliberately create a new session. Windows process-tree termination cannot guarantee cleanup of descendants that detach or outlive an intermediate parent before cleanup begins. Do not rely on PHPMake to contain hostile processes.
-
-### Example build file
-
-See [build.json.example](build.json.example) file.
-
-## FAQ
-
-See [FAQ.txt](documents/FAQ.txt) file.
-
-## Support
-
-For questions, bug reports, and feature requests, [open an issue](https://github.com/phpmake/phpmake/issues).
-
-## Changelog
-
-See [CHANGELOG.txt](documents/CHANGELOG.txt) file.
-
-## ToDo
-
-See [TODO.txt](documents/TODO.txt) file.
-
-## Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork repository.
-2. Create a new branch for your feature or bugfix.
-3. Submit a pull request with a detailed description of your changes.
-
-For more details see [CONTRIBUTING.txt](documents/CONTRIBUTING.txt).
-
-## Code of Conduct
-
-See [CODE_OF_CONDUCT.txt](documents/CODE_OF_CONDUCT.txt) file.
-
-## DCO
-
-See [DCO.txt](documents/DCO.txt) file.
-
-## Contributors
-
-See [CONTRIBUTORS.txt](documents/CONTRIBUTORS.txt) file.
-
-## Notice
-
-See [NOTICE.txt](documents/NOTICE.txt) file.
-
-## License
-
-This open-source software is distributed under the GPL-3.0 license. See [LICENSE](LICENSE) file.
+PHPMake is distributed under [GPL-3.0-only](LICENSE).
