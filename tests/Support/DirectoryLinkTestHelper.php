@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PhpMake\Tests\Support;
 
-/** Creates directory links on Unix and unprivileged Windows environments. */
+/** Creates directory links on Linux and unprivileged Windows environments. */
 trait DirectoryLinkTestHelper
 {
     /** Detects a Windows NTFS junction without following its target. */
