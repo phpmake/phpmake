@@ -46,7 +46,13 @@ All process launch paths continue to use argv arrays and `bypass_shell`; no shel
 - `CliParser` uses one declarative flag table and routes help/version/diagnostic output through the output service.
 - The CLI entrypoint shares one output instance with the logger and task executor. The pre-autoload failure remains a direct stderr write because the Composer autoloader and output class are not available yet.
 
-## 6. Operational reliability
+## 6. Platform support boundary
+
+- `PlatformSupport` defines Windows and Linux as the only supported operating-system families.
+- The CLI, task execution, process launch/supervision, filesystem-tree primitives, benchmarks, and test bootstrap reject unsupported families.
+- POSIX process-group behavior is Linux-specific; Windows process containment uses Job Objects.
+
+## 7. Operational reliability
 
 - The benchmark records filesystem write throughput, ZIP throughput, process-start median latency, concurrent worker wall time, peak memory, PHP version, and OS family.
 - CI runs the benchmark on Windows and Linux for PHP 8.0–8.5 and retains each JSON result as a 90-day artifact.
