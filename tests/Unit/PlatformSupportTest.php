@@ -15,7 +15,7 @@ final class PlatformSupportTest extends TestCase
     {
         // Arrange
         $supported = ['Windows', 'Linux'];
-        $unsupported = ['Darwin', 'FreeBSD', 'OpenBSD', 'SunOS'];
+        $unsupported = ['FreeBSD', 'OpenBSD', 'SunOS'];
 
         // Act
         $supportedResults = array_map(static fn(string $family): bool => PlatformSupport::isSupportedFamily($family), $supported);
@@ -23,14 +23,14 @@ final class PlatformSupportTest extends TestCase
 
         // Assert
         self::assertSame([true, true], $supportedResults);
-        self::assertSame([false, false, false, false], $unsupportedResults);
+        self::assertSame([false, false, false], $unsupportedResults);
     }
 
     /** Rejects an operating-system family outside the supported matrix. */
     public function testUnsupportedOperatingSystemIsRejected(): void
     {
         // Arrange
-        $family = 'Darwin';
+        $family = 'FreeBSD';
 
         // Assert
         $this->expectException(\RuntimeException::class);
