@@ -1,123 +1,72 @@
-# Technical Specification Document (TSD)
+# Technical Specification
 
-**Product:** PHPMake  
-**Version:** 2.0.x  
-**Document:** Technical Specification  
-**Status:** Active
+**Product:** PHPMake 2.x  
+**Runtime:** PHP 8.0+ (`^8.0`)  
+**Platforms:** Windows and GNU/Linux
 
-The supported PHP/CLI integration surface, current public class inventory, deprecation policy, and compatibility verification are documented in [API-COMPATIBILITY.md](API-COMPATIBILITY.md).
+## Technology
 
-## 1. Technology Stack
-
-| Component | Technology |
-| --- | --- |
-| Programming language | PHP 8.0+ |
-| Dependency management and installation | Composer 2+ |
+| Area | Specification |
+|---|---|
+| Language | PHP 8.0+ |
+| Package management | Composer 2+ |
 | Configuration | JSON |
-| Required PHP extensions | ctype, json, zip |
-| Archive support | PHP ZipArchive |
-| Testing | PHPUnit 9.6 |
-| Execution interface | CLI |
+| Required extensions | ctype, json, zip |
+| Archive format | ZIP via PHP ZipArchive |
+| Tests | PHPUnit (`^9.6 || ^13.0`) |
+| Interface | Command line |
 | Distribution | Composer / Packagist |
-| CI/CD | GitHub Actions |
+| CI | GitHub Actions |
 | License | GPL-3.0-only |
 
-PHPMake has no third-party PHP package dependencies at runtime. Composer is used to install the package and generate its autoloader and executable proxy.
+There are no third-party PHP package dependencies at runtime. Composer installs the package and generates its autoloader and executable proxy.
 
-## 2. Architecture
+## Execution architecture
 
-PHPMake follows a modular, object-oriented architecture.
+```text
+CLI
+ └─ BuildLoader / BuildValidator
+     └─ BuildExecutor
+         └─ DependencyResolver
+             └─ TaskExecutor
+                 └─ TaskFactory / TaskDefinitionRegistry
+                     └─ Built-in task
+```
 
-**Main execution flow:**
+The task registry defines the built-in task identifiers and parameter contracts. The published JSON Schema is checked against the runtime definitions by automated tests.
 
-CLI → BuildLoader → BuildValidator → BuildExecutor → DependencyResolver → TaskExecutor → TaskFactory → Task Implementation
+## Build configuration
 
-| Component | Responsibility |
-| --- | --- |
-| Config | Application configuration and version information |
-| PlatformSupport | Enforce the Windows/Linux operating-system support boundary |
-| CLI | Parse arguments and dispatch CLI operations |
-| Build | Load, validate, and execute build configurations |
-| Target | Resolve dependency order and detect cycles |
-| Task | Define task contracts, creation, and execution |
-| Task Types | Implement individual build operations |
-| Utilities | Logging and supporting functionality |
+The default file is `build.json`, a UTF-8 JSON object. It contains project metadata, named targets, and a default target. Targets declare ordered task arrays and optional dependencies. Unknown properties and unsupported task parameters are rejected.
 
-## 3. Configuration Specification
+See [USER-GUIDE.md](USER-GUIDE.md) and [schema/build-schema.json](../schema/build-schema.json) for the complete contract.
 
-The build definition is a UTF-8 JSON object, normally named `build.json`.
+## Built-in tasks
 
-Required top-level properties:
+| Task | Parameters | Function |
+|---|---|---|
+| `create_directory` | `name` | Create a directory |
+| `delete` | `path` | Delete a file or directory tree |
+| `copy` | `source`, `dest` | Copy files/directories transactionally |
+| `exec` | `command`, optional `args`, `timeout` | Execute a process without a shell |
+| `echo` | `message` | Output a message |
+| `archive` | `source`, `output` | Create a ZIP archive |
 
-- `name`: Non-empty project name.
-- `description`: Non-empty project description.
-- `version`: Non-empty build/project version; it is independent of the PHPMake package version.
-- `targets`: Object containing named targets.
-- `default_target`: Name of an existing target.
+## Operational limits
 
-Each target is an object with:
+- Build configuration: 2 MiB.
+- Process timeout: 300 seconds by default; maximum 86,400 seconds.
+- Captured stdout: 1 MiB maximum.
+- Captured stderr: 1 MiB maximum.
+- ZIP creation: 10,000 files, 20,000 filesystem entries, depth 256, 512 MiB per file, and 2 GiB total uncompressed input.
+- Log rotation: 10 MiB per active log; up to five rotated files.
 
-- `description`: Optional string.
-- `depends`: Optional array of existing target names.
-- `tasks`: Required ordered array of task objects.
+## Security and platform behavior
 
-Each task is an object containing:
+Filesystem task paths must resolve inside the current working directory. Symlink/junction ancestors that escape that boundary are rejected. Destructive tasks cannot target the project root.
 
-- `type`: One of the six built-in task identifiers.
-- `params`: Object containing only parameters supported by that task type.
+Processes are launched without shell interpretation. Windows uses Job Objects for process-tree cleanup. Linux uses a process group where supported, with documented fallback behavior. Cleanup is best-effort and does not sandbox child processes.
 
-Unknown properties are rejected. The runtime validator and `schema/build-schema.json` define the configuration contract. The loader also checks raw JSON object/array shapes before associative decoding can erase those distinctions.
+## Quality assurance
 
-## 4. Built-in Task Specifications
-
-| Task | Required parameters | Optional parameters | Responsibility |
-| --- | --- | --- | --- |
-| `create_directory` | `name` | — | Create a directory |
-| `delete` | `path` | — | Delete a file or directory tree |
-| `copy` | `source`, `dest` | — | Copy files or directory trees transactionally |
-| `exec` | `command` | `args`, `timeout` | Execute a process without a shell |
-| `echo` | `message` | — | Output a message |
-| `archive` | `source`, `output` | — | Create a ZIP archive |
-
-### 4.1 External Process Execution
-
-- `command` is a non-empty executable/command string tokenized into an argument vector.
-- `args` is an optional array of scalar values appended to the argument vector.
-- The command is launched without shell expansion, pipelines, or shell operators.
-- `timeout` is an optional numeric duration in seconds. The default is 300 seconds; values must be greater than 0 and no greater than 86400.
-- Captured stdout and stderr are each written to temporary files and monitored independently against a 1 MiB limit. Exceeding either limit fails the task; only bounded output is read into memory, and temporary files are removed after execution.
-- On Windows, a PowerShell/.NET launcher creates the target process suspended, assigns it to a Windows Job Object configured with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`, and resumes it only after assignment succeeds. The Job handle is closed after the target exits, terminating any remaining descendants; terminating the launcher on timeout or output overflow closes the Job handle and applies the same cleanup. Assignment failure terminates the still-suspended target rather than running it without containment.
-- Linux uses a dedicated process group when the POSIX extension or `setsid`/`kill` utilities are available. Descendants are periodically sampled and tracked to catch processes that detach from the original session; the sampling interval leaves a narrow fork-and-exit race. Without process-group support, termination falls back to the direct process.
-
-## 5. Platform Compatibility
-
-- Supported runtime: PHP 8.0+ with Composer 2+.
-- Required extensions: `ctype`, `json`, and `zip`.
-- Supported operating systems: Microsoft Windows and GNU/Linux.
-- Path comparisons follow host filesystem semantics: Windows is treated as case-insensitive; Linux paths are case-sensitive.
-- Windows junctions and POSIX symbolic links are treated as path redirection boundaries.
-- Filesystem and process behavior is exercised in Linux and Windows CI jobs.
-
-## 6. Security and Reliability
-
-- Filesystem task paths are normalized and must remain within the current working directory.
-- Existing path prefixes are resolved to detect symbolic-link and junction escapes.
-- Deletion and directory-copy destinations must not target the project root.
-- Directory copies are staged and published only after successful copying; failed copies must preserve an existing destination.
-- ZIP creation rejects links and removes partial archives after failure.
-- External processes are launched without a shell, have bounded captured output, and enforce execution deadlines.
-- Process-tree termination is attempted using the platform facilities described in Section 4.1.
-- Task failures remain visible on stderr even when normal console output is silent.
-- Log writes and rotation are serialized using a persistent `build.log.lock` file.
-- Logs rotate at 10 MiB and retain up to five numbered backups.
-
-## 7. Quality Assurance
-
-- PHPUnit unit, integration, system, and smoke tests.
-- Regression tests for project-root protection, symlink/junction traversal, UNC paths, and filesystem case semantics.
-- Regression tests for process timeouts, descendant termination, and output limits.
-- Regression tests for concurrent and partial log writes.
-- Runtime/schema parity tests for all built-in task parameter definitions.
-- PHP syntax, YAML, XML, and JSON validation.
-- Composer manifest, dependency, requirement, normalization, and security checks.
-- CI-based build and test execution on Linux and Windows.
+CI validates PHP 8.0–8.5 on Linux and runs Windows filesystem/process tests for PHP 8.0–8.5. The workflow includes PHPUnit, syntax/style/static checks, Composer validation and dependency checks, a clean consumer install, and a coverage report. Coverage reporting currently publishes statement coverage; branch coverage and an enforced 80% threshold are not yet configured.
