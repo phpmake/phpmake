@@ -408,7 +408,7 @@ final class TaskExecutionTest extends TestCase
         $detailsFile = $marker . '.details';
         $parentPidFile = $marker . '.parent';
         $childCode = 'file_put_contents($argv[1], "child=" . getmypid() . "; expected-parent=" . $argv[2]); '
-            . '$query = "(Get-CimInstance -ClassName Win32_Process -Filter \"ProcessId = " + getmypid() + "\").ParentProcessId"; '
+            . '$query = "(Get-CimInstance -ClassName Win32_Process -Filter "ProcessId = " + getmypid() + "").ParentProcessId"; '
             . '$pipes = []; $probe = proc_open(["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", $query], '
             . '[0 => ["pipe", "r"], 1 => ["pipe", "w"], 2 => ["pipe", "w"]], $pipes); '
             . 'if (is_resource($probe)) { fclose($pipes[0]); $actual = trim((string) stream_get_contents($pipes[1])); '
@@ -782,7 +782,7 @@ final class TaskExecutionTest extends TestCase
                 'message' => "Exec task requires a non-empty string 'command'.",
             ],
             'non-scalar argument' => [
-                'params' => ['command' => PHP_BINARY, 'args' => ['-r', new \\stdClass()]],
+                'params' => ['command' => PHP_BINARY, 'args' => ['-r', new \stdClass()]],
                 'message' => "Exec task 'args' must be an array of scalar values.",
             ],
             'string timeout' => [
@@ -806,7 +806,7 @@ final class TaskExecutionTest extends TestCase
                 // Act
                 new ExecTask($configuration['params'], $logger);
                 self::fail(sprintf('Expected invalid configuration "%s" to throw.', $scenario));
-            } catch (\\InvalidArgumentException $exception) {
+            } catch (\InvalidArgumentException $exception) {
                 // Assert
                 self::assertSame($configuration['message'], $exception->getMessage(), $scenario);
             }
