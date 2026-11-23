@@ -6,6 +6,8 @@ declare(strict_types=1);
 // Include Composer autoloader to load dependencies.
 require_once addslashes(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR) . 'autoload.php';
 
+\PhpMake\PlatformSupport::assertSupported();
+
 // Error/Exception engine, always `E_ALL`.
 error_reporting(E_ALL);
 // Error/Exception display system.
