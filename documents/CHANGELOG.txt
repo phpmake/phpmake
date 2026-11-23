@@ -1,5 +1,6 @@
 PHPMake - Unreleased
 --------------------
+* Isolate path-safety and smoke-test fixtures with shared temporary workspaces; use explicit platform prerequisite skips and fix the FilesystemTree test import.
 * Extend shared temporary filesystem fixtures to ZIP and integration tests; fix Rector-required test formatting.
 * Consolidate temporary filesystem test workspace creation and recursive cleanup across filesystem test classes.
 * Refactor legacy PHPUnit tests for descriptive names and consistent Arrange / Act / Assert structure.

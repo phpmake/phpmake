@@ -132,8 +132,7 @@ final class AtomicPublisherValidationTest extends TestCase
     {
         // Arrange
         if (PHP_OS_FAMILY === 'Windows') {
-            self::assertTrue(true, 'File symbolic-link creation is not assumed on Windows.');
-            return;
+            self::markTestSkipped('File symbolic-link creation is not assumed on Windows.');
         }
 
         $target = $this->base . DIRECTORY_SEPARATOR . 'target.txt';
@@ -141,8 +140,7 @@ final class AtomicPublisherValidationTest extends TestCase
         $destination = $this->base . DIRECTORY_SEPARATOR . 'destination.txt';
         self::assertSame(4, file_put_contents($target, 'keep'));
         if (!@symlink($target, $staged)) {
-            self::assertTrue(true, 'File symbolic-link creation is unavailable.');
-            return;
+            self::markTestSkipped('File symbolic-link creation is unavailable.');
         }
 
         try {
@@ -164,8 +162,7 @@ final class AtomicPublisherValidationTest extends TestCase
     {
         // Arrange
         if (PHP_OS_FAMILY === 'Windows') {
-            self::assertTrue(true, 'File symbolic-link creation is not assumed on Windows.');
-            return;
+            self::markTestSkipped('File symbolic-link creation is not assumed on Windows.');
         }
 
         $staged = $this->base . DIRECTORY_SEPARATOR . 'staged.txt';
@@ -174,8 +171,7 @@ final class AtomicPublisherValidationTest extends TestCase
         self::assertSame(3, file_put_contents($staged, 'new'));
         self::assertSame(4, file_put_contents($target, 'keep'));
         if (!@symlink($target, $destination)) {
-            self::assertTrue(true, 'File symbolic-link creation is unavailable.');
-            return;
+            self::markTestSkipped('File symbolic-link creation is unavailable.');
         }
 
         try {
@@ -262,8 +258,7 @@ final class AtomicPublisherValidationTest extends TestCase
     {
         // Arrange
         if (PHP_OS_FAMILY === 'Windows') {
-            self::assertTrue(true, 'POSIX directory permission semantics are not available on Windows.');
-            return;
+            self::markTestSkipped('POSIX directory permission semantics are not available on Windows.');
         }
 
         $staged = $this->base . DIRECTORY_SEPARATOR . 'staged.tmp';

@@ -6,25 +6,41 @@ use PhpMake\Task\Types\CopyTask;
 use PhpMake\Task\Types\CreateDirectoryTask;
 use PhpMake\Task\Types\DeleteTask;
 use PhpMake\Task\Types\ZipTask;
-use PhpMake\Utilities\Logger;
 use PhpMake\Tests\Support\DirectoryLinkTestHelper;
+use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
+use PhpMake\Utilities\Logger;
 use PHPUnit\Framework\TestCase;
 
 /** Tests filesystem boundary enforcement and symbolic-link safety. */
 final class PathSafetyTest extends TestCase
 {
     use DirectoryLinkTestHelper;
+    use TemporaryDirectoryTestHelper;
 
     private Logger $logger;
+
+    private string $workspace;
+
+    private string $originalWorkingDirectory;
 
     /** Initializes a silent logger for filesystem safety tests. */
     protected function setUp(): void
     {
         parent::setUp();
+        $this->originalWorkingDirectory = (string) getcwd();
+        $this->workspace = $this->createTemporaryDirectory('phpmake-path-safety-');
+        self::assertTrue(chdir($this->workspace));
         $this->logger = new Logger(false, true, true);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    /** Restores the original working directory and removes all remaining fixtures. */
+    protected function tearDown(): void
+    {
+        chdir($this->originalWorkingDirectory);
+        $this->removeTemporaryDirectory($this->workspace);
+        parent::tearDown();
+    }
+
     public function testDeleteRejectsPathOutsideProject(): void
     {
         // Arrange
@@ -36,7 +52,6 @@ final class PathSafetyTest extends TestCase
         new DeleteTask(['path' => sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'outside.txt'], $this->logger);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
     public function testCopyRejectsSourceOutsideProject(): void
     {
         // Arrange
@@ -51,7 +66,6 @@ final class PathSafetyTest extends TestCase
         ], $this->logger);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
     public function testCreateDirectoryRejectsParentTraversal(): void
     {
         // Arrange
@@ -63,7 +77,6 @@ final class PathSafetyTest extends TestCase
         new CreateDirectoryTask(['name' => '..' . DIRECTORY_SEPARATOR . 'outside-dir'], $this->logger);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
     public function testArchiveRejectsOutputOutsideProject(): void
     {
         // Arrange
@@ -78,7 +91,6 @@ final class PathSafetyTest extends TestCase
         ], $this->logger);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
     public function testCreateDirectoryIsIdempotent(): void
     {
         // Arrange
@@ -102,8 +114,8 @@ final class PathSafetyTest extends TestCase
     {
         // Arrange
         $originalCwd = getcwd();
-        $project = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-project-' . uniqid('', true);
-        $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-outside-' . uniqid('', true);
+        $project = $this->workspace . DIRECTORY_SEPARATOR . 'phpmake-project-' . uniqid('', true);
+        $outside = $this->workspace . DIRECTORY_SEPARATOR . 'phpmake-outside-' . uniqid('', true);
         mkdir($project);
         mkdir($outside);
         $project = realpath($project);
@@ -139,8 +151,8 @@ final class PathSafetyTest extends TestCase
     {
         // Arrange
         $originalCwd = getcwd();
-        $project = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-copy-project-' . uniqid('', true);
-        $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-copy-outside-' . uniqid('', true);
+        $project = $this->workspace . DIRECTORY_SEPARATOR . 'phpmake-copy-project-' . uniqid('', true);
+        $outside = $this->workspace . DIRECTORY_SEPARATOR . 'phpmake-copy-outside-' . uniqid('', true);
         mkdir($project);
         mkdir($outside);
         $project = realpath($project);
@@ -187,8 +199,8 @@ final class PathSafetyTest extends TestCase
     {
         // Arrange
         $originalCwd = getcwd();
-        $project = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-delete-project-' . uniqid('', true);
-        $target = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-delete-target-' . uniqid('', true);
+        $project = $this->workspace . DIRECTORY_SEPARATOR . 'phpmake-delete-project-' . uniqid('', true);
+        $target = $this->workspace . DIRECTORY_SEPARATOR . 'phpmake-delete-target-' . uniqid('', true);
         mkdir($project);
         mkdir($target);
         $project = realpath($project);
@@ -243,8 +255,8 @@ final class PathSafetyTest extends TestCase
     {
         // Arrange
         $originalCwd = getcwd();
-        $project = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-copy-rollback-' . bin2hex(random_bytes(6));
-        $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-copy-target-' . bin2hex(random_bytes(6));
+        $project = $this->workspace . DIRECTORY_SEPARATOR . 'phpmake-copy-rollback-' . bin2hex(random_bytes(6));
+        $outside = $this->workspace . DIRECTORY_SEPARATOR . 'phpmake-copy-target-' . bin2hex(random_bytes(6));
         mkdir($project);
         mkdir($outside);
         $project = realpath($project);
@@ -296,8 +308,7 @@ final class PathSafetyTest extends TestCase
     public function testRejectsUncPathOnWindows(): void
     {
         if (PHP_OS_FAMILY !== 'Windows') {
-            self::assertTrue(true, 'UNC path handling is Windows-specific.');
-            return;
+            self::markTestSkipped('UNC path handling is Windows-specific.');
         }
 
         // Assert
@@ -313,7 +324,7 @@ final class PathSafetyTest extends TestCase
     {
         // Arrange
         $originalCwd = getcwd();
-        $base = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-case-' . bin2hex(random_bytes(6));
+        $base = $this->workspace . DIRECTORY_SEPARATOR . 'phpmake-case-' . bin2hex(random_bytes(6));
         self::assertTrue(mkdir($base));
         $project = $base . DIRECTORY_SEPARATOR . 'CaseRoot';
         $sibling = $base . DIRECTORY_SEPARATOR . 'caseroot';
@@ -323,8 +334,7 @@ final class PathSafetyTest extends TestCase
         if (!@mkdir($sibling)) {
             rmdir($project);
             rmdir($base);
-            self::assertTrue(true, 'Case-only siblings cannot exist on this filesystem.');
-            return;
+            self::markTestSkipped('Case-only siblings cannot exist on this filesystem.');
         }
 
         $victim = $sibling . DIRECTORY_SEPARATOR . 'victim.txt';
@@ -356,8 +366,7 @@ final class PathSafetyTest extends TestCase
     public function testRejectsExtendedUncPathOnWindows(): void
     {
         if (PHP_OS_FAMILY !== 'Windows') {
-            self::assertTrue(true, 'Extended UNC path handling is Windows-specific.');
-            return;
+            self::markTestSkipped('Extended UNC path handling is Windows-specific.');
         }
 
         // Assert
@@ -372,8 +381,7 @@ final class PathSafetyTest extends TestCase
     public function testRejectsDriveRelativePathOnWindows(): void
     {
         if (PHP_OS_FAMILY !== 'Windows') {
-            self::assertTrue(true, 'Drive-relative path handling is Windows-specific.');
-            return;
+            self::markTestSkipped('Drive-relative path handling is Windows-specific.');
         }
 
         // Assert
@@ -392,7 +400,7 @@ final class PathSafetyTest extends TestCase
     {
         // Arrange
         $originalCwd = getcwd();
-        $project = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-delete-hardlink-' . bin2hex(random_bytes(6));
+        $project = $this->workspace . DIRECTORY_SEPARATOR . 'phpmake-delete-hardlink-' . bin2hex(random_bytes(6));
         self::assertTrue(mkdir($project));
         $source = $project . DIRECTORY_SEPARATOR . 'source.txt';
         $alias = $project . DIRECTORY_SEPARATOR . 'alias.txt';
@@ -434,8 +442,7 @@ final class PathSafetyTest extends TestCase
     public function testRejectsExtendedLengthDrivePathOnWindows(): void
     {
         if (PHP_OS_FAMILY !== 'Windows') {
-            self::assertTrue(true, 'Extended-length drive paths are Windows-specific.');
-            return;
+            self::markTestSkipped('Extended-length drive paths are Windows-specific.');
         }
 
         // Arrange
