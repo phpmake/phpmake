@@ -41,16 +41,19 @@ The table identifies remaining test depth, not confirmed production defects. The
 
 ## Platform-dependent skips
 
-Skips were reviewed by capability rather than removed indiscriminately:
+The source search found 37 skip call sites across 10 test files. These are conditional skips: the affected test is skipped only when the host OS, filesystem semantics, or required operating-system capability is unavailable. They fall into these groups:
 
-| Skip category | Why it is skipped | Validation path |
-|---|---|---|
-| POSIX process-table discovery and tracked-descendant signaling | Requires Linux process-table behavior and POSIX signaling | Linux test job; Windows process cleanup is covered by the Job Object test |
-| POSIX signal cancellation and detached-session cleanup | Requires Linux plus the relevant `pcntl`/`posix` functions | Linux CI where extensions are available; the no-`ext-posix` fallback smoke check runs separately |
-| Windows Job Object descendant cleanup | Requires Windows process/job APIs | Windows test matrix |
-| POSIX directory permission failures (four tests) | `chmod(0500)`/directory write-denial semantics are not equivalent on Windows | Linux test job; these tests remain legitimately skipped on Windows |
-| Symbolic-link creation | Windows privilege/configuration may prevent link creation | Tests run where the host permits link creation; unavailable capability is explicitly skipped |
-| Case-variant archive alias | Requires a case-insensitive filesystem | Windows test matrix; Linux case-sensitive filesystems skip it |
+| Skip category | Test areas | Why it is skipped | Validation path |
+|---|---|---|---|
+| POSIX process-table discovery, descendant signaling, process groups, cancellation, and detached-session cleanup | `ProcessSupervisorTest`, `TaskExecutionTest` | Requires Linux process-table behavior and/or `posix`/`pcntl` functions | Linux test job; the no-`ext-posix` fallback smoke check runs separately |
+| Windows Job Object descendant cleanup | `TaskExecutionTest` | Requires Windows process/job APIs | Windows test matrix |
+| POSIX directory permission failures (four tests) | `FilesystemFailurePathsTest`, plus publisher validation | `chmod(0500)` and directory write-denial semantics are not equivalent on Windows | Linux test job; these tests remain legitimately skipped on Windows |
+| Symbolic-link and junction creation | `CopyTaskSafetyTest`, `LoggerSecurityTest`, `InitSymlinkTest`, `PathSafetyTest`, `AtomicPublisherValidationTest`, `AtomicFilePublisherTest` | Link creation may require Windows privileges or filesystem support; dangling links and junctions also differ by OS | Windows and Linux jobs where creation is supported; capability failures are explicitly skipped |
+| Hardlink creation | `CopyTaskSafetyTest`, `LoggerSecurityTest`, `PathSafetyTest` | The runtime or backing filesystem may not support hardlinks | Run where the filesystem supports hardlinks |
+| FIFO/named-pipe creation | `CopyTaskSafetyTest`, `LoggerSecurityTest` | POSIX special-file creation is unavailable on Windows | Linux test job |
+| Windows path syntax (UNC, extended UNC, drive-relative, extended-length drive paths) | `PathSafetyTest` | These path forms are Windows-specific | Windows test matrix |
+| Case-only sibling paths | `PathSafetyTest` | A case-insensitive filesystem cannot represent two sibling entries differing only by case | Case-sensitive filesystem |
+| Case-variant archive aliases | `ZipTaskTest` | Requires a case-insensitive filesystem so two path spellings identify one entry | Windows test matrix; case-sensitive filesystems skip it |
 
 These skips are not evidence that the behavior passed on the skipped platform. The Windows and Linux jobs are complementary. The remaining gap is Windows-specific failure testing for filesystem operations that currently rely on POSIX permission denial; do not replace those tests with assumptions that NTFS permissions behave like POSIX modes.
 
