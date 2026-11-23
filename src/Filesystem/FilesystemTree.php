@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PhpMake\Filesystem;
 
+use PhpMake\PlatformSupport;
+
 /**
  * Performs recursive directory copying and cleanup without following links.
  *
@@ -15,6 +17,8 @@ final class FilesystemTree
     /** Copies a directory tree into an existing or newly created destination. */
     public static function copyDirectory(string $source, string $destination): bool
     {
+        PlatformSupport::assertSupported();
+
         if ($source === '' || $destination === '' || str_contains($source, "\0")
             || str_contains($destination, "\0") || self::isLink($source)
             || !is_dir($source) || self::isLink($destination)) {
@@ -88,6 +92,8 @@ final class FilesystemTree
     /** Removes a file or directory tree without traversing symbolic links or junctions. */
     public static function remove(string $path): bool
     {
+        PlatformSupport::assertSupported();
+
         if ($path === '' || str_contains($path, "\0")) {
             return false;
         }
@@ -130,8 +136,10 @@ final class FilesystemTree
     /** Detects POSIX symbolic links and Windows directory junctions. */
     public static function isLink(string $path): bool
     {
+        PlatformSupport::assertSupported();
+
         clearstatcache(true, $path);
-        if (PHP_OS_FAMILY !== 'Windows') {
+        if (PHP_OS_FAMILY === 'Linux') {
             return is_link($path);
         }
 

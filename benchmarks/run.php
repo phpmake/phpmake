@@ -5,8 +5,11 @@ declare(strict_types=1);
 use PhpMake\Task\Types\ExecTask;
 use PhpMake\Task\Types\ZipTask;
 use PhpMake\Utilities\Logger;
+use PhpMake\PlatformSupport;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
+
+PlatformSupport::assertSupported();
 
 $originalDirectory = getcwd();
 $root = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-benchmark-' . bin2hex(random_bytes(8));

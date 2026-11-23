@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PhpMake\Process;
 
+use PhpMake\PlatformSupport;
+
 /** Prepares POSIX session launchers and process-group tracking metadata. */
 final class PosixProcessLauncher
 {
@@ -13,6 +15,8 @@ final class PosixProcessLauncher
      */
     public static function prepare(array $argv): array
     {
+        PlatformSupport::assertSupportedFamily('Linux');
+
         $launchArgv = $argv;
         $hasPosixExtension = function_exists('posix_setsid') && function_exists('posix_kill');
         $setsidExecutable = null;

@@ -96,7 +96,7 @@ final class LoggerSecurityTest extends TestCase
     public function testLoggerDoesNotOpenSpecialFileAsLock(): void
     {
         // Arrange
-        if (PHP_OS_FAMILY === 'Windows' || !function_exists('posix_mkfifo')) {
+        if (PHP_OS_FAMILY !== 'Linux' || !function_exists('posix_mkfifo')) {
             self::markTestSkipped('POSIX FIFO creation is unavailable on this platform.');
         }
 

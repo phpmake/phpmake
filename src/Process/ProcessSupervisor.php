@@ -4,12 +4,19 @@ declare(strict_types=1);
 
 namespace PhpMake\Process;
 
+use PhpMake\PlatformSupport;
+
 /** Supervises and terminates process trees without invoking a command shell. */
 final class ProcessSupervisor
 {
     /** @return list<int> */
     public static function getDescendantProcessIds(int $rootPid): array
     {
+        PlatformSupport::assertSupported();
+        if (PHP_OS_FAMILY !== 'Linux') {
+            return [];
+        }
+
         $ps = self::findExecutable('ps');
         if ($ps === null) {
             return [];
@@ -80,6 +87,7 @@ final class ProcessSupervisor
         ?int $launcherPid = null,
         array $trackedDescendantPids = []
     ): void {
+        PlatformSupport::assertSupported();
         if (PHP_OS_FAMILY === 'Windows') {
             proc_terminate($process, 15);
             usleep(100000);

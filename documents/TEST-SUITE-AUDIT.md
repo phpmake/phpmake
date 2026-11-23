@@ -1,12 +1,16 @@
 # Test Suite Audit
 
-**Baseline:** `main` at `41864c31ef5a2a4c9b2e106a634006bfaf920d58`  
-**Current follow-up branch:** `quality/phase-21-ci-stabilization`  
+**Baseline:** `main` at `ec78e61509dae3fcec59243f4a5e6243db215ac0`  
+**Current follow-up branch:** `quality/phase-25-workflow-platform-consolidation`  
 **Scope:** PHPUnit unit, integration, system, and smoke tests.  
 **Compatibility:** PHP 8.0–8.5; Windows and Linux.  
-**Constraints:** PHPUnit retained; no mocks introduced; production source unchanged.
+**Constraints:** PHPUnit retained; no mocks introduced; PHP `^8.0` retained; Windows and Linux only.
 
 ## Changes in this pass
+
+- Phase 25 consolidates release validation and publishing into `.github/workflows/default.yml`; the release job depends on the shared build, coverage, PHP compatibility, and Windows test jobs instead of repeating dependency installation and test execution. The separate `release.yml` workflow is removed.
+- Phase 25 explicitly supports only Windows and Linux. `PlatformSupport` rejects other operating-system families in CLI/task execution, process launch/supervision, filesystem-tree operations, benchmarks, and PHPUnit bootstrap. The case-insensitive filesystem test is restricted to Windows, and POSIX-only tests are scoped to Linux.
+- Added `PlatformSupportTest` for the supported family list and rejection behavior.
 
 - Phase 24 addresses the Windows stderr-overflow stall identified by Phase 23 CI run #629. ExecTask now drains stdout and stderr independently on every polling pass and no longer uses feof() as the non-blocking read-loop guard. The stderr-overflow regression test has a 15-second task deadline and asserts the explicit 1 MiB overflow diagnostic, so a timeout cannot be mistaken for successful overflow detection.
 - Phase 23 CI run #629 confirmed all six Windows PHP 8.0–8.5 jobs stalled at TaskExecutionTest::testExecTaskRejectsExcessiveStderrOutput. Linux compatibility, coverage, static analysis, build/test, and performance jobs passed.

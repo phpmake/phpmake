@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace PhpMake\Process;
 
+use PhpMake\PlatformSupport;
+
 /** Selects the platform-specific process launcher. */
 final class ProcessLauncher
 {
@@ -15,6 +17,8 @@ final class ProcessLauncher
      */
     public static function prepare(array $argv): array
     {
+        PlatformSupport::assertSupported();
+
         if (PHP_OS_FAMILY === 'Windows') {
             return [
                 'argv' => WindowsProcessLauncher::build($argv),

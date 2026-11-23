@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace PhpMake\Tests\Support;
 
-/** Creates directory links on Unix and unprivileged Windows environments. */
+use PhpMake\PlatformSupport;
+
+/** Creates directory links on Linux and unprivileged Windows environments. */
 trait DirectoryLinkTestHelper
 {
     /** Detects a Windows NTFS junction without following its target. */
     private function isDirectoryJunction(string $path): bool
     {
+        PlatformSupport::assertSupported();
+
         clearstatcache(true, $path);
         if (PHP_OS_FAMILY !== 'Windows' || !is_dir($path) || is_link($path)) {
             return false;
@@ -22,6 +26,8 @@ trait DirectoryLinkTestHelper
     /** Removes a directory link without traversing its target. */
     private function removeDirectoryLink(string $path): void
     {
+        PlatformSupport::assertSupported();
+
         if (PHP_OS_FAMILY === 'Windows') {
             // PHP's rmdir()/unlink() handling of directory symlinks varies
             // across Windows PHP builds; cmd's rmdir removes the link itself.
@@ -41,6 +47,8 @@ trait DirectoryLinkTestHelper
     /** Creates a symbolic link or, on Windows, an NTFS junction. */
     private function createDirectoryLink(string $target, string $link): void
     {
+        PlatformSupport::assertSupported();
+
         if (PHP_OS_FAMILY === 'Windows') {
             $powerShell = (getenv('SystemRoot') ?: 'C:\\Windows')
                 . DIRECTORY_SEPARATOR . 'System32'

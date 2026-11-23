@@ -97,7 +97,7 @@ final class ExecTask extends BaseTask
         // On POSIX CLI runtimes, turn SIGINT/SIGTERM into cooperative
         // cancellation so the child process tree can be stopped before exit.
         if (
-            PHP_OS_FAMILY !== 'Windows'
+            PHP_OS_FAMILY === 'Linux'
             && PHP_SAPI === 'cli'
             && function_exists('pcntl_signal')
             && function_exists('pcntl_async_signals')
@@ -127,7 +127,7 @@ final class ExecTask extends BaseTask
                 // A descendant can create a new POSIX session and escape the
                 // original process group. Snapshot descendants periodically so
                 // those PIDs can still be terminated if the command times out.
-                if (PHP_OS_FAMILY !== 'Windows' && is_int($launcherPid) && $launcherPid > 0) {
+                if (PHP_OS_FAMILY === 'Linux' && is_int($launcherPid) && $launcherPid > 0) {
                     $now = hrtime(true);
                     if ($now - $lastProcessScan >= 50_000_000) {
                         $trackedDescendantPids = array_values(array_unique(array_merge(

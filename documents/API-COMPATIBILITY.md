@@ -26,6 +26,7 @@ All classes under the Composer PSR-4 namespace are currently autoloadable. Publi
 | Namespace / class | Current public methods and constants |
 |---|---|
 | `PhpMake\Config` | `TOOL_VERSION` |
+| `PhpMake\PlatformSupport` | `isSupportedFamily`, `assertSupported`, `assertSupportedFamily` |
 | `PhpMake\Diagnostics\ExceptionDiagnostics` | `format` |
 | `PhpMake\Build\BuildConfiguration` | `__construct`, `getName`, `getDescription`, `getVersion`, `getTargets`, `getDefaultTarget` |
 | `PhpMake\Build\BuildExecutor` | `__construct`, `execute` |
@@ -79,7 +80,7 @@ No public API deprecation annotations or migration steps are declared in the cur
 
 ## 5. Runtime and platform compatibility
 
-The supported validation matrix is PHP 8.0, 8.1, 8.2, 8.3, 8.4, and 8.5 on Linux; the Windows test matrix covers the same PHP versions. Supported operating systems are Windows and GNU/Linux.
+The supported validation matrix is PHP 8.0, 8.1, 8.2, 8.3, 8.4, and 8.5 on Linux; the Windows test matrix covers the same PHP versions. Supported operating systems are Windows and GNU/Linux. Runtime task execution and the CLI reject operating-system families outside this set.
 
 Composer declares PHP `^8.0`, Composer 2 as the package-management requirement, and the runtime extensions `ctype`, `json`, and `zip`. PHPStan and Rector target PHP 8.0 so that analysis and automated refactoring do not introduce syntax newer than the minimum runtime.
 
@@ -90,6 +91,7 @@ The Composer constraint intentionally remains `^8.0`; CI currently verifies the 
 The following automated checks protect the contract:
 
 - `ComposerPlatformConstraintTest`: Composer package identity, runtime requirements, autoload mapping, executable metadata, and version-file consistency.
+- `PlatformSupportTest`: supported operating-system family checks and rejection of unsupported families.
 - `PublicApiCompatibilityTest`: stable TaskInterface method names, parameter names/types, and return types.
 - `BuildSchemaParityTest`: task identifiers and parameter definitions remain aligned across the registry, runtime validator, and JSON Schema.
 - CLI, configuration, task, and Composer consumer integration tests: preserve documented command behavior and build-file compatibility.

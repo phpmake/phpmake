@@ -3,6 +3,7 @@
 namespace PhpMake\Task;
 
 use PhpMake\Diagnostics\ExceptionDiagnostics;
+use PhpMake\PlatformSupport;
 use PhpMake\Utilities\Logger;
 
 /** Provides shared execution, logging, and filesystem-safety behavior for tasks. */
@@ -11,6 +12,7 @@ abstract class BaseTask implements TaskInterface
     /** Initializes the task and validates its parameters. */
     public function __construct(protected array $params, protected Logger $logger)
     {
+        PlatformSupport::assertSupported();
         $this->validateParams();
     }
 
@@ -18,6 +20,7 @@ abstract class BaseTask implements TaskInterface
     public function execute(bool $debug, bool $silent): bool
     {
         try {
+            PlatformSupport::assertSupported();
             return $this->runTask($debug, $silent);
         } catch (\Throwable $throwable) {
             if ($debug) {
@@ -45,7 +48,7 @@ abstract class BaseTask implements TaskInterface
     protected function isSymbolicLinkOrJunction(string $path): bool
     {
         clearstatcache(true, $path);
-        if (PHP_OS_FAMILY !== 'Windows') {
+        if (PHP_OS_FAMILY === 'Linux') {
             return is_link($path);
         }
 
