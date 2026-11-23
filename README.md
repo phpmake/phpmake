@@ -2,7 +2,6 @@
 
 [![Packagist](https://img.shields.io/packagist/v/phpmake/phpmake.svg)](https://packagist.org/packages/phpmake/phpmake)
 [![Build and Test](https://github.com/phpmake/phpmake/actions/workflows/default.yml/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/default.yml)
-[![CodeQL](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/github-code-scanning/codeql)
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-617CBE)](https://php.net/)
 [![License](https://img.shields.io/github/license/phpmake/phpmake)](LICENSE)
 
@@ -76,6 +75,8 @@ composer format-check
 composer refactor-check
 ```
 
+For coverage, run PHPUnit with Xdebug and `--branch-coverage` to generate `build/coverage.xml`, then enforce the project thresholds with `composer coverage-check`. See the [Code Coverage Policy](documents/CODE-COVERAGE.md).
+
 Run performance benchmarks with `composer benchmark`.
 
 ## Documentation
@@ -85,6 +86,7 @@ Run performance benchmarks with `composer benchmark`.
 - [Security Policy](SECURITY.md)
 - [Security Review](documents/SECURITY-REVIEW.md)
 - [API Compatibility](documents/API-COMPATIBILITY.md)
+- [Code Coverage Policy](documents/CODE-COVERAGE.md)
 - [Migration Guide](documents/MIGRATION-GUIDE.md)
 - [Contributing](documents/CONTRIBUTING.txt)
 - [Release Checklist](documents/RELEASE-CHECKLIST.txt)
