@@ -121,8 +121,8 @@ jobs:
       - name: Check Composer normalization
         run: composer normalize --dry-run
 
-      - name: Run PHPUnit tests
-        run: composer test
+      - name: Run PHPUnit tests with per-test diagnostics
+        run: composer test -- --testdox
 
       - name: Verify clean Composer consumer installation
         shell: bash
