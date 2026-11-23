@@ -33,6 +33,7 @@ if (!class_exists(\Composer\Autoload\ClassLoader::class, false)) {
 }
 
 use PhpMake\Utilities\Logger;
+use PhpMake\PlatformSupport;
 use PhpMake\Cli\CliParser;
 use PhpMake\Build\BuildLoader;
 use PhpMake\Task\TaskExecutor;
@@ -61,6 +62,8 @@ try {
         CliParser::showDiagnostics();
         exit(0);
     }
+
+    PlatformSupport::assertSupported();
 
     if ($args['init']) {
         $sampleCandidates = [
