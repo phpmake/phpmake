@@ -8,6 +8,9 @@
 
 ## Changes in this pass
 
+- Phase 22 makes the Windows PHP 8.0–8.5 test matrix emit PHPUnit TestDox output (`composer test -- --testdox`). Phase 21 CI run #617 showed all six Windows jobs reaching the 300-second Composer process timeout, while Linux completed the same 266 tests in about 23 seconds. The default progress output did not identify the last test reached before the Windows stall; TestDox output is added to make the next run identify the blocking test without changing test behavior, platform coverage, or the timeout.
+- The same run confirmed PHP 8.0–8.5 Linux compatibility, coverage, static analysis, and most performance jobs passed. The Ubuntu PHP 8.0 performance job failed during Composer dependency download with HTTP 429 from codeload.github.com; this is recorded as an external transient download failure, not a PHPUnit regression.
+
 - Phase 21 fixes Phase 20 CI regressions: replaces PHPUnit docblock data-provider metadata with a PHPUnit-version-independent scenario loop, since the supported dependency range spans PHPUnit 9.6 and 13.0. The loop still asserts all six invalid configurations and their exact diagnostics.
 - Phase 21 moves the output-limit failure path ahead of stdout/stderr logging. When a process exceeds the 1 MiB per-stream cap, only the bounded generic diagnostic is emitted; the captured prefix is not dumped into CI logs or terminal output. This also avoids echoing attacker-controlled or secret output after a limit breach.
 - Phase 20 CI run #609 showed PHPUnit 9.6 treating the new provider test as a zero-argument test (ArgumentCountError). The package smoke step failed because its `package` target invokes the test target. Windows filesystem jobs and PHP 8.4/8.5 compatibility jobs also failed in the same test run; the provider incompatibility was common to the test matrix.
