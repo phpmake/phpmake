@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace PhpMake\Tests\Unit;
 
+use PhpMake\Task\Types\CreateDirectoryTask;
 use PhpMake\Task\Types\EchoTask;
 use PhpMake\Task\Types\ExecTask;
-use PhpMake\Task\Types\CreateDirectoryTask;
 use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
 use PhpMake\Utilities\Logger;
 use PHPUnit\Framework\TestCase;

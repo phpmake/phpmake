@@ -320,7 +320,6 @@ final class PathSafetyTest extends TestCase
     }
 
 
-    /** Rejects UNC paths as external paths on Windows. */
     /** Rejects UNC paths as external Windows paths. */
     public function testRejectsUncPathOnWindows(): void
     {

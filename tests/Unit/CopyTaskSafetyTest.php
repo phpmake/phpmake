@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace PhpMake\Tests\Unit;
 
 use PhpMake\Task\Types\CopyTask;
-use PhpMake\Utilities\Logger;
 use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
+use PhpMake\Utilities\Logger;
 use PHPUnit\Framework\TestCase;
 
 /** Tests transactional file-copy behavior and filesystem alias protection. */
@@ -22,6 +22,7 @@ final class CopyTaskSafetyTest extends TestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
         // Use the system temp volume: the repository checkout may not support
         // hardlinks (notably Windows CI). Make it the task's project root so
         // BaseTask's project-directory safety boundary remains enforced.
@@ -35,6 +36,7 @@ final class CopyTaskSafetyTest extends TestCase
     {
         chdir($this->originalWorkingDirectory);
         $this->removeTemporaryDirectory($this->root);
+        parent::tearDown();
     }
 
     /** Rejects a hardlink alias instead of truncating the source inode. */
