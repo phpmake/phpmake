@@ -138,8 +138,11 @@ final class ExecTask extends BaseTask
                     }
                 }
 
-                $outputLimitExceeded = self::captureAvailableOutput($pipes[1], $stdout)
-                    || self::captureAvailableOutput($pipes[2], $stderr);
+                // Drain both streams on every pass so one full pipe cannot
+                // block the child while the other stream is ignored.
+                $stdoutLimitExceeded = self::captureAvailableOutput($pipes[1], $stdout);
+                $stderrLimitExceeded = self::captureAvailableOutput($pipes[2], $stderr);
+                $outputLimitExceeded = $stdoutLimitExceeded || $stderrLimitExceeded;
                 if ($outputLimitExceeded) {
                     ProcessSupervisor::terminate($process, $processPid, $processGroupCreated, $launcherPid, $trackedDescendantPids);
                     break;
@@ -159,8 +162,9 @@ final class ExecTask extends BaseTask
 
                 if (!$status['running']) {
                     $observedExitCode = $status['exitcode'];
-                    $outputLimitExceeded = self::captureAvailableOutput($pipes[1], $stdout)
-                        || self::captureAvailableOutput($pipes[2], $stderr);
+                    $stdoutLimitExceeded = self::captureAvailableOutput($pipes[1], $stdout);
+                    $stderrLimitExceeded = self::captureAvailableOutput($pipes[2], $stderr);
+                    $outputLimitExceeded = $stdoutLimitExceeded || $stderrLimitExceeded;
                     break;
                 }
 
@@ -235,24 +239,28 @@ final class ExecTask extends BaseTask
      */
     private static function captureAvailableOutput($pipe, string &$buffer): bool
     {
-        while (!feof($pipe)) {
-            $chunk = fread($pipe, 65536);
-            if ($chunk === false || $chunk === '') {
-                break;
-            }
-
-            $remaining = self::MAX_CAPTURE_BYTES - strlen($buffer);
-            if (strlen($chunk) > $remaining) {
-                if ($remaining > 0) {
-                    $buffer .= substr($chunk, 0, $remaining);
-                }
-
-                return true;
-            }
-
-            $buffer .= $chunk;
+        // A non-blocking pipe may temporarily have no bytes available while
+        // its writer is still active. Do not use feof() as a read-loop guard:
+        // on Windows it can report EOF between writes and stop future draining.
+        // Read only one bounded chunk per polling pass. Windows anonymous
+        // pipes do not consistently honor non-blocking reads when draining
+        // until empty; a second fread can wait indefinitely while the child
+        // is blocked writing to the same pipe.
+        $remaining = self::MAX_CAPTURE_BYTES - strlen($buffer);
+        $chunk = fread($pipe, min(65536, $remaining + 1));
+        if ($chunk === false || $chunk === '') {
+            return false;
         }
 
+        if (strlen($chunk) > $remaining) {
+            if ($remaining > 0) {
+                $buffer .= substr($chunk, 0, $remaining);
+            }
+
+            return true;
+        }
+
+        $buffer .= $chunk;
         return false;
     }
 

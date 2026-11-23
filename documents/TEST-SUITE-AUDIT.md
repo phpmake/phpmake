@@ -8,6 +8,9 @@
 
 ## Changes in this pass
 
+- Phase 24 addresses the Windows stderr-overflow stall identified by Phase 23 CI run #629. ExecTask now drains stdout and stderr independently on every polling pass and no longer uses feof() as the non-blocking read-loop guard. The stderr-overflow regression test has a 15-second task deadline and asserts the explicit 1 MiB overflow diagnostic, so a timeout cannot be mistaken for successful overflow detection.
+- Phase 23 CI run #629 confirmed all six Windows PHP 8.0–8.5 jobs stalled at TaskExecutionTest::testExecTaskRejectsExcessiveStderrOutput. Linux compatibility, coverage, static analysis, build/test, and performance jobs passed.
+
 - Phase 23 adds PHPUnit debug events to the Windows PHP 8.0–8.5 test command (`--debug --testdox`). Phase 22's TestDox output shows each Windows run completed through `TaskExecutionTest::testExecTaskCapturesStderrOnSuccessfulExit`, but emitted no completion line for the next method, `testExecTaskRejectsExcessiveStderrOutput`. This strongly narrows the suspect path but does not prove where execution blocks. Debug events will show the test-start event and help distinguish a hang in the stderr overflow execution from a later suite/teardown issue.
 - Phase 22 CI run #623: all six Windows filesystem jobs failed; the six Linux PHP compatibility jobs, coverage, static analysis, and performance matrix passed. Ubuntu PHP 8.0 performance also passed on this run, so the earlier HTTP 429 was transient.
 
@@ -62,6 +65,8 @@
 - Continue the remaining suite-wide review for AAA ordering and test names; this pass addressed the remaining generic dependency-resolution and built-in task execution names identified in the legacy unit tests.
 - Path-safety and smoke-test fixtures now use the shared workspace lifecycle; keep platform-specific junction creation/removal in `DirectoryLinkTestHelper` rather than merging it into generic directory cleanup.
 - Process-tree and filesystem capability tests use explicit skips when platform prerequisites are absent; `failOnSkipped` is disabled so justified platform skips do not fail otherwise-valid matrix jobs. CI must still exercise each supported platform-specific path.
+
+- Phase 24 CI exposed a second Windows overflow stall in the stdout regression test after the stderr case was isolated. The pipe reader now consumes one bounded chunk per polling pass instead of attempting to drain a non-blocking Windows anonymous pipe until empty. The stdout regression now requires the explicit per-stream overflow diagnostic within a 15-second task deadline; a timeout alone cannot pass it.
 
 ## Validation
 

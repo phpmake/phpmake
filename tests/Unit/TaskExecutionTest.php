@@ -346,16 +346,35 @@ final class TaskExecutionTest extends TestCase
     public function testExecTaskRejectsExcessiveOutput(): void
     {
         // Arrange
+        $logFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR
+            . 'phpmake-exec-stdout-overflow-' . bin2hex(random_bytes(8)) . '.log';
+        $logger = new Logger(false, true, false, $logFile);
         $task = new ExecTask([
             'command' => PHP_BINARY,
             'args' => ['-r', 'echo str_repeat("x", 1100000);'],
-        ], $this->logger);
+            'timeout' => 15,
+        ], $logger);
 
-        // Act
-        $result = $task->execute(false, true);
+        try {
+            // Act
+            $result = $task->execute(false, true);
 
-        // Assert
-        self::assertFalse($result);
+            // Assert
+            self::assertFalse($result);
+            $log = file_get_contents($logFile);
+            self::assertIsString($log);
+            self::assertStringContainsString(
+                'Command output exceeded the 1048576-byte per-stream limit.',
+                $log,
+                'The task must reject stdout overflow, not merely time out.'
+            );
+        } finally {
+            foreach ([$logFile, $logFile . '.lock'] as $path) {
+                if (is_file($path)) {
+                    unlink($path);
+                }
+            }
+        }
     }
 
 
@@ -847,16 +866,35 @@ final class TaskExecutionTest extends TestCase
     public function testExecTaskRejectsExcessiveStderrOutput(): void
     {
         // Arrange
+        $logFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR
+            . 'phpmake-exec-stderr-overflow-' . bin2hex(random_bytes(8)) . '.log';
+        $logger = new Logger(false, true, false, $logFile);
         $task = new ExecTask([
             'command' => PHP_BINARY,
             'args' => ['-r', 'fwrite(STDERR, str_repeat("x", 1100000));'],
-        ], $this->logger);
+            'timeout' => 15,
+        ], $logger);
 
-        // Act
-        $result = $task->execute(false, true);
+        try {
+            // Act
+            $result = $task->execute(false, true);
 
-        // Assert
-        self::assertFalse($result);
+            // Assert
+            self::assertFalse($result);
+            $log = file_get_contents($logFile);
+            self::assertIsString($log);
+            self::assertStringContainsString(
+                'Command output exceeded the 1048576-byte per-stream limit.',
+                $log,
+                'The task must reject stderr overflow, not merely time out.'
+            );
+        } finally {
+            foreach ([$logFile, $logFile . '.lock'] as $path) {
+                if (is_file($path)) {
+                    unlink($path);
+                }
+            }
+        }
     }
 
 }
