@@ -8,9 +8,11 @@ permissions:
   push:
     branches:
       - main
+      - 'quality/**'
   pull_request:
     branches:
       - main
+      - 'quality/**'
   workflow_dispatch:
 
 env:
