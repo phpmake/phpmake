@@ -768,47 +768,49 @@ final class TaskExecutionTest extends TestCase
     }
 
 
-    /**
-     * @dataProvider invalidExecConfigurationProvider
-     *
-     * Rejects invalid command, argument, and timeout configuration before launch.
-     */
-    public function testExecTaskRejectsInvalidConfiguration(array $params, string $message): void
+    /** Rejects invalid command, argument, and timeout configuration before launch. */
+    public function testExecTaskRejectsInvalidConfiguration(): void
     {
         // Arrange
-        $logger = new Logger(false, true, true);
-
-        // Assert
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage($message);
-
-        // Act
-        new ExecTask($params, $logger);
-    }
-
-    /** Supplies invalid constructor configurations and their expected diagnostics. */
-    public static function invalidExecConfigurationProvider(): iterable
-    {
-        return [
-            'missing command' => [[], "Exec task requires a non-empty string 'command'."],
-            'blank command' => [['command' => '  '], "Exec task requires a non-empty string 'command'."],
+        $invalidConfigurations = [
+            'missing command' => [
+                'params' => [],
+                'message' => "Exec task requires a non-empty string 'command'.",
+            ],
+            'blank command' => [
+                'params' => ['command' => '  '],
+                'message' => "Exec task requires a non-empty string 'command'.",
+            ],
             'non-scalar argument' => [
-                ['command' => PHP_BINARY, 'args' => ['-r', new \stdClass()]],
-                "Exec task 'args' must be an array of scalar values.",
+                'params' => ['command' => PHP_BINARY, 'args' => ['-r', new \\stdClass()]],
+                'message' => "Exec task 'args' must be an array of scalar values.",
             ],
             'string timeout' => [
-                ['command' => PHP_BINARY, 'timeout' => '5'],
-                "Exec task 'timeout' must be greater than 0 and at most 86400 seconds.",
+                'params' => ['command' => PHP_BINARY, 'timeout' => '5'],
+                'message' => "Exec task 'timeout' must be greater than 0 and at most 86400 seconds.",
             ],
             'zero timeout' => [
-                ['command' => PHP_BINARY, 'timeout' => 0],
-                "Exec task 'timeout' must be greater than 0 and at most 86400 seconds.",
+                'params' => ['command' => PHP_BINARY, 'timeout' => 0],
+                'message' => "Exec task 'timeout' must be greater than 0 and at most 86400 seconds.",
             ],
             'infinite timeout' => [
-                ['command' => PHP_BINARY, 'timeout' => INF],
-                "Exec task 'timeout' must be greater than 0 and at most 86400 seconds.",
+                'params' => ['command' => PHP_BINARY, 'timeout' => INF],
+                'message' => "Exec task 'timeout' must be greater than 0 and at most 86400 seconds.",
             ],
         ];
+
+        foreach ($invalidConfigurations as $scenario => $configuration) {
+            $logger = new Logger(false, true, true);
+
+            try {
+                // Act
+                new ExecTask($configuration['params'], $logger);
+                self::fail(sprintf('Expected invalid configuration "%s" to throw.', $scenario));
+            } catch (\\InvalidArgumentException $exception) {
+                // Assert
+                self::assertSame($configuration['message'], $exception->getMessage(), $scenario);
+            }
+        }
     }
 
     /** Captures stderr diagnostics without treating a successful process exit as failure. */
