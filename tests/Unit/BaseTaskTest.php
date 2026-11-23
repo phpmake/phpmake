@@ -305,6 +305,7 @@ class BaseTaskTestProbe extends BaseTask
         return $this->removeSymbolicLinkOrJunction($path);
     }
 
+    /** Returns a successful result for the probe task. */
     protected function runTask(bool $debug, bool $silent): bool
     {
         return true;
