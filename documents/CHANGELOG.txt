@@ -1,5 +1,7 @@
 PHPMake - Unreleased
 --------------------
+* Standardize test methods on explicit Arrange, Act, and Assert sections; verify the test suite contains no mock objects or mocking-framework usage.
+* Add concise PHPDoc comments to previously undocumented classes and methods across the source and test suites; retain existing test behavior and PHP compatibility.
 * Consolidate release validation and publishing into the default workflow; remove the duplicate release workflow and reuse the shared build, coverage, Linux compatibility, and Windows test jobs.
 * Restrict runtime, tests, benchmarks, and process/filesystem adapters to Windows and Linux; reject unsupported operating-system families explicitly.
 * Add platform-support regression tests and synchronize the supported OS documentation and test guards.
