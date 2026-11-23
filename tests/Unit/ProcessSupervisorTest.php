@@ -14,7 +14,7 @@ final class ProcessSupervisorTest extends TestCase
     public function testGetDescendantProcessIdsFindsChildProcess(): void
     {
         // Arrange
-        if (PHP_OS_FAMILY === 'Windows' || !function_exists('posix_kill')) {
+        if (PHP_OS_FAMILY !== 'Linux' || !function_exists('posix_kill')) {
             self::markTestSkipped('POSIX process-table discovery and cleanup are not available on this platform.');
         }
 
@@ -138,7 +138,7 @@ final class ProcessSupervisorTest extends TestCase
     public function testTerminateStopsTrackedDescendantsWithoutKillingRoot(): void
     {
         // Arrange
-        if (PHP_OS_FAMILY === 'Windows' || !function_exists('posix_kill')) {
+        if (PHP_OS_FAMILY !== 'Linux' || !function_exists('posix_kill')) {
             self::markTestSkipped('POSIX descendant signaling is not available on this platform.');
         }
 
