@@ -146,7 +146,7 @@ final class CopyTaskSafetyTest extends TestCase
     public function testCopyTaskRejectsNamedPipeSource(): void
     {
         // Arrange
-        if (PHP_OS_FAMILY === 'Windows' || !function_exists('posix_mkfifo')) {
+        if (PHP_OS_FAMILY !== 'Linux' || !function_exists('posix_mkfifo')) {
             self::markTestSkipped('Named-pipe creation is not available on this platform.');
         }
 
