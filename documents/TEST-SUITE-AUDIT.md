@@ -22,13 +22,15 @@
 - Phase 14 migrated `ZipTaskTest`, `CliBuildIntegrationTest`, `InitSymlinkTest`, and `ComposerBinTest` to the shared temporary-directory lifecycle.
 - Phase 15 migrated `PathSafetyTest` and `SmokeTest` to isolated temporary project roots with shared failure-safe cleanup.
 - Replaced silent platform-only passing assertions with explicit PHPUnit skips for tests whose OS or filesystem prerequisites are unavailable.
+- Renamed generic dependency-resolution and task-execution tests to describe the behavior and expected outcome; removed obsolete PHPUnit attributes and empty docblocks from the legacy task tests.
+- Normalized Arrange / Act / Assert ordering in dependency, system-requirement, archive-publication, and initialization integration tests.
 - Corrected the missing `FilesystemTree` import exposed by Phase 14 CI in `FilesystemFailurePathsTest`.
 - Replaced the duplicated recursive CLI integration cleanup implementation with `TemporaryDirectoryTestHelper`; ZIP test workspaces now run from an isolated temporary project root.
 
 ## Audit observations requiring follow-up
 
 - AAA markers and ordering remain inconsistent in several legacy test classes. In particular, exception expectation setup is frequently placed before Arrange comments, some methods combine multiple scenarios, and several fixture assertions are interleaved with behavior assertions.
-- Generic test names and inconsistent AAA structure remain in legacy classes outside the Phase 12 scope; continue the same focused refactor across the remaining unit and integration tests.
+- Continue the remaining suite-wide review for AAA ordering and test names; this pass addressed the remaining generic dependency-resolution and built-in task execution names identified in the legacy unit tests.
 - Path-safety and smoke-test fixtures now use the shared workspace lifecycle; keep platform-specific junction creation/removal in `DirectoryLinkTestHelper` rather than merging it into generic directory cleanup.
 - Process-tree and filesystem capability tests use explicit skips when platform prerequisites are absent; CI must still exercise each supported platform-specific path.
 - Continue auditing integration process tests and remaining legacy unit classes for fixture isolation, AAA ordering, and behavior-focused method names.

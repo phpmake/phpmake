@@ -11,7 +11,8 @@ use PHPUnit\Framework\TestCase;
 /** Tests dependency ordering and invalid dependency handling. */
 final class DependencyResolverTest extends TestCase
 {
-    public function testDependencyOrder(): void
+    /** Resolves every dependency before its dependent target in topological order. */
+    public function testResolveReturnsDependenciesBeforeTheirDependents(): void
     {
         // Arrange
         $config = new BuildConfiguration(
@@ -26,16 +27,15 @@ final class DependencyResolverTest extends TestCase
             'target_c'
         );
         $resolver = new DependencyResolver();
-        // Action
+        // Act
         $order = $resolver->resolve($config, 'target_c');
         // Assert
         $this->assertEquals(['target_a', 'target_b', 'target_c'], $order);
     }
 
-    public function testCircularDependency(): void
+    /** Rejects a dependency graph that contains a cycle. */
+    public function testResolveRejectsCircularDependency(): void
     {
-        // Assert
-        $this->expectException(\RuntimeException::class);
         // Arrange
         $config = new BuildConfiguration(
             'Test',
@@ -48,7 +48,11 @@ final class DependencyResolverTest extends TestCase
             'a'
         );
         $resolver = new DependencyResolver();
-        // Action
+
+        // Assert
+        $this->expectException(\RuntimeException::class);
+
+        // Act
         $resolver->resolve($config, 'a');
     }
 

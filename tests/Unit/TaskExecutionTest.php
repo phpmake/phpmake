@@ -26,17 +26,12 @@ final class TaskExecutionTest extends TestCase
 
 
     /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
-    public function testCreateDirectoryTask(): void
+    public function testCreateDirectoryTaskCreatesConfiguredDirectory(): void
     {
         // Arrange — path must stay inside the project directory.
         $tempDir = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-test-dir-' . uniqid('', true);
         $params = ['name' => $tempDir];
-        // Action
+        // Act
         $task = new CreateDirectoryTask($params, $this->logger);
         $result = $task->execute(false, true);
         // Assert
@@ -47,34 +42,24 @@ final class TaskExecutionTest extends TestCase
     }
 
     /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
-    public function testExecTask(): void
+    public function testExecTaskRunsConfiguredCommandSuccessfully(): void
     {
         // Arrange
         $params = ['command' => PHP_BINARY, 'args' => ['-r', 'echo "Test";']];
         $task = new ExecTask($params, $this->logger);
-        // Action
+        // Act
         $result = $task->execute(false, true);
         // Assert
         $this->assertTrue($result);
     }
 
     /**
-     *
-     *
-     * @return void
-     */
-    #[\PHPUnit\Framework\Attributes\Test]
-    public function testEchoTask(): void
+    public function testEchoTaskExecutesConfiguredMessageSuccessfully(): void
     {
         // Arrange
         $params = ['message' => 'Test message'];
         $task = new EchoTask($params, $this->logger);
-        // Action
+        // Act
         $result = $task->execute(false, true);
         // Assert
         $this->assertTrue($result);
@@ -451,8 +436,7 @@ final class TaskExecutionTest extends TestCase
     {
         // Arrange
         if (PHP_OS_FAMILY !== 'Windows') {
-            self::assertTrue(true, 'Windows Job Object behavior is only available on Windows.');
-            return;
+            self::markTestSkipped('Windows Job Object behavior is only available on Windows.');
         }
 
         $marker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-job-object-child-' . bin2hex(random_bytes(8));
@@ -572,8 +556,7 @@ final class TaskExecutionTest extends TestCase
             || !function_exists('pcntl_async_signals')
             || !function_exists('posix_kill')
         ) {
-            self::assertTrue(true, 'POSIX signal cancellation is not available on this platform.');
-            return;
+            self::markTestSkipped('POSIX signal cancellation is not available on this platform.');
         }
 
         $marker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-cancel-' . bin2hex(random_bytes(8));
@@ -656,8 +639,7 @@ final class TaskExecutionTest extends TestCase
             || !function_exists('posix_setsid')
             || !function_exists('posix_kill')
         ) {
-            self::assertTrue(true, 'POSIX session escape behavior is not available on this platform.');
-            return;
+            self::markTestSkipped('POSIX session escape behavior is not available on this platform.');
         }
 
         $marker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-detached-child-' . bin2hex(random_bytes(8));
