@@ -412,7 +412,7 @@ jobs:
             exit 1
           fi
 
-          git fetch origin main --no-tags
+          git fetch origin main:refs/remotes/origin/main --no-tags
           if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
             echo "::error::The release tag must be reachable from main."
             exit 1
