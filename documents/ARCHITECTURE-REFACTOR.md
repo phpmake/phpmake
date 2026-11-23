@@ -56,7 +56,7 @@ All process launch paths continue to use argv arrays and `bypass_shell`; no shel
 ## Compatibility and behavior constraints
 
 - PHP 8.0+ syntax only.
-- Windows and Linux remain supported; macOS is not added to the supported matrix.
+- Supported operating systems are Microsoft Windows and GNU/Linux only.
 - No third-party process, filesystem, or console dependencies were added.
 - Existing task identifiers, JSON configuration shape, process timeout/output limits, filesystem safety checks, and task exit-code conventions are intended to remain stable.
 
