@@ -1,5 +1,6 @@
 PHPMake - Unreleased
 --------------------
+* Consolidate temporary filesystem test workspace creation and recursive cleanup across filesystem test classes.
 * Refactor legacy PHPUnit tests for descriptive names and consistent Arrange / Act / Assert structure.
 * Add debug-only exception class, source location, and argument-free stack trace diagnostics for task failures.
 * Correct POSIX process-group termination to signal the launcher session rather than the child PID.

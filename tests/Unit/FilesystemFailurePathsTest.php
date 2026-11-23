@@ -9,11 +9,13 @@ use PhpMake\Filesystem\AtomicFilePublisher;
 use PhpMake\Filesystem\FilesystemTree;
 use PhpMake\Task\Types\DeleteTask;
 use PhpMake\Utilities\Logger;
+use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
 use PHPUnit\Framework\TestCase;
 
 /** Exercises filesystem failure paths using real POSIX directory permissions. */
 final class FilesystemFailurePathsTest extends TestCase
 {
+    use TemporaryDirectoryTestHelper;
     private string $base;
 
     private string $originalWorkingDirectory;
@@ -22,16 +24,14 @@ final class FilesystemFailurePathsTest extends TestCase
     {
         parent::setUp();
         $this->originalWorkingDirectory = (string) getcwd();
-        $this->base = sys_get_temp_dir() . DIRECTORY_SEPARATOR
-            . 'phpmake-failure-paths-' . bin2hex(random_bytes(8));
-        self::assertTrue(mkdir($this->base, 0777, true));
+        $this->base = $this->createTemporaryDirectory('phpmake-failure-paths-');
     }
 
     protected function tearDown(): void
     {
         chdir($this->originalWorkingDirectory);
         chmod($this->base, 0700);
-        FilesystemTree::remove($this->base);
+        $this->removeTemporaryDirectory($this->base);
         parent::tearDown();
     }
 

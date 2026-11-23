@@ -6,26 +6,26 @@ namespace PhpMake\Tests\Unit;
 
 use PhpMake\Filesystem\FilesystemTree;
 use PhpMake\Tests\Support\DirectoryLinkTestHelper;
+use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
 use PHPUnit\Framework\TestCase;
 
 /** Covers recursive filesystem copying and cleanup without link traversal. */
 final class FilesystemTreeTest extends TestCase
 {
     use DirectoryLinkTestHelper;
+    use TemporaryDirectoryTestHelper;
 
     private string $base;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->base = sys_get_temp_dir() . DIRECTORY_SEPARATOR
-            . 'phpmake-filesystem-tree-' . bin2hex(random_bytes(8));
-        self::assertTrue(mkdir($this->base, 0777, true));
+        $this->base = $this->createTemporaryDirectory('phpmake-filesystem-tree-');
     }
 
     protected function tearDown(): void
     {
-        FilesystemTree::remove($this->base);
+        $this->removeTemporaryDirectory($this->base);
         parent::tearDown();
     }
 

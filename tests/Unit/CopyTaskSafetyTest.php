@@ -7,11 +7,13 @@ namespace PhpMake\Tests\Unit;
 use PhpMake\Filesystem\FilesystemTree;
 use PhpMake\Task\Types\CopyTask;
 use PhpMake\Utilities\Logger;
+use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
 use PHPUnit\Framework\TestCase;
 
 /** Tests transactional file-copy behavior and filesystem alias protection. */
 final class CopyTaskSafetyTest extends TestCase
 {
+    use TemporaryDirectoryTestHelper;
     private string $root;
 
     private string $originalWorkingDirectory;
@@ -24,8 +26,7 @@ final class CopyTaskSafetyTest extends TestCase
         // hardlinks (notably Windows CI). Make it the task's project root so
         // BaseTask's project-directory safety boundary remains enforced.
         $this->originalWorkingDirectory = (string) getcwd();
-        $this->root = sys_get_temp_dir() . DIRECTORY_SEPARATOR . '.phpmake-copy-safety-' . bin2hex(random_bytes(6));
-        self::assertTrue(mkdir($this->root));
+        $this->root = $this->createTemporaryDirectory('.phpmake-copy-safety-');
         self::assertTrue(chdir($this->root));
         $this->logger = new Logger(false, true, true);
     }
@@ -33,7 +34,7 @@ final class CopyTaskSafetyTest extends TestCase
     protected function tearDown(): void
     {
         chdir($this->originalWorkingDirectory);
-        FilesystemTree::remove($this->root);
+        $this->removeTemporaryDirectory($this->root);
     }
 
     /** Rejects a hardlink alias instead of truncating the source inode. */

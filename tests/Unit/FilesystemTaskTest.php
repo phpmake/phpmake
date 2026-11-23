@@ -9,6 +9,7 @@ use PhpMake\Task\Types\CopyTask;
 use PhpMake\Task\Types\DeleteTask;
 use PhpMake\Task\Types\ZipTask;
 use PhpMake\Tests\Support\DirectoryLinkTestHelper;
+use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
 use PhpMake\Utilities\Logger;
 use PHPUnit\Framework\TestCase;
 
@@ -16,6 +17,7 @@ use PHPUnit\Framework\TestCase;
 final class FilesystemTaskTest extends TestCase
 {
     use DirectoryLinkTestHelper;
+    use TemporaryDirectoryTestHelper;
 
     private Logger $logger;
 
@@ -31,21 +33,15 @@ final class FilesystemTaskTest extends TestCase
         $this->originalCwd = getcwd();
         // Keep the test workspace on the system volume. Windows directory
         // junctions require source and target to share a local NTFS volume.
-        $this->root = sys_get_temp_dir() . DIRECTORY_SEPARATOR . '.phpmake-fs-' . bin2hex(random_bytes(8));
-        self::assertTrue(mkdir($this->root));
+        $this->root = $this->createTemporaryDirectory('.phpmake-fs-');
         self::assertTrue(chdir($this->root));
-        // Use the exact canonical path returned by PHP on Windows. The
-        // temporary-directory path may use an 8.3 alias instead.
-        $workingDirectory = realpath(getcwd());
-        self::assertNotFalse($workingDirectory);
-        $this->root = $workingDirectory;
     }
 
     /** Cleans up test fixtures. */
     protected function tearDown(): void
     {
         chdir($this->originalCwd);
-        $this->removePath($this->root);
+        $this->removeTemporaryDirectory($this->root);
         parent::tearDown();
     }
 
@@ -458,37 +454,4 @@ final class FilesystemTaskTest extends TestCase
         self::assertSame('preserve', file_get_contents($source . DIRECTORY_SEPARATOR . 'original.txt'));
     }
 
-    /** Removes temporary files without following symbolic links. */
-    private function removePath(string $path): void
-    {
-        if (PHP_OS_FAMILY === 'Windows' && is_dir($path) && (is_link($path) || $this->isDirectoryJunction($path))) {
-            @rmdir($path);
-            return;
-        }
-
-        if (is_link($path) || $this->isDirectoryJunction($path) || is_file($path)) {
-            if ($this->isDirectoryJunction($path)) {
-                @rmdir($path);
-            } else {
-                @unlink($path);
-            }
-
-            return;
-        }
-
-        if (!is_dir($path)) {
-            return;
-        }
-
-        $items = scandir($path);
-        if ($items !== false) {
-            foreach ($items as $item) {
-                if ($item !== '.' && $item !== '..') {
-                    $this->removePath($path . DIRECTORY_SEPARATOR . $item);
-                }
-            }
-        }
-
-        @rmdir($path);
-    }
 }
