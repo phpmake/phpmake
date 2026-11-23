@@ -1,5 +1,6 @@
 PHPMake - Unreleased
 --------------------
+* Retain PHPUnit JUnit, Clover, and HTML coverage reports; publish validated statement coverage in CI summaries and run CI for documentation-only changes.
 * Reuse the platform process launchers for test subprocesses, ensuring Windows Job Object and POSIX session cleanup; validate commands, working directories, and deadlines before launch.
 * Add bounded subprocess execution and file-backed output capture to integration tests; terminate timed-out test processes and verify cleanup behavior.
 * Isolate path-safety, smoke, and task-execution fixtures with shared temporary workspaces; use explicit platform prerequisite skips and fix the FilesystemTree test import.
