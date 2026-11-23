@@ -27,40 +27,40 @@ final class ComposerBinTest extends TestCase
             self::assertTrue(mkdir($packageBinDirectory, 0777, true));
 
             $autoload = <<<'PHP'
-            <?php
-
-            namespace Composer\Autoload {
-            /** Tests class loader behavior. */
-                class ClassLoader {}
-            }
-
-            namespace {
-                spl_autoload_register(static function (string $class): void {
-                    $prefix = 'PhpMake\\';
-                    if (strncmp($class, $prefix, strlen($prefix)) !== 0) {
-                        return;
-                    }
-
-                    $sourceDirectory = __PROJECT_SOURCE__;
-                    $relativeClass = substr($class, strlen($prefix));
-                    $file = $sourceDirectory . DIRECTORY_SEPARATOR
-                        . str_replace('\\', DIRECTORY_SEPARATOR, $relativeClass) . '.php';
-
-                    if (is_file($file)) {
-                        require $file;
-                    }
-                });
-            }
-            PHP;
-        $autoload = str_replace('__PROJECT_SOURCE__', var_export($projectRoot . DIRECTORY_SEPARATOR . 'src', true), $autoload);
+                <?php
+    
+                namespace Composer\Autoload {
+                /** Tests class loader behavior. */
+                    class ClassLoader {}
+                }
+    
+                namespace {
+                    spl_autoload_register(static function (string $class): void {
+                        $prefix = 'PhpMake\\';
+                        if (strncmp($class, $prefix, strlen($prefix)) !== 0) {
+                            return;
+                        }
+    
+                        $sourceDirectory = __PROJECT_SOURCE__;
+                        $relativeClass = substr($class, strlen($prefix));
+                        $file = $sourceDirectory . DIRECTORY_SEPARATOR
+                            . str_replace('\\', DIRECTORY_SEPARATOR, $relativeClass) . '.php';
+    
+                        if (is_file($file)) {
+                            require $file;
+                        }
+                    });
+                }
+                PHP;
+            $autoload = str_replace('__PROJECT_SOURCE__', var_export($projectRoot . DIRECTORY_SEPARATOR . 'src', true), $autoload);
 
         $runner = <<<'PHP'
-            <?php
-
-            require __DIR__ . '/vendor/autoload.php';
-            $argv = [__FILE__, '--version'];
-            include __DIR__ . '/vendor/phpmake/phpmake/bin/phpmake.php';
-            PHP;
+                <?php
+    
+                require __DIR__ . '/vendor/autoload.php';
+                $argv = [__FILE__, '--version'];
+                include __DIR__ . '/vendor/phpmake/phpmake/bin/phpmake.php';
+                PHP;
 
             self::assertNotFalse(file_put_contents($autoloadDirectory . DIRECTORY_SEPARATOR . 'autoload.php', $autoload));
             self::assertTrue(copy($projectRoot . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'phpmake.php', $packageBinDirectory . DIRECTORY_SEPARATOR . 'phpmake.php'));
