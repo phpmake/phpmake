@@ -8,6 +8,9 @@
 
 ## Changes in this pass
 
+- Phase 23 adds PHPUnit debug events to the Windows PHP 8.0–8.5 test command (`--debug --testdox`). Phase 22's TestDox output shows each Windows run completed through `TaskExecutionTest::testExecTaskCapturesStderrOnSuccessfulExit`, but emitted no completion line for the next method, `testExecTaskRejectsExcessiveStderrOutput`. This strongly narrows the suspect path but does not prove where execution blocks. Debug events will show the test-start event and help distinguish a hang in the stderr overflow execution from a later suite/teardown issue.
+- Phase 22 CI run #623: all six Windows filesystem jobs failed; the six Linux PHP compatibility jobs, coverage, static analysis, and performance matrix passed. Ubuntu PHP 8.0 performance also passed on this run, so the earlier HTTP 429 was transient.
+
 - Phase 22 makes the Windows PHP 8.0–8.5 test matrix emit PHPUnit TestDox output (`composer test -- --testdox`). Phase 21 CI run #617 showed all six Windows jobs reaching the 300-second Composer process timeout, while Linux completed the same 266 tests in about 23 seconds. The default progress output did not identify the last test reached before the Windows stall; TestDox output is added to make the next run identify the blocking test without changing test behavior, platform coverage, or the timeout.
 - The same run confirmed PHP 8.0–8.5 Linux compatibility, coverage, static analysis, and most performance jobs passed. The Ubuntu PHP 8.0 performance job failed during Composer dependency download with HTTP 429 from codeload.github.com; this is recorded as an external transient download failure, not a PHPUnit regression.
 
