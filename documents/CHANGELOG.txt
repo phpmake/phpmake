@@ -1,67 +1,28 @@
 PHPMake - Unreleased
 --------------------
-* Standardize test methods on explicit Arrange, Act, and Assert sections; verify the test suite contains no mock objects or mocking-framework usage.
-* Add concise PHPDoc comments to previously undocumented classes and methods across the source and test suites; retain existing test behavior and PHP compatibility.
-* Consolidate release validation and publishing into the default workflow; remove the duplicate release workflow and reuse the shared build, coverage, Linux compatibility, and Windows test jobs.
-* Restrict runtime, tests, benchmarks, and process/filesystem adapters to Windows and Linux; reject unsupported operating-system families explicitly.
-* Add platform-support regression tests and synchronize the supported OS documentation and test guards.
-* Fix Windows stderr overflow detection by continuing to drain both process pipes without relying on transient feof() state; assert the overflow diagnostic in the regression test.
-* Add PHPUnit debug events to the Windows test matrix to pinpoint the stderr output-limit regression following the Phase 22 TestDox findings.
-* Emit PHPUnit TestDox output in the Windows PHP 8.0–8.5 test matrix to identify the test reached before the CI timeout.
-* Fix PHPUnit 9.6/13 data-provider compatibility in ExecTask validation tests and suppress captured output prefixes after subprocess output-limit violations.
-* Expand ExecTask coverage for invalid constructor configuration, successful stderr capture, and stderr output-limit enforcement.
-* Read subprocess output pipes in bounded polling chunks to avoid Windows anonymous-pipe stalls; require explicit stdout overflow diagnostics in the regression test.
-* Fix the coverage workflow YAML lint violation and make the Windows process-tree regression test tolerate PowerShell Job Object launcher startup latency.
-* Reuse the platform process launchers for test subprocesses, ensuring Windows Job Object and POSIX session cleanup; validate commands, working directories, and deadlines before launch.
-* Add bounded subprocess execution and file-backed output capture to integration tests; terminate timed-out test processes and verify cleanup behavior.
-* Isolate path-safety, smoke, and task-execution fixtures with shared temporary workspaces; use explicit platform prerequisite skips and fix the FilesystemTree test import.
-* Normalize Arrange / Act / Assert sections and behavior-focused test names across the remaining legacy test classes.
-* Configure PHPUnit to allow explicit platform-capability skips without failing the supported-platform matrix.
-* Extend shared temporary filesystem fixtures to ZIP and integration tests; fix Rector-required test formatting.
-* Consolidate temporary filesystem test workspace creation and recursive cleanup across filesystem test classes.
-* Refactor legacy PHPUnit tests for descriptive names and consistent Arrange / Act / Assert structure.
-* Add debug-only exception class, source location, and argument-free stack trace diagnostics for task failures.
-* Correct POSIX process-group termination to signal the launcher session rather than the child PID.
-* Handle POSIX SIGINT/SIGTERM as cooperative cancellation and clean up the active child process group.
-* Use `setsid` and `kill` as a POSIX process-tree fallback when the POSIX extension is unavailable.
-* Bound ZIP creation to 10,000 files, 20,000 filesystem entries, depth 256, 512 MiB per file, and 2 GiB total uncompressed input; preserve existing output when limits are exceeded.
-* Limit build configuration input to 2 MiB and require task parameter objects to match the JSON schema.
-* Support PHP 8.0+ and run PHP 8.0–8.5 compatibility tests on Linux and Windows; target PHP 8.0 in PHPStan and Rector.
-* Add a repeatable benchmark for file writes, ZIP throughput, process startup latency, concurrent workers, and peak memory.
-* Document the executable trust boundary, deployment isolation assumptions, process cleanup limitations, and non-applicability of Forgejo/DNS/rate-limit controls.
-* Revalidate filesystem paths immediately before operations and during recursive traversal to reject symlink/junction swaps.
-* Make single-file copies transactional, preserve existing destinations on failure, and reject source/destination hardlink aliases.
-* Create ZIP archives in a staging file and publish only after successful finalization, preserving existing archives on failure.
-* Fix selection of numeric target names, including the target "0".
-* Use a monotonic clock for process timeouts and contain Windows process trees with kill-on-close Job Objects.
-* Prevent deleting the project root and reject dangling symlinks during --init.
-* Make directory copies transactional and bound external process output capture.
-* Align JSON schema and runtime validation, including raw JSON array/object shapes.
-* Improve CLI validation, dependency resolution, path comparison, and error reporting.
-* Terminate process descendants on timeout/output overflow using Windows Job Objects or a POSIX session.
-* Monitor process output through temporary files so Windows timeouts do not depend on non-blocking pipe reads.
-* Exercise case-sensitive Linux filesystem behavior and reject Windows UNC and drive-relative paths.
-* Test concurrent and partial logger writes, schema/runtime parity, and process-tree cleanup.
-* Verify a clean Composer consumer install, generated binary proxy, and sample build execution.
-* Fix Composer-installed CLI execution by reusing the consuming project's
-  Composer autoloader instead of requiring a package-local vendor/autoload.php.
-* Add an integration regression test for the Composer-installed binary.
-* Add regression/unit tests without mocks for validation, filesystem safety, process execution, and logging.
+* Harden filesystem operations with project-boundary checks, symlink/junction revalidation, transactional copy/archive publication, and bounded ZIP inputs.
+* Harden process execution with shell-free argument vectors, bounded stdout/stderr capture, timeouts, cooperative cancellation, and platform-specific process-tree cleanup.
+* Validate JSON object/array shapes and task parameters against centralized task metadata and the published JSON Schema.
+* Improve CLI parsing/output, exception diagnostics, logger concurrency, and bounded log rotation.
+* Expand PHPUnit coverage for filesystem failure paths, process behavior, configuration validation, logging, and Composer-installed CLI usage.
+* Standardize the audited test suite on Arrange / Act / Assert; retain PHPUnit without mocks.
+* Add PHP 8.0–8.5 Linux compatibility and Windows filesystem/process CI coverage; consolidate release validation and publishing in the default workflow.
+* Synchronize user, security, compatibility, contributor, and release documentation with the current PHP ^8.0, Windows/Linux, and task behavior contract.
 
 PHPMake 2.0.2 - 2026-11-07
 -------------------------
 * Fix Composer autoload path discovery for installed packages.
 * Fix --init: run before loading build.json; resolve sample from package path.
-* Fix create_directory: treat already-existing directory as success.
-* Fix JSON schema copy task parameter name (source, not src).
-* Add path safety checks for filesystem tasks (project CWD boundary).
-* Harden Logger rotation with file locking and max-file cleanup.
-* Sync README/FAQ task parameters and CLI flags with runtime behavior.
+* Fix create_directory: treat an already-existing directory as success.
+* Correct the JSON Schema copy parameter name to source.
+* Add project-working-directory path safety checks for filesystem tasks.
+* Harden logger rotation with file locking and bounded backup retention.
+* Synchronize README and FAQ task parameters and CLI options with runtime behavior.
 
 PHPMake 2.0.1 - 2025-05-18
 -------------------------
 * Fix compression bug.
-* Cleanup codes.
+* Clean up code.
 * Update dependencies.
 
 PHPMake 2.0.0 - 2025-05-18
