@@ -14,8 +14,13 @@ final class ConfigTest extends TestCase
     public function testToolVersionIsSemanticVersion(): void
     {
         // Arrange
+        $version = Config::TOOL_VERSION;
+
+        // Act
+        $isSemanticVersion = is_string($version) && preg_match('/^\d+\.\d+\.\d+$/', $version) === 1;
+
         // Assert
-        self::assertIsString(Config::TOOL_VERSION);
-        self::assertMatchesRegularExpression('/^\d+\.\d+\.\d+$/', Config::TOOL_VERSION);
+        self::assertIsString($version);
+        self::assertTrue($isSemanticVersion);
     }
 }

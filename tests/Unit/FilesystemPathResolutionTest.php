@@ -62,7 +62,7 @@ final class FilesystemPathResolutionTest extends TestCase
         $insideFile = $this->root . DIRECTORY_SEPARATOR . 'source.txt';
         file_put_contents($insideFile, 'source');
 
-        // Act / Assert
+        // Act
         $this->assertRejected(fn(): \PhpMake\Task\Types\DeleteTask => new DeleteTask(['path' => $escape], $this->logger));
         $this->assertRejected(fn(): \PhpMake\Task\Types\CreateDirectoryTask => new CreateDirectoryTask(['name' => $escape], $this->logger));
         $this->assertRejected(fn(): \PhpMake\Task\Types\CopyTask => new CopyTask([
@@ -82,7 +82,7 @@ final class FilesystemPathResolutionTest extends TestCase
             'output' => 'link' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'archive.zip',
         ], $this->logger));
 
-        // Verify
+        // Assert
         self::assertSame('preserve', file_get_contents($this->outside . DIRECTORY_SEPARATOR . 'victim.txt'));
         self::assertFileDoesNotExist($this->outside . DIRECTORY_SEPARATOR . 'written.txt');
         self::assertFileDoesNotExist($this->outside . DIRECTORY_SEPARATOR . 'archive.zip');
@@ -102,12 +102,16 @@ final class FilesystemPathResolutionTest extends TestCase
             . $alternateBaseName . DIRECTORY_SEPARATOR . basename($this->root);
         $candidate = $alternateRoot . DIRECTORY_SEPARATOR . 'case-check';
 
-        // Act / Assert
+        // Act
         if (realpath($alternateRoot) !== false) {
             $task = new CreateDirectoryTask(['name' => $candidate], $this->logger);
-            self::assertTrue($task->execute(false, true));
+            $created = $task->execute(false, true);
+
+            // Assert
+            self::assertTrue($created);
             self::assertDirectoryExists($this->root . DIRECTORY_SEPARATOR . 'case-check');
         } else {
+            // Assert
             $this->assertRejected(fn(): \PhpMake\Task\Types\CreateDirectoryTask => new CreateDirectoryTask(['name' => $candidate], $this->logger));
         }
     }

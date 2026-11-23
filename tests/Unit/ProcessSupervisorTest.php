@@ -15,8 +15,7 @@ final class ProcessSupervisorTest extends TestCase
     {
         // Arrange
         if (PHP_OS_FAMILY === 'Windows') {
-            self::assertTrue(true, 'POSIX process-table discovery is not available on Windows.');
-            return;
+            self::markTestSkipped('POSIX process-table discovery is not available on Windows.');
         }
 
         $pidFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR
@@ -140,8 +139,7 @@ final class ProcessSupervisorTest extends TestCase
     {
         // Arrange
         if (PHP_OS_FAMILY === 'Windows' || !function_exists('posix_kill')) {
-            self::assertTrue(true, 'POSIX descendant signaling is not available on this platform.');
-            return;
+            self::markTestSkipped('POSIX descendant signaling is not available on this platform.');
         }
 
         $marker = sys_get_temp_dir() . DIRECTORY_SEPARATOR

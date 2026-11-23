@@ -6,9 +6,10 @@ namespace PhpMake\Tests\Unit;
 
 use PhpMake\Filesystem\AtomicDirectoryPublisher;
 use PhpMake\Filesystem\AtomicFilePublisher;
+use PhpMake\Filesystem\FilesystemTree;
 use PhpMake\Task\Types\DeleteTask;
-use PhpMake\Utilities\Logger;
 use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
+use PhpMake\Utilities\Logger;
 use PHPUnit\Framework\TestCase;
 
 /** Exercises filesystem failure paths using real POSIX directory permissions. */
@@ -40,8 +41,7 @@ final class FilesystemFailurePathsTest extends TestCase
     {
         // Arrange
         if (PHP_OS_FAMILY === 'Windows') {
-            self::assertTrue(true, 'POSIX directory permission semantics are not available on Windows.');
-            return;
+            self::markTestSkipped('POSIX directory permission semantics are not available on Windows.');
         }
 
         $staged = $this->base . DIRECTORY_SEPARATOR . 'staged.tmp';
@@ -73,8 +73,7 @@ final class FilesystemFailurePathsTest extends TestCase
     {
         // Arrange
         if (PHP_OS_FAMILY === 'Windows') {
-            self::assertTrue(true, 'POSIX directory permission semantics are not available on Windows.');
-            return;
+            self::markTestSkipped('POSIX directory permission semantics are not available on Windows.');
         }
 
         $staging = $this->base . DIRECTORY_SEPARATOR . 'staging';
@@ -107,8 +106,7 @@ final class FilesystemFailurePathsTest extends TestCase
     {
         // Arrange
         if (PHP_OS_FAMILY === 'Windows') {
-            self::assertTrue(true, 'POSIX directory permission semantics are not available on Windows.');
-            return;
+            self::markTestSkipped('POSIX directory permission semantics are not available on Windows.');
         }
 
         $source = $this->base . DIRECTORY_SEPARATOR . 'source';
@@ -137,8 +135,7 @@ final class FilesystemFailurePathsTest extends TestCase
     {
         // Arrange
         if (PHP_OS_FAMILY === 'Windows') {
-            self::assertTrue(true, 'POSIX directory permission semantics are not available on Windows.');
-            return;
+            self::markTestSkipped('POSIX directory permission semantics are not available on Windows.');
         }
 
         self::assertTrue(chdir($this->base));

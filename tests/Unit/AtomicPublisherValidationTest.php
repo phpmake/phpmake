@@ -38,8 +38,9 @@ final class AtomicPublisherValidationTest extends TestCase
         $staged = $this->base . DIRECTORY_SEPARATOR . 'missing.tmp';
         $destination = $this->base . DIRECTORY_SEPARATOR . 'result.txt';
 
-        // Act / Assert
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
+        // Act
         AtomicFilePublisher::publish($staged, $destination);
     }
 
@@ -92,8 +93,10 @@ final class AtomicPublisherValidationTest extends TestCase
         $staging = $this->base . DIRECTORY_SEPARATOR . 'missing';
         $destination = $this->base . DIRECTORY_SEPARATOR . 'destination';
 
-        // Act / Assert
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
+
+        // Act
         AtomicDirectoryPublisher::publish($staging, $destination);
     }
 
@@ -132,8 +135,7 @@ final class AtomicPublisherValidationTest extends TestCase
     {
         // Arrange
         if (PHP_OS_FAMILY === 'Windows') {
-            self::assertTrue(true, 'File symbolic-link creation is not assumed on Windows.');
-            return;
+            self::markTestSkipped('File symbolic-link creation is not assumed on Windows.');
         }
 
         $target = $this->base . DIRECTORY_SEPARATOR . 'target.txt';
@@ -141,8 +143,7 @@ final class AtomicPublisherValidationTest extends TestCase
         $destination = $this->base . DIRECTORY_SEPARATOR . 'destination.txt';
         self::assertSame(4, file_put_contents($target, 'keep'));
         if (!@symlink($target, $staged)) {
-            self::assertTrue(true, 'File symbolic-link creation is unavailable.');
-            return;
+            self::markTestSkipped('File symbolic-link creation is unavailable.');
         }
 
         try {
@@ -164,8 +165,7 @@ final class AtomicPublisherValidationTest extends TestCase
     {
         // Arrange
         if (PHP_OS_FAMILY === 'Windows') {
-            self::assertTrue(true, 'File symbolic-link creation is not assumed on Windows.');
-            return;
+            self::markTestSkipped('File symbolic-link creation is not assumed on Windows.');
         }
 
         $staged = $this->base . DIRECTORY_SEPARATOR . 'staged.txt';
@@ -174,16 +174,16 @@ final class AtomicPublisherValidationTest extends TestCase
         self::assertSame(3, file_put_contents($staged, 'new'));
         self::assertSame(4, file_put_contents($target, 'keep'));
         if (!@symlink($target, $destination)) {
-            self::assertTrue(true, 'File symbolic-link creation is unavailable.');
-            return;
+            self::markTestSkipped('File symbolic-link creation is unavailable.');
         }
 
         try {
-            // Assert
+            // Act
             try {
                 AtomicFilePublisher::publish($staged, $destination);
                 self::fail('A destination file link must not be replaced.');
             } catch (\InvalidArgumentException $invalidArgumentException) {
+                // Assert
                 self::assertStringContainsString('Destination must not be a symbolic link', $invalidArgumentException->getMessage());
             }
 
@@ -206,9 +206,11 @@ final class AtomicPublisherValidationTest extends TestCase
         self::assertSame(3, file_put_contents($staged, 'new'));
         self::assertTrue(mkdir($destination));
 
-        // Act / Assert
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Existing destination must be a regular file.');
+
+        // Act
         AtomicFilePublisher::publish($staged, $destination);
     }
 
@@ -225,7 +227,7 @@ final class AtomicPublisherValidationTest extends TestCase
         $this->createDirectoryLink($target, $destination);
 
         try {
-            // Assert
+            // Act
             try {
                 AtomicDirectoryPublisher::publish($staging, $destination);
                 self::fail('A destination directory link must not be replaced.');
@@ -251,9 +253,11 @@ final class AtomicPublisherValidationTest extends TestCase
         self::assertTrue(mkdir($staging));
         self::assertSame(7, file_put_contents($destination, 'blocker'));
 
-        // Act / Assert
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Existing destination must be a directory.');
+
+        // Act
         AtomicDirectoryPublisher::publish($staging, $destination);
     }
 
@@ -262,8 +266,7 @@ final class AtomicPublisherValidationTest extends TestCase
     {
         // Arrange
         if (PHP_OS_FAMILY === 'Windows') {
-            self::assertTrue(true, 'POSIX directory permission semantics are not available on Windows.');
-            return;
+            self::markTestSkipped('POSIX directory permission semantics are not available on Windows.');
         }
 
         $staged = $this->base . DIRECTORY_SEPARATOR . 'staged.tmp';
@@ -272,11 +275,12 @@ final class AtomicPublisherValidationTest extends TestCase
         self::assertTrue(chmod($this->base, 0500));
 
         try {
-            // Assert
+            // Act
             try {
                 AtomicFilePublisher::publish($staged, $destination);
                 self::fail('Publication must fail when the parent directory is not writable.');
             } catch (\RuntimeException $runtimeException) {
+                // Assert
                 self::assertStringContainsString('Unable to publish file', $runtimeException->getMessage());
             }
 

@@ -15,20 +15,19 @@ final class InitSymlinkTest extends TestCase
     /** A dangling build.json symlink is rejected without creating its target. */
     public function testInitRejectsDanglingBuildConfigSymlink(): void
     {
-        // Arrange
         $root = dirname(__DIR__, 2);
         $workspace = $this->createTemporaryDirectory('phpmake-init-');
         $project = $workspace . DIRECTORY_SEPARATOR . 'project';
         $target = $workspace . DIRECTORY_SEPARATOR . 'target';
-        self::assertTrue(mkdir($project));
-        $link = $project . DIRECTORY_SEPARATOR . 'build.json';
-        if (!@symlink($target, $link)) {
-            $this->removeTemporaryDirectory($workspace);
-            self::assertFalse(is_link($link));
-            return;
-        }
-
         try {
+            // Arrange
+            self::assertTrue(mkdir($project));
+            $link = $project . DIRECTORY_SEPARATOR . 'build.json';
+            if (!@symlink($target, $link)) {
+                self::markTestSkipped('Symbolic-link creation is unavailable in this environment.');
+            }
+
+            // Act
             $process = proc_open(
                 [PHP_BINARY, $root . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'phpmake.php', '--init'],
                 [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
@@ -47,7 +46,7 @@ final class InitSymlinkTest extends TestCase
             self::assertTrue(is_link($link));
             self::assertFileDoesNotExist($target);
         } finally {
-            if (is_link($link)) {
+            if (isset($link) && is_link($link)) {
                 unlink($link);
             }
 

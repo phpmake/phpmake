@@ -12,8 +12,15 @@ namespace PhpMake\Tests\System {
         /** Checks that the runtime meets the minimum supported PHP version. */
         public function testProjectRequiredPhpVersion(): void
         {
+            // Arrange
+            $minimumVersion = '8.0.0';
+
+            // Act
+            $supported = version_compare(PHP_VERSION, $minimumVersion, '>=');
+
+            // Assert
             self::assertTrue(
-                version_compare(PHP_VERSION, '8.0.0', '>='),
+                $supported,
                 sprintf('PHP 8.0.0 or newer is required; %s is running.', PHP_VERSION)
             );
         }
@@ -21,16 +28,26 @@ namespace PhpMake\Tests\System {
         /** Checks that required PHP extensions are loaded. */
         public function testProjectRequiredPhpExtensions(): void
         {
-            foreach (['ctype', 'json', 'zip'] as $extension) {
-                self::assertTrue(extension_loaded($extension), sprintf('Required extension "%s" is not loaded.', $extension));
-            }
+            // Arrange
+            $requiredExtensions = ['ctype', 'json', 'zip'];
+
+            // Act
+            $loadedExtensions = array_filter($requiredExtensions, 'extension_loaded');
+
+            // Assert
+            self::assertSame(
+                [],
+                array_values(array_diff($requiredExtensions, $loadedExtensions)),
+                'One or more required PHP extensions are not loaded.'
+            );
         }
 
         /** Checks tracked and generated project directories using absolute paths. */
         public function testProjectDirectoriesExist(): void
         {
+            // Arrange
             $projectRoot = dirname(__DIR__, 2);
-            foreach ([
+            $directories = [
                 '.github',
                 'bin',
                 'documents',
@@ -39,17 +56,25 @@ namespace PhpMake\Tests\System {
                 'src',
                 'tests',
                 'vendor',
-            ] as $directory) {
-                self::assertDirectoryExists(
-                    $projectRoot . DIRECTORY_SEPARATOR . $directory,
-                    sprintf('Required project directory "%s" is missing.', $directory)
-                );
-            }
+            ];
+
+            // Act
+            $missingDirectories = array_filter($directories, static fn(string $directory): bool => !is_dir(
+                $projectRoot . DIRECTORY_SEPARATOR . $directory
+            ));
+
+            // Assert
+            self::assertSame(
+                [],
+                array_values($missingDirectories),
+                sprintf('Required project directories are missing: %s', implode(', ', $missingDirectories))
+            );
         }
 
         /** Checks repository files at their actual tracked locations. */
         public function testProjectFilesExist(): void
         {
+            // Arrange
             $projectRoot = dirname(__DIR__, 2);
             $files = [
                 '.editorconfig',
@@ -79,12 +104,17 @@ namespace PhpMake\Tests\System {
                 'VERSION.txt',
             ];
 
-            foreach ($files as $file) {
-                self::assertFileExists(
-                    $projectRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $file),
-                    sprintf('Required project file "%s" is missing.', $file)
-                );
-            }
+            // Act
+            $missingFiles = array_filter($files, static fn(string $file): bool => !is_file(
+                $projectRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $file)
+            ));
+
+            // Assert
+            self::assertSame(
+                [],
+                array_values($missingFiles),
+                sprintf('Required project files are missing: %s', implode(', ', $missingFiles))
+            );
         }
     }
 }

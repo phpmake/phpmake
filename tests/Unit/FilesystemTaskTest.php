@@ -113,7 +113,10 @@ final class FilesystemTaskTest extends TestCase
 
         // Assert
         // Act
-        self::assertFalse($task->execute(false, true));
+        $archived = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($archived);
         self::assertSame('not a directory', file_get_contents($blocker));
     }
 
@@ -133,7 +136,10 @@ final class FilesystemTaskTest extends TestCase
         ], $this->logger);
 
         // Act
-        self::assertFalse($task->execute(false, true));
+        $copied = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($copied);
         self::assertDirectoryDoesNotExist($this->root . DIRECTORY_SEPARATOR . 'copy');
     }
 
@@ -267,7 +273,10 @@ final class FilesystemTaskTest extends TestCase
         ], $this->logger);
 
         // Act
-        self::assertFalse($task->execute(false, true));
+        $archived = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($archived);
     }
 
     /** Archives a single file and verifies the stored entry and payload. */
@@ -281,10 +290,15 @@ final class FilesystemTaskTest extends TestCase
         $task = new ZipTask(['source' => $source, 'output' => $archive], $this->logger);
 
         // Act
-        self::assertSame('archive', $task->getType());
-        self::assertTrue($task->execute(false, true));
+        $type = $task->getType();
+        $archived = $task->execute(false, true);
         $zip = new \ZipArchive();
-        self::assertTrue($zip->open($archive));
+        $opened = $zip->open($archive);
+
+        // Assert
+        self::assertSame('archive', $type);
+        self::assertTrue($archived);
+        self::assertTrue($opened);
         try {
             self::assertSame(1, $zip->numFiles);
             self::assertSame('single.txt', $zip->getNameIndex(0));
@@ -306,9 +320,13 @@ final class FilesystemTaskTest extends TestCase
         $task = new ZipTask(['source' => $source, 'output' => $archive], $this->logger);
 
         // Act
-        self::assertTrue($task->execute(false, true));
+        $archived = $task->execute(false, true);
         $zip = new \ZipArchive();
-        self::assertTrue($zip->open($archive));
+        $opened = $zip->open($archive);
+
+        // Assert
+        self::assertTrue($archived);
+        self::assertTrue($opened);
         try {
             self::assertSame('nested/item.txt', $zip->getNameIndex(0));
             self::assertSame('nested payload', $zip->getFromName('nested/item.txt'));
@@ -328,7 +346,10 @@ final class FilesystemTaskTest extends TestCase
         ], $this->logger);
 
         // Act
-        self::assertFalse($task->execute(false, true));
+        $archived = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($archived);
         self::assertFileDoesNotExist($archive);
     }
 
@@ -346,7 +367,10 @@ final class FilesystemTaskTest extends TestCase
         ], $this->logger);
 
         // Act
-        self::assertFalse($task->execute(false, true));
+        $archived = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($archived);
         self::assertSame('not a directory', file_get_contents($blocker));
     }
 
@@ -366,7 +390,10 @@ final class FilesystemTaskTest extends TestCase
         $task = new ZipTask(['source' => $source, 'output' => $archive], $this->logger);
 
         // Act
-        self::assertFalse($task->execute(false, true));
+        $archived = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($archived);
         self::assertFileDoesNotExist($archive);
     }
 

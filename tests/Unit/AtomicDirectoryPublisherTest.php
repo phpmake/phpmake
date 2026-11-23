@@ -82,8 +82,10 @@ final class AtomicDirectoryPublisherTest extends TestCase
         self::assertTrue(mkdir($staging));
         $destination = $destinationParent . DIRECTORY_SEPARATOR . 'destination';
 
-        // Act / Assert
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
+
+        // Act
         AtomicDirectoryPublisher::publish($staging, $destination);
     }
 
@@ -96,8 +98,10 @@ final class AtomicDirectoryPublisherTest extends TestCase
         self::assertTrue(mkdir($staging));
         self::assertSame(4, file_put_contents($destination, 'keep'));
 
-        // Act / Assert
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
+
+        // Act
         AtomicDirectoryPublisher::publish($staging, $destination);
     }
 
@@ -113,8 +117,10 @@ final class AtomicDirectoryPublisherTest extends TestCase
         self::assertSame(4, file_put_contents($target . DIRECTORY_SEPARATOR . 'keep.txt', 'keep'));
         $this->createDirectoryLink($target, $destination);
 
-        // Act / Assert
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
+
+        // Act
         AtomicDirectoryPublisher::publish($staging, $destination);
     }
 
@@ -125,8 +131,10 @@ final class AtomicDirectoryPublisherTest extends TestCase
         $stagingAndDestination = $this->base . DIRECTORY_SEPARATOR . 'same';
         self::assertTrue(mkdir($stagingAndDestination));
 
-        // Act / Assert
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
+
+        // Act
         AtomicDirectoryPublisher::publish($stagingAndDestination, $stagingAndDestination);
     }
 

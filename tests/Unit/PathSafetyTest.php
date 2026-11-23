@@ -6,25 +6,42 @@ use PhpMake\Task\Types\CopyTask;
 use PhpMake\Task\Types\CreateDirectoryTask;
 use PhpMake\Task\Types\DeleteTask;
 use PhpMake\Task\Types\ZipTask;
-use PhpMake\Utilities\Logger;
 use PhpMake\Tests\Support\DirectoryLinkTestHelper;
+use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
+use PhpMake\Utilities\Logger;
 use PHPUnit\Framework\TestCase;
 
 /** Tests filesystem boundary enforcement and symbolic-link safety. */
 final class PathSafetyTest extends TestCase
 {
     use DirectoryLinkTestHelper;
+    use TemporaryDirectoryTestHelper;
 
     private Logger $logger;
+
+    private string $workspace;
+
+    private string $originalWorkingDirectory;
 
     /** Initializes a silent logger for filesystem safety tests. */
     protected function setUp(): void
     {
         parent::setUp();
+        $this->originalWorkingDirectory = (string) getcwd();
+        $this->workspace = $this->createTemporaryDirectory('phpmake-path-safety-');
+        self::assertTrue(chdir($this->workspace));
         $this->logger = new Logger(false, true, true);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    /** Restores the original working directory and removes all remaining fixtures. */
+    protected function tearDown(): void
+    {
+        chdir($this->originalWorkingDirectory);
+        $this->removeTemporaryDirectory($this->workspace);
+        parent::tearDown();
+    }
+
+    /** Rejects a delete path outside the active project root. */
     public function testDeleteRejectsPathOutsideProject(): void
     {
         // Arrange
@@ -36,7 +53,7 @@ final class PathSafetyTest extends TestCase
         new DeleteTask(['path' => sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'outside.txt'], $this->logger);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    /** Rejects a copy source outside the active project root. */
     public function testCopyRejectsSourceOutsideProject(): void
     {
         // Arrange
@@ -51,7 +68,7 @@ final class PathSafetyTest extends TestCase
         ], $this->logger);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    /** Rejects directory creation that traverses above the project root. */
     public function testCreateDirectoryRejectsParentTraversal(): void
     {
         // Arrange
@@ -63,7 +80,7 @@ final class PathSafetyTest extends TestCase
         new CreateDirectoryTask(['name' => '..' . DIRECTORY_SEPARATOR . 'outside-dir'], $this->logger);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    /** Rejects an archive output path outside the active project root. */
     public function testArchiveRejectsOutputOutsideProject(): void
     {
         // Arrange
@@ -78,21 +95,25 @@ final class PathSafetyTest extends TestCase
         ], $this->logger);
     }
 
-    #[\PHPUnit\Framework\Attributes\Test]
+    /** Treats an existing destination directory as a successful create operation. */
     public function testCreateDirectoryIsIdempotent(): void
     {
         // Arrange
         $dir = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-test-idempotent-' . uniqid('', true);
 
         $task = new CreateDirectoryTask(['name' => $dir], $this->logger);
+
         // Act
+        $created = $task->execute(false, true);
+
         // Assert
-        $this->assertTrue($task->execute(false, true));
-        $this->assertTrue(is_dir($dir));
+        $this->assertTrue($created);
+        $this->assertDirectoryExists($dir);
 
         // Second run must succeed when directory already exists.
         $task2 = new CreateDirectoryTask(['name' => $dir], $this->logger);
-        $this->assertTrue($task2->execute(false, true));
+        $secondExecution = $task2->execute(false, true);
+        $this->assertTrue($secondExecution);
 
         rmdir($dir);
     }
@@ -102,8 +123,8 @@ final class PathSafetyTest extends TestCase
     {
         // Arrange
         $originalCwd = getcwd();
-        $project = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-project-' . uniqid('', true);
-        $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-outside-' . uniqid('', true);
+        $project = $this->workspace . DIRECTORY_SEPARATOR . 'phpmake-project-' . uniqid('', true);
+        $outside = $this->workspace . DIRECTORY_SEPARATOR . 'phpmake-outside-' . uniqid('', true);
         mkdir($project);
         mkdir($outside);
         $project = realpath($project);
@@ -119,6 +140,7 @@ final class PathSafetyTest extends TestCase
                 self::assertTrue($this->isDirectoryJunction($link));
             }
 
+            // Assert
             $this->expectException(\InvalidArgumentException::class);
             $this->expectExceptionMessage('Safety Violation');
             // Act
@@ -139,8 +161,8 @@ final class PathSafetyTest extends TestCase
     {
         // Arrange
         $originalCwd = getcwd();
-        $project = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-copy-project-' . uniqid('', true);
-        $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-copy-outside-' . uniqid('', true);
+        $project = $this->workspace . DIRECTORY_SEPARATOR . 'phpmake-copy-project-' . uniqid('', true);
+        $outside = $this->workspace . DIRECTORY_SEPARATOR . 'phpmake-copy-outside-' . uniqid('', true);
         mkdir($project);
         mkdir($outside);
         $project = realpath($project);
@@ -158,7 +180,10 @@ final class PathSafetyTest extends TestCase
             $this->createDirectoryLink($outside, $source . DIRECTORY_SEPARATOR . 'linked');
             $task = new CopyTask(['source' => $source, 'dest' => $dest], $this->logger);
             // Act
-            $this->assertFalse($task->execute(false, true));
+            $copied = $task->execute(false, true);
+
+            // Assert
+            $this->assertFalse($copied);
             $this->assertDirectoryDoesNotExist($dest);
             $this->assertFileDoesNotExist($dest . DIRECTORY_SEPARATOR . 'linked' . DIRECTORY_SEPARATOR . 'secret.txt');
         } finally {
@@ -187,8 +212,8 @@ final class PathSafetyTest extends TestCase
     {
         // Arrange
         $originalCwd = getcwd();
-        $project = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-delete-project-' . uniqid('', true);
-        $target = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-delete-target-' . uniqid('', true);
+        $project = $this->workspace . DIRECTORY_SEPARATOR . 'phpmake-delete-project-' . uniqid('', true);
+        $target = $this->workspace . DIRECTORY_SEPARATOR . 'phpmake-delete-target-' . uniqid('', true);
         mkdir($project);
         mkdir($target);
         $project = realpath($project);
@@ -203,7 +228,10 @@ final class PathSafetyTest extends TestCase
             $this->createDirectoryLink($target, $link);
             $task = new DeleteTask(['path' => $link], $this->logger);
             // Act
-            $this->assertTrue($task->execute(false, true));
+            $deleted = $task->execute(false, true);
+
+            // Assert
+            $this->assertTrue($deleted);
             $this->assertDirectoryDoesNotExist($link);
             $this->assertFileExists($target . DIRECTORY_SEPARATOR . 'keep.txt');
             $this->assertSame('keep me', file_get_contents($target . DIRECTORY_SEPARATOR . 'keep.txt'));
@@ -222,7 +250,7 @@ final class PathSafetyTest extends TestCase
         }
     }
 
-    /** Refuses to delete the project root, including normalized aliases. */
+    /** Rejects deletion of the active project root and its normalized aliases. */
     public function testDeleteRejectsProjectRoot(): void
     {
         // Arrange
@@ -243,8 +271,8 @@ final class PathSafetyTest extends TestCase
     {
         // Arrange
         $originalCwd = getcwd();
-        $project = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-copy-rollback-' . bin2hex(random_bytes(6));
-        $outside = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-copy-target-' . bin2hex(random_bytes(6));
+        $project = $this->workspace . DIRECTORY_SEPARATOR . 'phpmake-copy-rollback-' . bin2hex(random_bytes(6));
+        $outside = $this->workspace . DIRECTORY_SEPARATOR . 'phpmake-copy-target-' . bin2hex(random_bytes(6));
         mkdir($project);
         mkdir($outside);
         $project = realpath($project);
@@ -292,12 +320,12 @@ final class PathSafetyTest extends TestCase
     }
 
 
-    /** Rejects UNC paths as external paths on Windows. */
+    /** Rejects UNC paths as external Windows paths. */
     public function testRejectsUncPathOnWindows(): void
     {
+        // Arrange
         if (PHP_OS_FAMILY !== 'Windows') {
-            self::assertTrue(true, 'UNC path handling is Windows-specific.');
-            return;
+            self::markTestSkipped('UNC path handling is Windows-specific.');
         }
 
         // Assert
@@ -313,7 +341,7 @@ final class PathSafetyTest extends TestCase
     {
         // Arrange
         $originalCwd = getcwd();
-        $base = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-case-' . bin2hex(random_bytes(6));
+        $base = $this->workspace . DIRECTORY_SEPARATOR . 'phpmake-case-' . bin2hex(random_bytes(6));
         self::assertTrue(mkdir($base));
         $project = $base . DIRECTORY_SEPARATOR . 'CaseRoot';
         $sibling = $base . DIRECTORY_SEPARATOR . 'caseroot';
@@ -323,8 +351,7 @@ final class PathSafetyTest extends TestCase
         if (!@mkdir($sibling)) {
             rmdir($project);
             rmdir($base);
-            self::assertTrue(true, 'Case-only siblings cannot exist on this filesystem.');
-            return;
+            self::markTestSkipped('Case-only siblings cannot exist on this filesystem.');
         }
 
         $victim = $sibling . DIRECTORY_SEPARATOR . 'victim.txt';
@@ -355,9 +382,9 @@ final class PathSafetyTest extends TestCase
     /** Rejects extended-length UNC paths as external Windows paths. */
     public function testRejectsExtendedUncPathOnWindows(): void
     {
+        // Arrange
         if (PHP_OS_FAMILY !== 'Windows') {
-            self::assertTrue(true, 'Extended UNC path handling is Windows-specific.');
-            return;
+            self::markTestSkipped('Extended UNC path handling is Windows-specific.');
         }
 
         // Assert
@@ -368,12 +395,12 @@ final class PathSafetyTest extends TestCase
         new DeleteTask(['path' => '\\\\?\\UNC\\server\\share\\victim.txt'], $this->logger);
     }
 
-    /** Rejects Windows drive-relative paths because their base depends on per-drive state. */
+    /** Rejects Windows drive-relative paths with ambiguous per-drive bases. */
     public function testRejectsDriveRelativePathOnWindows(): void
     {
+        // Arrange
         if (PHP_OS_FAMILY !== 'Windows') {
-            self::assertTrue(true, 'Drive-relative path handling is Windows-specific.');
-            return;
+            self::markTestSkipped('Drive-relative path handling is Windows-specific.');
         }
 
         // Assert
@@ -387,12 +414,12 @@ final class PathSafetyTest extends TestCase
 
 
 
-    /** Deletes a hardlink name without deleting or truncating its shared inode. */
+    /** Deletes a hardlink name without modifying its shared original file. */
     public function testDeleteHardlinkPreservesOriginalFile(): void
     {
         // Arrange
         $originalCwd = getcwd();
-        $project = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-delete-hardlink-' . bin2hex(random_bytes(6));
+        $project = $this->workspace . DIRECTORY_SEPARATOR . 'phpmake-delete-hardlink-' . bin2hex(random_bytes(6));
         self::assertTrue(mkdir($project));
         $source = $project . DIRECTORY_SEPARATOR . 'source.txt';
         $alias = $project . DIRECTORY_SEPARATOR . 'alias.txt';
@@ -430,12 +457,11 @@ final class PathSafetyTest extends TestCase
         }
     }
 
-    /** Rejects extended-length drive paths outside the project on Windows. */
+    /** Rejects extended-length drive paths outside the project root. */
     public function testRejectsExtendedLengthDrivePathOnWindows(): void
     {
         if (PHP_OS_FAMILY !== 'Windows') {
-            self::assertTrue(true, 'Extended-length drive paths are Windows-specific.');
-            return;
+            self::markTestSkipped('Extended-length drive paths are Windows-specific.');
         }
 
         // Arrange
@@ -452,7 +478,7 @@ final class PathSafetyTest extends TestCase
 
 
 
-    /** Rejects a dangling directory junction used as a path ancestor. */
+    /** Rejects a dangling directory link used as a path ancestor. */
     public function testRejectsDanglingDirectoryLinkAncestor(): void
     {
         // Arrange

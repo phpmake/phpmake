@@ -154,6 +154,8 @@ final class BaseTaskTest extends TestCase
     {
         // Arrange
         $root = getcwd();
+
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('project root');
 
@@ -165,11 +167,14 @@ final class BaseTaskTest extends TestCase
     public function testRejectsInvalidPathStrings(): void
     {
         // Arrange
+        $path = "invalid\0path";
+
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid or protected path');
 
         // Act
-        $this->task->assertPathIsSafe("invalid\0path", 'test path');
+        $this->task->assertPathIsSafe($path, 'test path');
     }
 
     /** Resolves parent components in filesystem order after resolving existing directories. */

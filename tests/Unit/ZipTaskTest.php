@@ -54,9 +54,13 @@ final class ZipTaskTest extends TestCase
         try {
             $task = new ZipTask(['source' => $root, 'output' => $output], new Logger(false, true, true));
             // Act
-            $this->assertTrue($task->execute(false, true));
+            $archived = $task->execute(false, true);
             $zip = new \ZipArchive();
-            $this->assertTrue($zip->open($output));
+            $opened = $zip->open($output);
+
+            // Assert
+            $this->assertTrue($archived);
+            $this->assertTrue($opened);
             $this->assertSame(1, $zip->numFiles);
             $this->assertSame('input.txt', $zip->getNameIndex(0));
             $zip->close();
@@ -82,8 +86,7 @@ final class ZipTaskTest extends TestCase
         self::assertTrue(class_exists(\ZipArchive::class), 'ext-zip is a required runtime dependency.');
 
         if (!in_array(PHP_OS_FAMILY, ['Windows', 'Darwin'], true)) {
-            self::assertTrue(true, 'Case-variant filesystem test is not applicable on this platform.');
-            return;
+            self::markTestSkipped('Case-variant filesystem test requires a case-insensitive filesystem.');
         }
 
         $root = $this->root . DIRECTORY_SEPARATOR . 'case';
