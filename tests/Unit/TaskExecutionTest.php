@@ -779,7 +779,7 @@ final class TaskExecutionTest extends TestCase
         $logger = new Logger(false, true, true);
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage($message);
 
         // Act
@@ -793,7 +793,7 @@ final class TaskExecutionTest extends TestCase
             'missing command' => [[], "Exec task requires a non-empty string 'command'."],
             'blank command' => [['command' => '  '], "Exec task requires a non-empty string 'command'."],
             'non-scalar argument' => [
-                ['command' => PHP_BINARY, 'args' => ['-r', new \\stdClass()]],
+                ['command' => PHP_BINARY, 'args' => ['-r', new \stdClass()]],
                 "Exec task 'args' must be an array of scalar values.",
             ],
             'string timeout' => [
