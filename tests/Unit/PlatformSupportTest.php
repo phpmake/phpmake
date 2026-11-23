@@ -18,8 +18,8 @@ final class PlatformSupportTest extends TestCase
         $unsupported = ['Darwin', 'FreeBSD', 'OpenBSD', 'SunOS'];
 
         // Act
-        $supportedResults = array_map(PlatformSupport::isSupportedFamily(...), $supported);
-        $unsupportedResults = array_map(PlatformSupport::isSupportedFamily(...), $unsupported);
+        $supportedResults = array_map(static fn(string $family): bool => PlatformSupport::isSupportedFamily($family), $supported);
+        $unsupportedResults = array_map(static fn(string $family): bool => PlatformSupport::isSupportedFamily($family), $unsupported);
 
         // Assert
         self::assertSame([true, true], $supportedResults);
