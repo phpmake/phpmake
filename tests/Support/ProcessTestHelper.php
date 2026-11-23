@@ -95,9 +95,7 @@ trait ProcessTestHelper
                         $process,
                         (int) $status['pid'],
                         $processGroupCreated,
-                        $pidPath,
-                        $stdoutPath,
-                        $stderrPath
+                        $pidPath
                     );
                     break;
                 }
@@ -111,9 +109,7 @@ trait ProcessTestHelper
                     $process,
                     (int) $status['pid'],
                     true,
-                    $pidPath,
-                    $stdoutPath,
-                    $stderrPath
+                    $pidPath
                 );
             }
 
@@ -166,8 +162,6 @@ trait ProcessTestHelper
         int $processId,
         bool $processGroupCreated,
         ?string $pidPath,
-        string $stdoutPath,
-        string $stderrPath
     ): void {
         $launcherPid = $this->resolveTestLauncherPid($processId, $processGroupCreated, $pidPath);
         $hasProcessGroup = $processGroupCreated && $launcherPid !== null;
