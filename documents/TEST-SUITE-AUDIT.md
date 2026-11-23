@@ -1,12 +1,14 @@
 # Test Suite Audit
 
 **Baseline:** `main` at `41864c31ef5a2a4c9b2e106a634006bfaf920d58`  
-**Current follow-up branch:** `quality/phase-19-ci-failure-triage`  
+**Current follow-up branch:** `quality/phase-20-exec-task-coverage`  
 **Scope:** PHPUnit unit, integration, system, and smoke tests.  
 **Compatibility:** PHP 8.0–8.5; Windows and Linux.  
 **Constraints:** PHPUnit retained; no mocks introduced; production source unchanged.
 
 ## Changes in this pass
+
+- Phase 20 uses the measured Phase 19 coverage report to target `ExecTask` configuration validation and the independently bounded stderr stream. It adds data-driven constructor rejection cases, verifies stderr diagnostics on a successful exit, and verifies stderr overflow is rejected. No production behavior is changed.
 
 - Phase 19 fixes the YAML lint failure in the coverage-summary step by shortening the overlong diagnostic line.
 - The Windows process-tree helper regression test now allows a bounded startup window for the PowerShell Job Object launcher before timing out; its child marker deadline remains later than the parent timeout so descendant cleanup is still verified.
