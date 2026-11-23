@@ -27,7 +27,7 @@ skipped, queued, or cancelled mandatory jobs as successful evidence.
 - [ ] `composer audit --abandoned=ignore`
 - [ ] Clean Composer consumer installation and executable-proxy smoke test.
 - [ ] Sample configuration validation and default/package target smoke tests.
-- [ ] Coverage report generated and retained.
+- [ ] Xdebug line/branch coverage report generated; `composer coverage-check` passes the 80% overall and critical-file 100% gates.
 
 ## Platform matrix
 
