@@ -77,9 +77,9 @@ Only after all mandatory gates pass:
       to complete successfully before pushing its release tag.
 - [ ] Create an annotated Git tag matching `VERSION.txt`.
 - [ ] Push the annotated tag matching `VERSION.txt`; this triggers
-      `.github/workflows/release.yml`.
-- [ ] Confirm the release workflow validates the exact commit and publishes the
-      GitHub Release with source archives, SHA-256 checksums, manifest, and changelog.
+      `.github/workflows/default.yml`.
+- [ ] Confirm the release job waits for the tagged commit's build, coverage, Linux
+      compatibility, and Windows test jobs before publishing the GitHub Release.
 - [ ] Verify the release source archives contain the expected tracked files.
 - [ ] Verify Packagist sees the intended version and installation works in a fresh
       consumer project. Packagist synchronization is external to the release workflow.
@@ -104,16 +104,19 @@ Only after all mandatory gates pass:
 - The Phase 9 audit observed Git tags `1.0.0`, `2.0.0`, and `2.0.1`, and no
   GitHub Releases at that time. Recheck Git and Packagist before selecting a version.
 
-## 8. Phase 10 release automation
+## 8. Unified release automation
 
-- `.github/workflows/release.yml` validates strict stable SemVer tags, rejects
-  moved/replaced tags and existing GitHub Releases, requires annotated-tag identity,
-  source version consistency, changelog presence, main-branch ancestry, and a
-  successful `Build and Test` run for the exact commit.
-- The workflow repeats Composer validation, the complete test suite, and the
-  dependency audit before publishing.
+- `.github/workflows/default.yml` handles branch/PR validation and stable SemVer tag
+  publication. There is no separate release workflow.
+- The tag-triggered release job validates annotated-tag identity, rejects moved or
+  replaced tags and existing GitHub Releases, checks version/changelog consistency,
+  and requires the tag commit to be reachable from `main`.
+- The release job depends on the shared build, coverage, Linux PHP 8.0–8.5
+  compatibility, and Windows PHP 8.0–8.5 test jobs. It does not reinstall Composer
+  dependencies or repeat the test suite and dependency audit.
+- Performance baselines run on branch and pull-request events; they are skipped for
+  tag events to keep release publication focused on required validation gates.
 - Successful publication creates a GitHub Release with `.tar.gz` and `.zip`
   source archives, `SHA256SUMS`, a release manifest, and changelog-derived notes.
 - The workflow does not select or bump versions, create tags, or publish directly
   to Packagist. These remain explicit maintainer actions.
-- No release is published by Phase 10 itself.
