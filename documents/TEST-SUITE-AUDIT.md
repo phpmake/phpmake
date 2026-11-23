@@ -1,14 +1,18 @@
 # Test Suite Audit
 
 **Baseline:** `main` at `41864c31ef5a2a4c9b2e106a634006bfaf920d58`  
-**Current follow-up branch:** `quality/phase-20-exec-task-coverage`  
+**Current follow-up branch:** `quality/phase-21-ci-stabilization`  
 **Scope:** PHPUnit unit, integration, system, and smoke tests.  
 **Compatibility:** PHP 8.0–8.5; Windows and Linux.  
 **Constraints:** PHPUnit retained; no mocks introduced; production source unchanged.
 
 ## Changes in this pass
 
-- Phase 20 uses the measured Phase 19 coverage report to target `ExecTask` configuration validation and the independently bounded stderr stream. It adds data-driven constructor rejection cases, verifies stderr diagnostics on a successful exit, and verifies stderr overflow is rejected. No production behavior is changed.
+- Phase 21 fixes Phase 20 CI regressions: replaces PHPUnit docblock data-provider metadata with a PHPUnit-version-independent scenario loop, since the supported dependency range spans PHPUnit 9.6 and 13.0. The loop still asserts all six invalid configurations and their exact diagnostics.
+- Phase 21 moves the output-limit failure path ahead of stdout/stderr logging. When a process exceeds the 1 MiB per-stream cap, only the bounded generic diagnostic is emitted; the captured prefix is not dumped into CI logs or terminal output. This also avoids echoing attacker-controlled or secret output after a limit breach.
+- Phase 20 CI run #609 showed PHPUnit 9.6 treating the new provider test as a zero-argument test (ArgumentCountError). The package smoke step failed because its `package` target invokes the test target. Windows filesystem jobs and PHP 8.4/8.5 compatibility jobs also failed in the same test run; the provider incompatibility was common to the test matrix.
+
+- Phase 20 uses the measured Phase 19 coverage report to target `ExecTask` configuration validation and the independently bounded stderr stream. It adds table-driven constructor rejection cases, verifies stderr diagnostics on a successful exit, and verifies stderr overflow is rejected.
 - Phase 19 coverage baseline: 263 tests, 1,244 assertions, 6 platform skips; 80.35% PHPUnit line coverage (1,280/1,593), 52.14% method coverage (61/117), and 36.67% class coverage (11/30). `ExecTask` was at 81.71% line coverage; Phase 20 adds coverage for constructor rejection paths and stderr handling/limits.
 
 - Phase 19 fixes the YAML lint failure in the coverage-summary step by shortening the overlong diagnostic line.
