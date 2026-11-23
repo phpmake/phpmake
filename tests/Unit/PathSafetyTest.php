@@ -250,7 +250,6 @@ final class PathSafetyTest extends TestCase
         }
     }
 
-    /** Refuses to delete the project root, including normalized aliases. */
     /** Rejects deletion of the active project root and its normalized aliases. */
     public function testDeleteRejectsProjectRoot(): void
     {
@@ -339,7 +338,6 @@ final class PathSafetyTest extends TestCase
     }
 
     /** Rejects case-only sibling paths on filesystems that distinguish case. */
-    /** Rejects case-only sibling paths on filesystems that distinguish case. */
     public function testRejectsCaseVariantSiblingOnCaseSensitiveFilesystem(): void
     {
         // Arrange
@@ -383,7 +381,6 @@ final class PathSafetyTest extends TestCase
 
 
     /** Rejects extended-length UNC paths as external Windows paths. */
-    /** Rejects extended-length UNC paths as external Windows paths. */
     public function testRejectsExtendedUncPathOnWindows(): void
     {
         // Arrange
@@ -399,7 +396,6 @@ final class PathSafetyTest extends TestCase
         new DeleteTask(['path' => '\\\\?\\UNC\\server\\share\\victim.txt'], $this->logger);
     }
 
-    /** Rejects Windows drive-relative paths because their base depends on per-drive state. */
     /** Rejects Windows drive-relative paths with ambiguous per-drive bases. */
     public function testRejectsDriveRelativePathOnWindows(): void
     {
@@ -419,7 +415,6 @@ final class PathSafetyTest extends TestCase
 
 
 
-    /** Deletes a hardlink name without deleting or truncating its shared inode. */
     /** Deletes a hardlink name without modifying its shared original file. */
     public function testDeleteHardlinkPreservesOriginalFile(): void
     {
@@ -463,7 +458,6 @@ final class PathSafetyTest extends TestCase
         }
     }
 
-    /** Rejects extended-length drive paths outside the project on Windows. */
     /** Rejects extended-length drive paths outside the project root. */
     public function testRejectsExtendedLengthDrivePathOnWindows(): void
     {
@@ -485,7 +479,6 @@ final class PathSafetyTest extends TestCase
 
 
 
-    /** Rejects a dangling directory junction used as a path ancestor. */
     /** Rejects a dangling directory link used as a path ancestor. */
     public function testRejectsDanglingDirectoryLinkAncestor(): void
     {
