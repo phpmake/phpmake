@@ -20,7 +20,7 @@
 - Migrated `CopyTaskSafetyTest`, `FilesystemTaskTest`, `FilesystemTreeTest`, and `FilesystemFailurePathsTest` to the shared fixture lifecycle; removed the duplicate recursive cleanup implementation from `FilesystemTaskTest`.
 - The migrated tests continue to restore the original working directory before cleanup; platform-specific directory-link handling remains in `DirectoryLinkTestHelper`.
 - Phase 14 migrated `ZipTaskTest`, `CliBuildIntegrationTest`, `InitSymlinkTest`, and `ComposerBinTest` to the shared temporary-directory lifecycle.
-- Phase 15 migrated `PathSafetyTest` and `SmokeTest` to isolated temporary project roots with shared failure-safe cleanup.
+- Phase 15 migrated `PathSafetyTest`, `SmokeTest`, and `TaskExecutionTest` to isolated temporary project roots with shared failure-safe cleanup.
 - Replaced silent platform-only passing assertions with explicit PHPUnit skips for tests whose OS or filesystem prerequisites are unavailable.
 - Renamed generic dependency-resolution and task-execution tests to describe the behavior and expected outcome; removed obsolete PHPUnit attributes and empty docblocks from the legacy task tests.
 - Normalized Arrange / Act / Assert ordering in dependency, system-requirement, archive-publication, and initialization integration tests.
