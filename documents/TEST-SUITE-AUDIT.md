@@ -39,6 +39,20 @@ The source inventory contains 33 production PHP files. Most public behavior has 
 
 The table identifies remaining test depth, not confirmed production defects. The fresh CI coverage artifact should be used to refine this inventory before treating any method as untested.
 
+## Methods with remaining weak or indirect coverage
+
+The following methods or branches should be treated as coverage gaps until the current Clover/HTML report proves otherwise:
+
+- `BuildLoader::load()`: failure to open an existing file and a failed stream read are not deterministically induced by the current portable tests.
+- `FilesystemIdentity::sameFile()`: the stat-failure fallback and Windows case-insensitive fallback are not isolated in dedicated tests.
+- `PosixProcessLauncher::findExecutable()`: the fallback smoke test covers the no-`ext-posix` route, but not every combination of missing `setsid`, `kill`, and PATH entries.
+- `ProcessSupervisor::signalProcess()` and `signalProcessGroup()`: utility-based signaling fallback combinations are not independently covered for every unavailable-tool/error condition.
+- `AtomicFilePublisher::publish()` and `AtomicDirectoryPublisher::publish()`: the most severe double-failure paths, where publication and rollback both fail and a recovery backup must be retained, lack deterministic end-to-end tests.
+- `ZipTask::addFilesToZip()`: all archive limits (file count, total entries, depth, per-file bytes, and aggregate bytes) are not each tested at both their exact boundary and one unit beyond.
+- `ConsoleOutput::stdout()` and `stderr()`: most verification is through the higher-level logger/task output contract rather than isolated stream-method tests.
+
+These are prioritized test gaps, not claims that the methods are untested at every level. Several are exercised indirectly through integration tests or adjacent failure-path tests.
+
 ## Platform-dependent skips
 
 The source search found 37 skip call sites across 10 test files. These are conditional skips: the affected test is skipped only when the host OS, filesystem semantics, or required operating-system capability is unavailable. They fall into these groups:
