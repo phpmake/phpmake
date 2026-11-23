@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PhpMake\\Tests\\Unit;
+namespace PhpMake\Tests\Unit;
 
-use PhpMake\\Tests\\Support\\ProcessTestHelper;
-use PHPUnit\\Framework\\TestCase;
+use PhpMake\Tests\Support\ProcessTestHelper;
+use PHPUnit\Framework\TestCase;
 
 /** Verifies bounded subprocess execution, output capture, and process-tree cleanup. */
 final class ProcessTestHelperTest extends TestCase
@@ -102,7 +102,7 @@ final class ProcessTestHelperTest extends TestCase
             try {
                 $this->runTestProcess([PHP_BINARY, '-r', 'exit(0);'], getcwd() ?: sys_get_temp_dir(), $timeout);
                 self::fail('An invalid timeout must be rejected.');
-            } catch (\\InvalidArgumentException $exception) {
+            } catch (\InvalidArgumentException $exception) {
                 self::assertSame(
                     'The subprocess timeout must be a finite positive number.',
                     $exception->getMessage()
@@ -118,6 +118,7 @@ final class ProcessTestHelperTest extends TestCase
         $invalidCalls = [
             [[], getcwd() ?: sys_get_temp_dir()],
             [[PHP_BINARY, '-r', 'exit(0);'], sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'missing-' . bin2hex(random_bytes(4))],
+            [[PHP_BINARY, 42], getcwd() ?: sys_get_temp_dir()],
         ];
 
         // Act / Assert
@@ -125,7 +126,7 @@ final class ProcessTestHelperTest extends TestCase
             try {
                 $this->runTestProcess($command, $workingDirectory);
                 self::fail('Invalid process arguments must be rejected.');
-            } catch (\\InvalidArgumentException) {
+            } catch (\InvalidArgumentException) {
                 self::assertTrue(true);
             }
         }
