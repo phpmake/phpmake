@@ -66,6 +66,8 @@
 - Path-safety and smoke-test fixtures now use the shared workspace lifecycle; keep platform-specific junction creation/removal in `DirectoryLinkTestHelper` rather than merging it into generic directory cleanup.
 - Process-tree and filesystem capability tests use explicit skips when platform prerequisites are absent; `failOnSkipped` is disabled so justified platform skips do not fail otherwise-valid matrix jobs. CI must still exercise each supported platform-specific path.
 
+- Phase 24 CI exposed a second Windows overflow stall in the stdout regression test after the stderr case was isolated. The pipe reader now consumes one bounded chunk per polling pass instead of attempting to drain a non-blocking Windows anonymous pipe until empty. The stdout regression now requires the explicit per-stream overflow diagnostic within a 15-second task deadline; a timeout alone cannot pass it.
+
 ## Validation
 
 The repository-connected editing environment does not provide a local PHP runtime or Composer installation. Run the complete PHPUnit suite and formatter/linter on the branch, including the PHP 8.0–8.5 Windows/Linux matrix, before treating this audit as complete. Do not infer a passing test result from the edits alone. Phase 13–17 changes require CI confirmation of fixture cleanup and bounded subprocess behavior on both Windows and Linux.
