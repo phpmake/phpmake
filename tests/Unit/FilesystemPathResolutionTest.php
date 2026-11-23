@@ -27,6 +27,7 @@ final class FilesystemPathResolutionTest extends TestCase
 
     private string $originalCwd;
 
+    /** Creates project and outside paths for traversal regression tests. */
     protected function setUp(): void
     {
         parent::setUp();
@@ -47,6 +48,7 @@ final class FilesystemPathResolutionTest extends TestCase
         file_put_contents($this->outside . DIRECTORY_SEPARATOR . 'victim.txt', 'preserve');
     }
 
+    /** Restores the working directory and removes path-resolution fixtures. */
     protected function tearDown(): void
     {
         chdir($this->originalCwd);
