@@ -767,4 +767,94 @@ final class TaskExecutionTest extends TestCase
         self::assertStringContainsString('Task failed', $output);
     }
 
+
+    /**
+     * @dataProvider invalidExecConfigurationProvider
+     *
+     * Rejects invalid command, argument, and timeout configuration before launch.
+     */
+    public function testExecTaskRejectsInvalidConfiguration(array $params, string $message): void
+    {
+        // Arrange
+        $logger = new Logger(false, true, true);
+
+        // Assert
+        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectExceptionMessage($message);
+
+        // Act
+        new ExecTask($params, $logger);
+    }
+
+    /** Supplies invalid constructor configurations and their expected diagnostics. */
+    public static function invalidExecConfigurationProvider(): iterable
+    {
+        return [
+            'missing command' => [[], "Exec task requires a non-empty string 'command'."],
+            'blank command' => [['command' => '  '], "Exec task requires a non-empty string 'command'."],
+            'non-scalar argument' => [
+                ['command' => PHP_BINARY, 'args' => ['-r', new \\stdClass()]],
+                "Exec task 'args' must be an array of scalar values.",
+            ],
+            'string timeout' => [
+                ['command' => PHP_BINARY, 'timeout' => '5'],
+                "Exec task 'timeout' must be greater than 0 and at most 86400 seconds.",
+            ],
+            'zero timeout' => [
+                ['command' => PHP_BINARY, 'timeout' => 0],
+                "Exec task 'timeout' must be greater than 0 and at most 86400 seconds.",
+            ],
+            'infinite timeout' => [
+                ['command' => PHP_BINARY, 'timeout' => INF],
+                "Exec task 'timeout' must be greater than 0 and at most 86400 seconds.",
+            ],
+        ];
+    }
+
+    /** Captures stderr diagnostics without treating a successful process exit as failure. */
+    public function testExecTaskCapturesStderrOnSuccessfulExit(): void
+    {
+        // Arrange
+        $logFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR
+            . 'phpmake-exec-stderr-' . bin2hex(random_bytes(8)) . '.log';
+        $logger = new Logger(false, true, false, $logFile);
+        $task = new ExecTask([
+            'command' => PHP_BINARY,
+            'args' => ['-r', 'fwrite(STDERR, "stderr diagnostic");'],
+        ], $logger);
+
+        try {
+            // Act
+            $result = $task->execute(false, true);
+
+            // Assert
+            self::assertTrue($result);
+            $log = file_get_contents($logFile);
+            self::assertIsString($log);
+            self::assertStringContainsString('stderr diagnostic', $log);
+        } finally {
+            foreach ([$logFile, $logFile . '.lock'] as $path) {
+                if (is_file($path)) {
+                    unlink($path);
+                }
+            }
+        }
+    }
+
+    /** Enforces the independent output bound on stderr as well as stdout. */
+    public function testExecTaskRejectsExcessiveStderrOutput(): void
+    {
+        // Arrange
+        $task = new ExecTask([
+            'command' => PHP_BINARY,
+            'args' => ['-r', 'fwrite(STDERR, str_repeat("x", 1100000));'],
+        ], $this->logger);
+
+        // Act
+        $result = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($result);
+    }
+
 }
