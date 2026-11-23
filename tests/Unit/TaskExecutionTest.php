@@ -7,17 +7,35 @@ namespace PhpMake\Tests\Unit;
 use PhpMake\Task\Types\EchoTask;
 use PhpMake\Task\Types\ExecTask;
 use PhpMake\Task\Types\CreateDirectoryTask;
+use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
 use PhpMake\Utilities\Logger;
 use PHPUnit\Framework\TestCase;
 
 /** Tests execution results for built-in task types. */
 final class TaskExecutionTest extends TestCase
 {
+    use TemporaryDirectoryTestHelper;
+
+    private string $workspace;
+
+    private string $originalWorkingDirectory;
+
     /** Initializes the logger shared by task execution tests. */
     protected function setUp(): void
     {
         parent::setUp();
+        $this->originalWorkingDirectory = (string) getcwd();
+        $this->workspace = $this->createTemporaryDirectory('phpmake-task-execution-');
+        self::assertTrue(chdir($this->workspace));
         $this->logger = new Logger(false, true, true);
+    }
+
+    /** Restores the working directory and removes any remaining task fixtures. */
+    protected function tearDown(): void
+    {
+        chdir($this->originalWorkingDirectory);
+        $this->removeTemporaryDirectory($this->workspace);
+        parent::tearDown();
     }
 
     private Logger $logger;
@@ -25,7 +43,7 @@ final class TaskExecutionTest extends TestCase
 
 
 
-    /**
+    /** Creates the configured directory and reports successful task execution. */
     public function testCreateDirectoryTaskCreatesConfiguredDirectory(): void
     {
         // Arrange — path must stay inside the project directory.
@@ -41,7 +59,7 @@ final class TaskExecutionTest extends TestCase
         rmdir($tempDir);
     }
 
-    /**
+    /** Runs the configured external command and reports successful execution. */
     public function testExecTaskRunsConfiguredCommandSuccessfully(): void
     {
         // Arrange
@@ -53,7 +71,7 @@ final class TaskExecutionTest extends TestCase
         $this->assertTrue($result);
     }
 
-    /**
+    /** Executes an echo task with the configured message. */
     public function testEchoTaskExecutesConfiguredMessageSuccessfully(): void
     {
         // Arrange

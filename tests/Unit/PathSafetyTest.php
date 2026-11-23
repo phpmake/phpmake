@@ -41,6 +41,7 @@ final class PathSafetyTest extends TestCase
         parent::tearDown();
     }
 
+    /** Rejects a delete path outside the active project root. */
     public function testDeleteRejectsPathOutsideProject(): void
     {
         // Arrange
@@ -52,6 +53,7 @@ final class PathSafetyTest extends TestCase
         new DeleteTask(['path' => sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'outside.txt'], $this->logger);
     }
 
+    /** Rejects a copy source outside the active project root. */
     public function testCopyRejectsSourceOutsideProject(): void
     {
         // Arrange
@@ -66,6 +68,7 @@ final class PathSafetyTest extends TestCase
         ], $this->logger);
     }
 
+    /** Rejects directory creation that traverses above the project root. */
     public function testCreateDirectoryRejectsParentTraversal(): void
     {
         // Arrange
@@ -77,6 +80,7 @@ final class PathSafetyTest extends TestCase
         new CreateDirectoryTask(['name' => '..' . DIRECTORY_SEPARATOR . 'outside-dir'], $this->logger);
     }
 
+    /** Rejects an archive output path outside the active project root. */
     public function testArchiveRejectsOutputOutsideProject(): void
     {
         // Arrange
@@ -91,20 +95,25 @@ final class PathSafetyTest extends TestCase
         ], $this->logger);
     }
 
+    /** Treats an existing destination directory as a successful create operation. */
     public function testCreateDirectoryIsIdempotent(): void
     {
         // Arrange
         $dir = getcwd() . DIRECTORY_SEPARATOR . '.phpmake-test-idempotent-' . uniqid('', true);
 
         $task = new CreateDirectoryTask(['name' => $dir], $this->logger);
+
         // Act
+        $created = $task->execute(false, true);
+
         // Assert
-        $this->assertTrue($task->execute(false, true));
-        $this->assertTrue(is_dir($dir));
+        $this->assertTrue($created);
+        $this->assertDirectoryExists($dir);
 
         // Second run must succeed when directory already exists.
         $task2 = new CreateDirectoryTask(['name' => $dir], $this->logger);
-        $this->assertTrue($task2->execute(false, true));
+        $secondExecution = $task2->execute(false, true);
+        $this->assertTrue($secondExecution);
 
         rmdir($dir);
     }
@@ -235,6 +244,7 @@ final class PathSafetyTest extends TestCase
     }
 
     /** Refuses to delete the project root, including normalized aliases. */
+    /** Rejects deletion of the active project root and its normalized aliases. */
     public function testDeleteRejectsProjectRoot(): void
     {
         // Arrange
@@ -305,6 +315,7 @@ final class PathSafetyTest extends TestCase
 
 
     /** Rejects UNC paths as external paths on Windows. */
+    /** Rejects UNC paths as external Windows paths. */
     public function testRejectsUncPathOnWindows(): void
     {
         if (PHP_OS_FAMILY !== 'Windows') {
@@ -319,6 +330,7 @@ final class PathSafetyTest extends TestCase
         new DeleteTask(['path' => '\\\\server\\share\\victim.txt'], $this->logger);
     }
 
+    /** Rejects case-only sibling paths on filesystems that distinguish case. */
     /** Rejects case-only sibling paths on filesystems that distinguish case. */
     public function testRejectsCaseVariantSiblingOnCaseSensitiveFilesystem(): void
     {
@@ -363,6 +375,7 @@ final class PathSafetyTest extends TestCase
 
 
     /** Rejects extended-length UNC paths as external Windows paths. */
+    /** Rejects extended-length UNC paths as external Windows paths. */
     public function testRejectsExtendedUncPathOnWindows(): void
     {
         if (PHP_OS_FAMILY !== 'Windows') {
@@ -378,6 +391,7 @@ final class PathSafetyTest extends TestCase
     }
 
     /** Rejects Windows drive-relative paths because their base depends on per-drive state. */
+    /** Rejects Windows drive-relative paths with ambiguous per-drive bases. */
     public function testRejectsDriveRelativePathOnWindows(): void
     {
         if (PHP_OS_FAMILY !== 'Windows') {
@@ -396,6 +410,7 @@ final class PathSafetyTest extends TestCase
 
 
     /** Deletes a hardlink name without deleting or truncating its shared inode. */
+    /** Deletes a hardlink name without modifying its shared original file. */
     public function testDeleteHardlinkPreservesOriginalFile(): void
     {
         // Arrange
@@ -439,6 +454,7 @@ final class PathSafetyTest extends TestCase
     }
 
     /** Rejects extended-length drive paths outside the project on Windows. */
+    /** Rejects extended-length drive paths outside the project root. */
     public function testRejectsExtendedLengthDrivePathOnWindows(): void
     {
         if (PHP_OS_FAMILY !== 'Windows') {
@@ -460,6 +476,7 @@ final class PathSafetyTest extends TestCase
 
 
     /** Rejects a dangling directory junction used as a path ancestor. */
+    /** Rejects a dangling directory link used as a path ancestor. */
     public function testRejectsDanglingDirectoryLinkAncestor(): void
     {
         // Arrange

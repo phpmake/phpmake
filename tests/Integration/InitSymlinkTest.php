@@ -15,7 +15,6 @@ final class InitSymlinkTest extends TestCase
     /** A dangling build.json symlink is rejected without creating its target. */
     public function testInitRejectsDanglingBuildConfigSymlink(): void
     {
-        // Arrange
         $root = dirname(__DIR__, 2);
         $workspace = $this->createTemporaryDirectory('phpmake-init-');
         $project = $workspace . DIRECTORY_SEPARATOR . 'project';
