@@ -379,12 +379,15 @@ final class TaskExecutionTest extends TestCase
     /** Rejects unbalanced quotes before attempting to launch a process. */
     public function testExecTaskRejectsUnbalancedCommandQuotes(): void
     {
+        // Arrange
+        $command = PHP_BINARY . ' "unterminated';
+
         // Assert
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('unbalanced quote');
 
         // Act
-        new ExecTask(['command' => PHP_BINARY . ' "unterminated'], $this->logger);
+        new ExecTask(['command' => $command], $this->logger);
     }
 
 

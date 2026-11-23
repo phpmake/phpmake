@@ -93,8 +93,9 @@ final class AtomicPublisherValidationTest extends TestCase
         $staging = $this->base . DIRECTORY_SEPARATOR . 'missing';
         $destination = $this->base . DIRECTORY_SEPARATOR . 'destination';
 
-        // Act / Assert
+        // Assert
         $this->expectException(\InvalidArgumentException::class);
+
         // Act
         AtomicDirectoryPublisher::publish($staging, $destination);
     }
@@ -274,11 +275,12 @@ final class AtomicPublisherValidationTest extends TestCase
         self::assertTrue(chmod($this->base, 0500));
 
         try {
-            // Assert
+            // Act
             try {
                 AtomicFilePublisher::publish($staged, $destination);
                 self::fail('Publication must fail when the parent directory is not writable.');
             } catch (\RuntimeException $runtimeException) {
+                // Assert
                 self::assertStringContainsString('Unable to publish file', $runtimeException->getMessage());
             }
 

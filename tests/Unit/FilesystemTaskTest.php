@@ -367,7 +367,10 @@ final class FilesystemTaskTest extends TestCase
         ], $this->logger);
 
         // Act
-        self::assertFalse($task->execute(false, true));
+        $archived = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($archived);
         self::assertSame('not a directory', file_get_contents($blocker));
     }
 
@@ -387,7 +390,10 @@ final class FilesystemTaskTest extends TestCase
         $task = new ZipTask(['source' => $source, 'output' => $archive], $this->logger);
 
         // Act
-        self::assertFalse($task->execute(false, true));
+        $archived = $task->execute(false, true);
+
+        // Assert
+        self::assertFalse($archived);
         self::assertFileDoesNotExist($archive);
     }
 
