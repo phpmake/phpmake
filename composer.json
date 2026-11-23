@@ -38,7 +38,7 @@
         "maglnet/composer-require-checker": "^4.0",
         "overtrue/phplint": "^9.0",
         "phpstan/phpstan": "^2.1",
-        "phpunit/phpunit": "^9.6",
+        "phpunit/phpunit": "^9.6 || ^13.0",
         "rector/rector": "^2.0"
     },
     "minimum-stability": "dev",
