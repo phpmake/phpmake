@@ -81,7 +81,7 @@ $criticalFiles = [
 $reportedFiles = [];
 foreach ($report->project->package as $package) {
     foreach ($package->file as $file) {
-        $path = str_replace('\\\\', '/', (string) $file['name']);
+        $path = str_replace('\\', '/', (string) $file['name']);
         foreach ($criticalFiles as $criticalPath => $description) {
             if (substr($path, -strlen($criticalPath)) !== $criticalPath) {
                 continue;
