@@ -53,7 +53,7 @@ final class FilesystemFailurePathsTest extends TestCase
         self::assertTrue(chmod($this->base, 0500));
 
         try {
-            // Act / Assert
+            // Act
             try {
                 AtomicFilePublisher::publish($staged, $destination);
                 self::fail('The publisher must reject a recovery path outside the destination directory.');
