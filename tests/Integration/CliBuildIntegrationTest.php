@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpMake\Tests\Integration;
 
+use PhpMake\Tests\Support\ProcessTestHelper;
 use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
 use PHPUnit\Framework\TestCase;
 use ZipArchive;
@@ -11,6 +12,7 @@ use ZipArchive;
 /** Exercises the real PHPMake CLI and its complete build pipeline. */
 final class CliBuildIntegrationTest extends TestCase
 {
+    use ProcessTestHelper;
     use TemporaryDirectoryTestHelper;
 
     private string $projectDirectory;
@@ -22,9 +24,9 @@ final class CliBuildIntegrationTest extends TestCase
     {
         parent::setUp();
 
-        $this->projectDirectory = $this->createTemporaryDirectory('phpmake-integration-');
         $this->cliPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'phpmake.php';
         self::assertFileExists($this->cliPath);
+        $this->projectDirectory = $this->createTemporaryDirectory('phpmake-integration-');
     }
 
     /** Removes the isolated project and every artifact created by the CLI. */
@@ -71,6 +73,7 @@ final class CliBuildIntegrationTest extends TestCase
         $result = $this->runCli(['--silent', '--no-log']);
 
         // Assert
+        self::assertFalse($result['timedOut'], $result['stderr']);
         self::assertSame(0, $result['exitCode'], $result['stderr']);
         self::assertFileExists($this->projectDirectory . DIRECTORY_SEPARATOR . 'build' . DIRECTORY_SEPARATOR . 'copied.txt');
         self::assertSame(
@@ -105,6 +108,7 @@ final class CliBuildIntegrationTest extends TestCase
         $result = $this->runCli(['--validate-build', '--no-log']);
 
         // Assert
+        self::assertFalse($result['timedOut'], $result['stderr']);
         self::assertSame(0, $result['exitCode'], $result['stderr']);
         self::assertStringContainsString('Build configuration is valid.', $result['stdout']);
         self::assertDirectoryDoesNotExist($this->projectDirectory . DIRECTORY_SEPARATOR . 'must-not-exist');
@@ -130,6 +134,7 @@ final class CliBuildIntegrationTest extends TestCase
         $result = $this->runCli(['--silent', '--no-log']);
 
         // Assert
+        self::assertFalse($result['timedOut'], $result['stderr']);
         self::assertSame(1, $result['exitCode']);
         self::assertDirectoryDoesNotExist($this->projectDirectory . DIRECTORY_SEPARATOR . 'must-not-exist');
     }
@@ -150,6 +155,7 @@ final class CliBuildIntegrationTest extends TestCase
         $result = $this->runCli(['--validate-build', '--no-log']);
 
         // Assert
+        self::assertFalse($result['timedOut'], $result['stderr']);
         self::assertSame(1, $result['exitCode']);
         self::assertStringContainsString("Unknown task type 'unknown_task'", $result['stderr']);
     }
@@ -171,32 +177,13 @@ final class CliBuildIntegrationTest extends TestCase
         );
     }
 
-    /** Executes the actual CLI script in the temporary project directory. */
+    /** Executes the actual CLI script with a bounded runtime in the temporary project. */
     private function runCli(array $arguments): array
     {
-        $process = proc_open(
+        return $this->runTestProcess(
             [PHP_BINARY, $this->cliPath, ...$arguments],
-            [
-                0 => ['pipe', 'r'],
-                1 => ['pipe', 'w'],
-                2 => ['pipe', 'w'],
-            ],
-            $pipes,
             $this->projectDirectory
         );
-
-        self::assertIsResource($process);
-        fclose($pipes[0]);
-        $stdout = stream_get_contents($pipes[1]);
-        $stderr = stream_get_contents($pipes[2]);
-        fclose($pipes[1]);
-        fclose($pipes[2]);
-
-        return [
-            'exitCode' => proc_close($process),
-            'stdout' => $stdout,
-            'stderr' => $stderr,
-        ];
     }
 
 }

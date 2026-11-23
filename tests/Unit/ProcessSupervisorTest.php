@@ -14,8 +14,8 @@ final class ProcessSupervisorTest extends TestCase
     public function testGetDescendantProcessIdsFindsChildProcess(): void
     {
         // Arrange
-        if (PHP_OS_FAMILY === 'Windows') {
-            self::markTestSkipped('POSIX process-table discovery is not available on Windows.');
+        if (PHP_OS_FAMILY === 'Windows' || !function_exists('posix_kill')) {
+            self::markTestSkipped('POSIX process-table discovery and cleanup are not available on this platform.');
         }
 
         $pidFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR

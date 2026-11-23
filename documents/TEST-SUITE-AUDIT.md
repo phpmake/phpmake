@@ -1,12 +1,17 @@
 # Test Suite Audit
 
-**Baseline:** `main` at `ef95755743dbbb78e1eb8d2233aff53c2d7e551b`  
-**Current follow-up branch:** `quality/phase-15-path-safety-and-suite-consistency`  
+**Baseline:** `main` at `41864c31ef5a2a4c9b2e106a634006bfaf920d58`  
+**Current follow-up branch:** `quality/phase-16-integration-process-isolation`  
 **Scope:** PHPUnit unit, integration, system, and smoke tests.  
 **Compatibility:** PHP 8.0–8.5; Windows and Linux.  
 **Constraints:** PHPUnit retained; no mocks introduced; production source unchanged.
 
 ## Changes in this pass
+
+- Phase 16 added `ProcessTestHelper` for real subprocess tests. It captures stdout/stderr to temporary files to avoid pipe-buffer deadlocks, applies a monotonic execution deadline, terminates timed-out processes, and removes capture files in a finally block.
+- Migrated CLI build, Composer-installed binary, and `--init` integration tests to the shared bounded subprocess runner; each now fails explicitly if the process exceeds its deadline.
+- Added helper regression tests for output larger than a typical pipe buffer and for forced timeout termination.
+- Tightened the POSIX process-tree discovery test prerequisite so it skips when descendant cleanup cannot be guaranteed without `posix_kill`.
 
 - Removed `BuildSmokeTest`, which duplicated build validation, dependency resolution, and build execution tests already owned by focused test classes.
 - Moved its only distinct contract coverage (all `BuildConfiguration` getters) into `BuildConfigurationTest`.
@@ -33,12 +38,12 @@
 - Continue the remaining suite-wide review for AAA ordering and test names; this pass addressed the remaining generic dependency-resolution and built-in task execution names identified in the legacy unit tests.
 - Path-safety and smoke-test fixtures now use the shared workspace lifecycle; keep platform-specific junction creation/removal in `DirectoryLinkTestHelper` rather than merging it into generic directory cleanup.
 - Process-tree and filesystem capability tests use explicit skips when platform prerequisites are absent; `failOnSkipped` is disabled so justified platform skips do not fail otherwise-valid matrix jobs. CI must still exercise each supported platform-specific path.
-- Continue auditing integration process tests and remaining legacy unit classes for fixture isolation, AAA ordering, and behavior-focused method names.
+- The integration entry-point tests now use bounded process execution; continue auditing lower-level process-tree tests for child-process ownership and failure-path cleanup.
 - No production implementation changes are included in this test-only pass.
 
 ## Validation
 
-The repository-connected editing environment does not provide a local PHP runtime or Composer installation. Run the complete PHPUnit suite and formatter/linter on the branch, including the PHP 8.0–8.5 Windows/Linux matrix, before treating this audit as complete. Do not infer a passing test result from the edits alone. Phase 13 and 14 changes require CI confirmation of fixture cleanup on both Windows and Linux.
+The repository-connected editing environment does not provide a local PHP runtime or Composer installation. Run the complete PHPUnit suite and formatter/linter on the branch, including the PHP 8.0–8.5 Windows/Linux matrix, before treating this audit as complete. Do not infer a passing test result from the edits alone. Phase 13–16 changes require CI confirmation of fixture cleanup and bounded subprocess behavior on both Windows and Linux.
 
 ## Completion criteria
 

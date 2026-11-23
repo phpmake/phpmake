@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace PhpMake\Tests\Integration;
 
+use PhpMake\Tests\Support\ProcessTestHelper;
 use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
 use PHPUnit\Framework\TestCase;
 
 /** Verifies that --init never follows an existing dangling destination symlink. */
 final class InitSymlinkTest extends TestCase
 {
+    use ProcessTestHelper;
     use TemporaryDirectoryTestHelper;
 
     /** A dangling build.json symlink is rejected without creating its target. */
@@ -28,21 +30,14 @@ final class InitSymlinkTest extends TestCase
             }
 
             // Act
-            $process = proc_open(
+            $result = $this->runTestProcess(
                 [PHP_BINARY, $root . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'phpmake.php', '--init'],
-                [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
-                $pipes,
                 $project
             );
-            self::assertIsResource($process);
-            fclose($pipes[0]);
-            $stdout = stream_get_contents($pipes[1]);
-            $stderr = stream_get_contents($pipes[2]);
-            fclose($pipes[1]);
-            fclose($pipes[2]);
 
             // Assert
-            self::assertSame(1, proc_close($process), $stdout . $stderr);
+            self::assertFalse($result['timedOut'], $result['stdout'] . $result['stderr']);
+            self::assertSame(1, $result['exitCode'], $result['stdout'] . $result['stderr']);
             self::assertTrue(is_link($link));
             self::assertFileDoesNotExist($target);
         } finally {
