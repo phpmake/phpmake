@@ -1,122 +1,62 @@
 # PHPMake Release Checklist
 
-Use this checklist for every stable release publication. A release is not ready
-until all mandatory automated and manual gates have recorded evidence against the exact
-candidate commit.
+A release must be validated against the exact candidate commit. Do not treat missing,
+skipped, queued, or cancelled mandatory jobs as successful evidence.
 
-## 1. Candidate identity and source hygiene
+## Candidate
 
-- [ ] Confirm the release branch is based on the intended, reviewed `main` commit.
-- [ ] Confirm the working tree contains only intended source, test, and documentation changes.
-- [ ] Confirm no temporary files, generated reports, local configuration, credentials, or logs are included.
-- [ ] Select a version that is not already published on Packagist or tagged in Git.
-- [ ] Update `VERSION.txt` and `src/Config.php` to the same stable SemVer version.
-- [ ] Confirm the Composer package name remains `phpmake/phpmake` and the package metadata is valid.
-- [ ] Confirm the PHP requirement remains `^8.0` unless a separately approved compatibility change is intended.
-- [ ] Confirm the documented runtime extensions (`ctype`, `json`, `zip`) match `composer.json`.
+- [ ] Candidate is based on reviewed `main`.
+- [ ] Working tree contains only intended source, test, and documentation changes.
+- [ ] No credentials, local configuration, logs, or generated test artifacts are included.
+- [ ] Selected stable SemVer version is not already tagged or published.
+- [ ] `VERSION.txt` and `PhpMake\\Config::TOOL_VERSION` match.
+- [ ] Changelog contains a release section for the selected version.
+- [ ] Composer metadata is valid; PHP `^8.0` and required extensions match documentation.
 
-## 2. Mandatory automated gates
+## Automated validation
 
-Run these checks against the exact candidate commit. A failed or skipped mandatory gate
-blocks publication.
+- [ ] `composer validate --strict`
+- [ ] `composer lint`
+- [ ] `composer analyse`
+- [ ] `composer format-check`
+- [ ] `composer refactor-check`
+- [ ] `vendor/bin/composer-unused`
+- [ ] `vendor/bin/composer-require-checker check`
+- [ ] `composer normalize --dry-run`
+- [ ] `composer test` with no failures, errors, or risky tests; review all skips and justify platform prerequisites.
+- [ ] `composer audit --abandoned=ignore`
+- [ ] Clean Composer consumer installation and executable-proxy smoke test.
+- [ ] Sample configuration validation and default/package target smoke tests.
+- [ ] Coverage report generated and retained.
 
-| Gate | Required evidence |
-|---|---|
-| Composer metadata | `composer validate --strict` succeeds |
-| PHP syntax | `composer lint` succeeds |
-| Static analysis | `composer analyse` succeeds at the configured PHPStan level |
-| Formatting | `composer format-check` succeeds |
-| Rector | `composer refactor-check` succeeds |
-| Composer dependency usage | `vendor/bin/composer-unused` succeeds |
-| Composer requirements | `vendor/bin/composer-require-checker check` succeeds |
-| Composer normalization | `composer normalize --dry-run` succeeds |
-| Unit/integration/system/smoke tests | `composer test` succeeds with no failures, errors, risky, or skipped tests |
-| Dependency security | `composer audit --abandoned=ignore` reports no known advisories |
-| Clean consumer install | Fresh Composer consumer installation succeeds and generated `vendor/bin` proxy works |
-| CLI smoke | Installed binary reports the candidate version and `--init` / `--validate-build` succeed |
-| Sample build | `build.json.example` validates; default and `package` targets succeed |
-| Coverage | PHPUnit coverage report is generated and retained as a CI artifact |
-| POSIX fallback | Process-group fallback smoke test succeeds without `ext-posix` |
+## Platform matrix
 
-## 3. Platform matrix
+- [ ] Linux PHP 8.0, 8.1, 8.2, 8.3, 8.4, and 8.5 compatibility jobs pass.
+- [ ] Windows filesystem/process tests pass for PHP 8.0–8.5.
+- [ ] Performance jobs complete on Windows and Linux for PHP 8.0–8.5.
+- [ ] Review platform-specific skips; every supported platform path must be exercised by at least one applicable job.
+- [ ] Record workflow URL and candidate commit SHA.
 
-The GitHub Actions run for the candidate commit must show success for:
+## Security and documentation
 
-- [ ] PHP 8.0, 8.1, 8.2, 8.3, 8.4, and 8.5 compatibility jobs on Linux.
-- [ ] Windows filesystem/process regression jobs for PHP 8.0 through 8.5.
-- [ ] Performance baseline jobs on Linux and Windows for PHP 8.0 through 8.5.
-- [ ] The primary Linux build, static analysis, formatting, dependency checks, security audit, and smoke tests.
-- [ ] PHPUnit coverage job.
+- [ ] Review path containment, symlink/junction handling, destructive operations, and transactional publication.
+- [ ] Review process invocation, timeout, output limits, cancellation, and cleanup behavior.
+- [ ] Review ZIP input validation and resource limits.
+- [ ] Review build JSON validation and Composer audit results.
+- [ ] Review `SECURITY.md` and the security review; do not claim an external penetration test unless one occurred.
+- [ ] Synchronize README, FAQ, User Guide, schema, API compatibility, migration notes, and changelog.
+- [ ] Verify examples and internal links.
 
-Do not treat an in-progress, skipped, cancelled, or missing matrix job as a pass.
-Record the workflow URL and candidate commit SHA in the release record.
+## Publish
 
-## 4. Security and regression review
+- [ ] Merge the reviewed candidate into `main`.
+- [ ] Confirm the push-triggered workflow passes for the exact main commit.
+- [ ] Create and push an annotated stable SemVer tag matching the source version.
+- [ ] Confirm the tag-triggered release workflow passes all required build, coverage, Linux, and Windows jobs.
+- [ ] Verify GitHub Release archives, checksums, manifest, and release notes.
+- [ ] Verify Packagist synchronization and installation in a clean consumer project.
+- [ ] Verify the README badge and installed `--version` output.
+- [ ] Retain CI, coverage, dependency-audit, and consumer-install evidence.
 
-- [ ] Review the current `SECURITY.md` policy and `documents/SECURITY-REVIEW.md`.
-- [ ] Confirm security-sensitive regression tests are included in the complete test suite.
-- [ ] Confirm filesystem containment, symlink/junction handling, archive limits, process timeout/output limits, process-tree cleanup, and logger concurrency tests pass.
-- [ ] Review Composer audit output; record any accepted exception with package, advisory, impact, and mitigation.
-- [ ] Do not claim a third-party penetration test or OS-level sandbox unless one was actually performed.
-
-## 5. Documentation and migration
-
-- [ ] Update `documents/CHANGELOG.txt`: move the completed Unreleased entries under the chosen version and add the release date.
-- [ ] Review README requirements, installation instructions, supported PHP versions, CLI examples, and version badges.
-- [ ] Review `documents/USER-GUIDE.md`, `documents/API-COMPATIBILITY.md`, FAQ, and TSD for consistency.
-- [ ] Add migration notes when a documented behavior, configuration field, CLI option, or stable API changes.
-- [ ] If no migration is required, explicitly record that the release preserves the documented 2.x compatibility contract.
-- [ ] Verify the sample build configuration and all version references are intentional and consistent.
-
-## 6. Final publication
-
-Only after all mandatory gates pass:
-
-- [ ] Re-run or verify all required checks against the final release commit.
-- [ ] Wait for the push-triggered `Build and Test` run for the exact `main` commit
-      to complete successfully before pushing its release tag.
-- [ ] Create an annotated Git tag matching `VERSION.txt`.
-- [ ] Push the annotated tag matching `VERSION.txt`; this triggers
-      `.github/workflows/default.yml`.
-- [ ] Confirm the release job waits for the tagged commit's build, coverage, Linux
-      compatibility, and Windows test jobs before publishing the GitHub Release.
-- [ ] Verify the release source archives contain the expected tracked files.
-- [ ] Verify Packagist sees the intended version and installation works in a fresh
-      consumer project. Packagist synchronization is external to the release workflow.
-- [ ] Confirm the release page, tag, Packagist version, README badge, and
-      `--version` output agree.
-- [ ] Retain the workflow URL, commit SHA, test matrix results, coverage artifact,
-      audit result, and consumer-install evidence.
-
-## 7. Phase 9 release-readiness baseline
-
-- Phase 9 was merged into `main` as merge commit
-  `ec63634f6f73e3b3dbde92df9668217fab30b496`.
-- The Phase 9 candidate was `048aebedb097d63608b2a046da1a1d42d55535d4`.
-- Workflow run
-  `https://github.com/phpmake/phpmake/actions/runs/45009480697`
-  completed successfully with 26 of 26 jobs passing.
-- The run covered PHP 8.0–8.5 compatibility, Windows filesystem/process tests,
-  Linux/Windows performance baselines, PHPStan, formatting, Rector, Composer checks,
-  PHPUnit, dependency audit, clean consumer installation, and coverage generation.
-- The source version remains `2.0.2` in `VERSION.txt` and
-  `PhpMake\Config::TOOL_VERSION`. Phase 9 did not create a tag or publish a release.
-- The Phase 9 audit observed Git tags `1.0.0`, `2.0.0`, and `2.0.1`, and no
-  GitHub Releases at that time. Recheck Git and Packagist before selecting a version.
-
-## 8. Unified release automation
-
-- `.github/workflows/default.yml` handles branch/PR validation and stable SemVer tag
-  publication. There is no separate release workflow.
-- The tag-triggered release job validates annotated-tag identity, rejects moved or
-  replaced tags and existing GitHub Releases, checks version/changelog consistency,
-  and requires the tag commit to be reachable from `main`.
-- The release job depends on the shared build, coverage, Linux PHP 8.0–8.5
-  compatibility, and Windows PHP 8.0–8.5 test jobs. It does not reinstall Composer
-  dependencies or repeat the test suite and dependency audit.
-- Performance baselines run on branch and pull-request events; they are skipped for
-  tag events to keep release publication focused on required validation gates.
-- Successful publication creates a GitHub Release with `.tar.gz` and `.zip`
-  source archives, `SHA256SUMS`, a release manifest, and changelog-derived notes.
-- The workflow does not select or bump versions, create tags, or publish directly
-  to Packagist. These remain explicit maintainer actions.
+The release workflow publishes GitHub Releases from annotated tags. It does not choose
+or bump versions, create tags, or publish directly to Packagist.
