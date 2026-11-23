@@ -195,6 +195,13 @@ final class ExecTask extends BaseTask
             ? $observedExitCode
             : $closeCode;
 
+        if ($outputLimitExceeded) {
+            // Do not emit the captured prefix: it can itself be up to 1 MiB
+            // and may contain secrets or attacker-controlled terminal output.
+            $this->logger->error(sprintf('Command output exceeded the %d-byte per-stream limit.', self::MAX_CAPTURE_BYTES));
+            return false;
+        }
+
         foreach (preg_split('/\\R/', rtrim($stdout)) as $line) {
             if ($line !== '') {
                 $this->logger->info($line);
@@ -203,11 +210,6 @@ final class ExecTask extends BaseTask
 
         if (trim($stderr) !== '') {
             $this->logger->error(trim($stderr));
-        }
-
-        if ($outputLimitExceeded) {
-            $this->logger->error(sprintf('Command output exceeded the %d-byte per-stream limit.', self::MAX_CAPTURE_BYTES));
-            return false;
         }
 
         if ($cancelledSignal !== null) {
