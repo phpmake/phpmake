@@ -26,6 +26,7 @@ All classes under the Composer PSR-4 namespace are currently autoloadable. Publi
 | Namespace / class | Current public methods and constants |
 |---|---|
 | `PhpMake\Config` | `TOOL_VERSION` |
+| `PhpMake\PlatformSupport` | `isSupportedFamily`, `assertSupported`, `assertSupportedFamily` |
 | `PhpMake\Diagnostics\ExceptionDiagnostics` | `format` |
 | `PhpMake\Build\BuildConfiguration` | `__construct`, `getName`, `getDescription`, `getVersion`, `getTargets`, `getDefaultTarget` |
 | `PhpMake\Build\BuildExecutor` | `__construct`, `execute` |
