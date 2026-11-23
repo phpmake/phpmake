@@ -7,7 +7,7 @@
 ## Audit baseline
 
 - 50 PHP files under `tests/` were included in the source inventory.
-- The prior structural audit counted 268 test methods with explicit Arrange, Act, and Assert sections. This phase adds two tests, bringing the audited total to 270 test methods.
+- The prior structural audit counted 268 test methods with explicit Arrange, Act, and Assert sections. This phase adds two tests, bringing the audited total to 271 test methods.
 - The prior audit found no PHPUnit mock objects, mock-builder usage, Mockery, or Prophecy references. This phase introduces no mocks.
 - This is a source-level audit and targeted test improvement, not a fresh coverage measurement. No current line, branch, method, or class coverage percentage is claimed.
 
@@ -17,12 +17,12 @@
 - Improved the `EchoTask` test to assert the exact observable log message.
 - Improved the timeout test to assert the timeout diagnostic, not just a false return value.
 - Improved malformed execution-order and task-list tests to assert their exact error output.
-- Added an exact 2 MiB `BuildLoader` input-boundary test. The existing over-limit test continues to verify rejection above the limit.
+- Added an exact 2 MiB `BuildLoader` input-boundary test and an exact 1 MiB `ExecTask` stdout capture-boundary test. Existing over-limit tests continue to verify rejection above both limits.
 - Added a task-definition registry contract test that checks all six identifiers, their concrete task classes, lookup consistency, and unknown-type behavior.
 
 ## Source-to-test coverage findings
 
-The source inventory contains 38 production PHP files. Most public behavior has at least one direct unit test or is exercised through the CLI integration/system suite. The following areas remain weaker or depend on indirect/platform-specific coverage:
+The source inventory contains 33 production PHP files. Most public behavior has at least one direct unit test or is exercised through the CLI integration/system suite. The following areas remain weaker or depend on indirect/platform-specific coverage:
 
 | Production area | Current evidence | Remaining limitation |
 |---|---|---|
