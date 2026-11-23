@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpMake\Tests\Unit;
 
 use PhpMake\Task\TaskFactory;
+use PhpMake\Task\TaskDefinitionRegistry;
 use PhpMake\Task\Types\CopyTask;
 use PhpMake\Task\Types\CreateDirectoryTask;
 use PhpMake\Task\Types\DeleteTask;
