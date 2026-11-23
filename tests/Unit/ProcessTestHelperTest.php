@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PhpMake\\Tests\\Unit;
+namespace PhpMake\Tests\Unit;
 
-use PhpMake\\Tests\\Support\\ProcessTestHelper;
-use PHPUnit\\Framework\\TestCase;
+use PhpMake\Tests\Support\ProcessTestHelper;
+use PHPUnit\Framework\TestCase;
 
 /** Verifies bounded subprocess execution and output capture for integration tests. */
 final class ProcessTestHelperTest extends TestCase

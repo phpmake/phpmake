@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace PhpMake\Tests\Integration;
 
+use PhpMake\Tests\Support\ProcessTestHelper;
 use PhpMake\Tests\Support\TemporaryDirectoryTestHelper;
 use PHPUnit\Framework\TestCase;
 
 /** Verifies that --init never follows an existing dangling destination symlink. */
 final class InitSymlinkTest extends TestCase
 {
-    use ProcessTestHelper;\n    use TemporaryDirectoryTestHelper;
+    use ProcessTestHelper;
+    use TemporaryDirectoryTestHelper;
 
     /** A dangling build.json symlink is rejected without creating its target. */
     public function testInitRejectsDanglingBuildConfigSymlink(): void
