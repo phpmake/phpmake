@@ -1,52 +1,42 @@
-# Product Requirements Document (PRD)
+# Product Requirements
 
-**Product:** PHPMake
-**Version:** 2.0.x
-**Document:** Product Requirements Document
-**Status:** Active
+**Product:** PHPMake  
+**Release line:** 2.x
 
-## 1. Product Overview
+## Purpose
 
-PHPMake is a lightweight PHP-based build automation tool inspired by GNU Make and Apache Ant. It enables developers to define, organize, and execute project build processes through human-readable JSON configuration files.
+PHPMake is a command-line build automation tool for defining and executing project workflows from a JSON configuration file.
 
-## 2. Product Objectives
+## Users
 
-- Simplify and automate repetitive development and build tasks.
-- Provide dependency-based execution of build targets.
-- Offer a lightweight, modular, and extensible build system.
-- Support cross-platform development environments.
-- Provide safe and predictable filesystem operations.
-- Execute external processes with bounded output and configurable deadlines.
-- Preserve log integrity during concurrent builds.
-- Integrate easily into CI/CD pipelines.
+- Developers automating local build and packaging tasks.
+- Build and DevOps engineers maintaining repeatable workflows.
+- Teams using PHP-based projects and CI pipelines.
 
-## 3. Target Users
+## Product capabilities
 
-- PHP developers and development teams.
-- Software engineers and build engineers.
-- DevOps engineers.
-- Open-source project maintainers.
-- Teams requiring lightweight build automation.
+1. Define named build targets and dependencies in JSON.
+2. Validate build configuration before execution.
+3. Execute ordered tasks and stop when a task fails.
+4. Provide filesystem, process, archive, and message-output tasks.
+5. Expose CLI controls for validation, diagnostics, logging, and initialization.
+6. Install and invoke the tool through Composer.
 
-## 4. Core Features
+## Supported environment
 
-1. **Build Configuration**
-2. **Target Management**
-3. **Dependency Resolution**
-4. **Task Execution**
-5. **Configuration Validation**
-6. **CLI Interface**
-7. **Logging**
-8. **Extensibility**
-9. **CI/CD Integration**
+- PHP 8.0 or newer (`^8.0`).
+- Composer 2 or newer.
+- PHP extensions: `ctype`, `json`, and `zip`.
+- Microsoft Windows and GNU/Linux.
 
-## 5. Product Scope
+## Product constraints
 
-- JSON-based build definitions.
-- Dependency-aware task execution.
-- Built-in task implementations.
-- Filesystem safety restrictions, including symlink and junction escape prevention.
-- CLI and logging functionality with serialized file writes and bounded rotation.
-- External process execution without shell interpretation, bounded output, and timeout handling.
-- Cross-platform compatibility.
-- Composer-based distribution.
+- Filesystem tasks are restricted to the current working directory.
+- External processes execute without implicit shell interpretation.
+- Process execution has bounded timeouts and captured output.
+- ZIP creation and build configuration input have explicit resource limits.
+- PHPMake is not a sandbox; build definitions and `exec` commands must be trusted.
+
+## Out of scope
+
+PHPMake does not provide a third-party runtime task-plugin API, OS-level sandboxing, credential isolation, network egress filtering, DNS policy enforcement, or archive extraction.
