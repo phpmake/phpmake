@@ -1,5 +1,8 @@
 PHPMake - Unreleased
 --------------------
+* Consolidate release validation and publishing into the default workflow; remove the duplicate release workflow and reuse the shared build, coverage, Linux compatibility, and Windows test jobs.
+* Restrict runtime, tests, benchmarks, and process/filesystem adapters to Windows and Linux; reject unsupported operating-system families explicitly.
+* Add platform-support regression tests and synchronize the supported OS documentation and test guards.
 * Fix Windows stderr overflow detection by continuing to drain both process pipes without relying on transient feof() state; assert the overflow diagnostic in the regression test.
 * Add PHPUnit debug events to the Windows test matrix to pinpoint the stderr output-limit regression following the Phase 22 TestDox findings.
 * Emit PHPUnit TestDox output in the Windows PHP 8.0–8.5 test matrix to identify the test reached before the CI timeout.
