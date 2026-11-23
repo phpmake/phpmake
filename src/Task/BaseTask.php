@@ -3,6 +3,7 @@
 namespace PhpMake\Task;
 
 use PhpMake\Diagnostics\ExceptionDiagnostics;
+use PhpMake\Filesystem\FilesystemTree;
 use PhpMake\PlatformSupport;
 use PhpMake\Utilities\Logger;
 
@@ -44,43 +45,16 @@ abstract class BaseTask implements TaskInterface
     /** Validates task-specific parameters before execution. */
     abstract protected function validateParams(): void;
 
-    /** Detects POSIX symbolic links and Windows NTFS junctions. */
+    /** Detects symbolic links and Windows junctions through the shared filesystem helper. */
     protected function isSymbolicLinkOrJunction(string $path): bool
     {
-        clearstatcache(true, $path);
-        if (PHP_OS_FAMILY === 'Linux') {
-            return is_link($path);
-        }
-
-        // Check is_dir() before is_link() to preserve Windows reparse-point
-        // metadata for lstat(), matching PHP's junction detection semantics.
-        if (!is_dir($path)) {
-            if (is_link($path)) {
-                return true;
-            }
-
-            // A dangling Windows junction is no longer a directory, but its
-            // reparse-point mode remains visible through lstat().
-            $stat = @lstat($path);
-            return is_array($stat) && (($stat['mode'] & 0xF000) !== 0x8000);
-        }
-
-        if (is_link($path)) {
-            return true;
-        }
-
-        $stat = @lstat($path);
-        return is_array($stat) && (($stat['mode'] & 0xF000) !== 0x4000);
+        return FilesystemTree::isLink($path);
     }
 
     /** Removes a link itself without traversing its target. */
     protected function removeSymbolicLinkOrJunction(string $path): bool
     {
-        if (PHP_OS_FAMILY === 'Windows' && @rmdir($path)) {
-            return true;
-        }
-
-        return @unlink($path);
+        return FilesystemTree::remove($path);
     }
 
     /**
