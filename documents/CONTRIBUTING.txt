@@ -53,7 +53,9 @@ New-Item -ItemType Directory -Force build | Out-Null
 $env:XDEBUG_MODE = "coverage"
 vendor/bin/phpunit --configuration phpunit.xml --branch-coverage --coverage-clover=build/coverage.xml
 composer coverage-check
-``` The coverage gate requires at least 80% overall executable-line coverage and 100% line coverage in the designated critical files. Branch coverage is reported but does not yet have a global percentage threshold.
+```
+
+The coverage gate requires at least 80% overall executable-line coverage and 100% line coverage in the designated critical files. Branch coverage is reported but does not yet have a global percentage threshold.
 
 Run the benchmark when changing performance-sensitive code:
 
