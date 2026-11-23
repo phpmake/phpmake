@@ -56,8 +56,7 @@ final class LoggerSecurityTest extends TestCase
         }
 
         if (!@symlink($target, 'blocked.log.lock')) {
-            self::assertTrue(true, 'File symbolic-link creation is unavailable.');
-            return;
+            self::markTestSkipped('File symbolic-link creation is unavailable.');
         }
 
         // Act
