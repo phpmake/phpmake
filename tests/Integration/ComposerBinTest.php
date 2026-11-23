@@ -23,9 +23,10 @@ final class ComposerBinTest extends TestCase
         $autoloadDirectory = $temporaryRoot . DIRECTORY_SEPARATOR . 'vendor';
         $packageBinDirectory = $autoloadDirectory . DIRECTORY_SEPARATOR . 'phpmake' . DIRECTORY_SEPARATOR . 'phpmake' . DIRECTORY_SEPARATOR . 'bin';
 
-        self::assertTrue(mkdir($packageBinDirectory, 0777, true));
+        try {
+            self::assertTrue(mkdir($packageBinDirectory, 0777, true));
 
-        $autoload = <<<'PHP'
+            $autoload = <<<'PHP'
             <?php
 
             namespace Composer\Autoload {
@@ -61,7 +62,6 @@ final class ComposerBinTest extends TestCase
             include __DIR__ . '/vendor/phpmake/phpmake/bin/phpmake.php';
             PHP;
 
-        try {
             self::assertNotFalse(file_put_contents($autoloadDirectory . DIRECTORY_SEPARATOR . 'autoload.php', $autoload));
             self::assertTrue(copy($projectRoot . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'phpmake.php', $packageBinDirectory . DIRECTORY_SEPARATOR . 'phpmake.php'));
             self::assertNotFalse(file_put_contents($temporaryRoot . DIRECTORY_SEPARATOR . 'run.php', $runner));

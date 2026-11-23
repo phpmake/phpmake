@@ -24,9 +24,9 @@ final class CliBuildIntegrationTest extends TestCase
     {
         parent::setUp();
 
-        $this->projectDirectory = $this->createTemporaryDirectory('phpmake-integration-');
         $this->cliPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'phpmake.php';
         self::assertFileExists($this->cliPath);
+        $this->projectDirectory = $this->createTemporaryDirectory('phpmake-integration-');
     }
 
     /** Removes the isolated project and every artifact created by the CLI. */
@@ -74,7 +74,6 @@ final class CliBuildIntegrationTest extends TestCase
 
         // Assert
         self::assertFalse($result['timedOut'], $result['stderr']);
-        self::assertFalse($result['timedOut'], $result['stderr']);
         self::assertSame(0, $result['exitCode'], $result['stderr']);
         self::assertFileExists($this->projectDirectory . DIRECTORY_SEPARATOR . 'build' . DIRECTORY_SEPARATOR . 'copied.txt');
         self::assertSame(
@@ -109,6 +108,7 @@ final class CliBuildIntegrationTest extends TestCase
         $result = $this->runCli(['--validate-build', '--no-log']);
 
         // Assert
+        self::assertFalse($result['timedOut'], $result['stderr']);
         self::assertSame(0, $result['exitCode'], $result['stderr']);
         self::assertStringContainsString('Build configuration is valid.', $result['stdout']);
         self::assertDirectoryDoesNotExist($this->projectDirectory . DIRECTORY_SEPARATOR . 'must-not-exist');
@@ -135,7 +135,6 @@ final class CliBuildIntegrationTest extends TestCase
 
         // Assert
         self::assertFalse($result['timedOut'], $result['stderr']);
-        self::assertFalse($result['timedOut'], $result['stderr']);
         self::assertSame(1, $result['exitCode']);
         self::assertDirectoryDoesNotExist($this->projectDirectory . DIRECTORY_SEPARATOR . 'must-not-exist');
     }
@@ -156,6 +155,7 @@ final class CliBuildIntegrationTest extends TestCase
         $result = $this->runCli(['--validate-build', '--no-log']);
 
         // Assert
+        self::assertFalse($result['timedOut'], $result['stderr']);
         self::assertSame(1, $result['exitCode']);
         self::assertStringContainsString("Unknown task type 'unknown_task'", $result['stderr']);
     }

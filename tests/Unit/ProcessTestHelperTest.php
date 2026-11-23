@@ -19,7 +19,7 @@ final class ProcessTestHelperTest extends TestCase
         $code = 'fwrite(STDOUT, str_repeat("o", 131072)); fwrite(STDERR, "diagnostic");';
 
         // Act
-        $result = $this->runTestProcess([PHP_BINARY, '-r', $code], getcwd());
+        $result = $this->runTestProcess([PHP_BINARY, '-r', $code], (getcwd() ?: sys_get_temp_dir()));
 
         // Assert
         self::assertFalse($result['timedOut']);
@@ -35,7 +35,7 @@ final class ProcessTestHelperTest extends TestCase
         $startedAt = hrtime(true);
 
         // Act
-        $result = $this->runTestProcess([PHP_BINARY, '-r', 'sleep(10);'], getcwd(), 0.1);
+        $result = $this->runTestProcess([PHP_BINARY, '-r', 'sleep(10);'], (getcwd() ?: sys_get_temp_dir()), 0.1);
         $elapsedSeconds = (hrtime(true) - $startedAt) / 1_000_000_000;
 
         // Assert
