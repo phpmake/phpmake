@@ -131,7 +131,7 @@ final class FilesystemTree
     public static function isLink(string $path): bool
     {
         clearstatcache(true, $path);
-        if (PHP_OS_FAMILY !== 'Windows') {
+        if (PHP_OS_FAMILY === 'Linux') {
             return is_link($path);
         }
 
