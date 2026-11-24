@@ -159,7 +159,7 @@ final class ProcessSupervisorFallbackTest extends TestCase
         );
 
         if ($result['timedOut']) {
-            throw new \\RuntimeException('The PHP fallback subprocess exceeded its six-second timeout.');
+            throw new \RuntimeException('The PHP fallback subprocess exceeded its six-second timeout.');
         }
 
         return [
