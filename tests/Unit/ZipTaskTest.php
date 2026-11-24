@@ -115,12 +115,12 @@ final class ZipTaskTest extends TestCase
         } finally {
             foreach ([$configuredOutput, $actualOutput, $root . DIRECTORY_SEPARATOR . 'input.txt'] as $path) {
                 if (is_file($path) && !unlink($path)) {
-                    throw new \\RuntimeException(sprintf('Unable to remove ZIP case-alias fixture "%s".', $path));
+                    throw new \RuntimeException(sprintf('Unable to remove ZIP case-alias fixture "%s".', $path));
                 }
             }
 
             if (is_dir($root) && !rmdir($root)) {
-                throw new \\RuntimeException(sprintf('Unable to remove ZIP case-alias test directory "%s".', $root));
+                throw new \RuntimeException(sprintf('Unable to remove ZIP case-alias test directory "%s".', $root));
             }
         }
     }
