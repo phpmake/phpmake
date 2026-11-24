@@ -43,7 +43,7 @@ final class PosixProcessLauncherTest extends TestCase
             }
         } finally {
             if (is_string($prepared['pidPath']) && is_file($prepared['pidPath']) && !unlink($prepared['pidPath'])) {
-                throw new \\RuntimeException(sprintf('Unable to remove process launcher PID file "%s".', $prepared['pidPath']));
+                throw new \RuntimeException(sprintf('Unable to remove process launcher PID file "%s".', $prepared['pidPath']));
             }
         }
     }
@@ -156,7 +156,8 @@ final class PosixProcessLauncherTest extends TestCase
                 base64_encode(json_encode($arguments, JSON_THROW_ON_ERROR)),
             ],
             dirname(__DIR__, 2),
-            6.0
+            6.0,
+            $path === null ? null : ['PATH' => $path]
         );
 
         if ($result['timedOut']) {
