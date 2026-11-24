@@ -156,7 +156,7 @@ trait ProcessTestHelper
     private function removeTestFile(string $path): void
     {
         if ((file_exists($path) || is_link($path)) && !unlink($path)) {
-            throw new \\RuntimeException(sprintf('Unable to remove test file "%s".', $path));
+            throw new \RuntimeException(sprintf('Unable to remove test file "%s".', $path));
         }
     }
 
