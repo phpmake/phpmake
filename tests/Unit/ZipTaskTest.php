@@ -85,10 +85,6 @@ final class ZipTaskTest extends TestCase
         // Arrange
         self::assertTrue(class_exists(\ZipArchive::class), 'ext-zip is a required runtime dependency.');
 
-        if (PHP_OS_FAMILY !== 'Windows') {
-            self::markTestSkipped('Case-variant filesystem test requires a case-insensitive filesystem.');
-        }
-
         $root = $this->root . DIRECTORY_SEPARATOR . 'case';
         self::assertTrue(mkdir($root));
         file_put_contents($root . DIRECTORY_SEPARATOR . 'input.txt', 'content');
@@ -268,19 +264,19 @@ final class ZipTaskTest extends TestCase
             self::assertSame([], glob($root . DIRECTORY_SEPARATOR . '.phpmake-archive-input-*') ?: []);
         } finally {
             foreach (glob($root . DIRECTORY_SEPARATOR . '.phpmake-archive-input-*') ?: [] as $snapshot) {
-                @unlink($snapshot);
+                if (is_file($snapshot) && !unlink($snapshot)) {
+                    throw new \\RuntimeException(sprintf('Unable to remove ZIP input snapshot "%s".', $snapshot));
+                }
             }
 
-            if (is_file($output)) {
-                unlink($output);
+            foreach ([$output, $source] as $path) {
+                if (is_file($path) && !unlink($path)) {
+                    throw new \\RuntimeException(sprintf('Unable to remove ZIP test fixture "%s".', $path));
+                }
             }
 
-            if (is_file($source)) {
-                unlink($source);
-            }
-
-            if (is_dir($root)) {
-                rmdir($root);
+            if (is_dir($root) && !rmdir($root)) {
+                throw new \\RuntimeException(sprintf('Unable to remove ZIP test directory "%s".', $root));
             }
         }
     }
