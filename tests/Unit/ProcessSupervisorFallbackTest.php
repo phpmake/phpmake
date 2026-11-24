@@ -113,10 +113,13 @@ final class ProcessSupervisorFallbackTest extends TestCase
 
         return sprintf(
             'require %s; require %s; '
-            . '$process = proc_open([%s, PHP_BINARY, "-n", "-r", %s, %s], '
+            . '$process = proc_open([%s, PHP_BINARY, "-n", "-r", %s, %s, %s, %s], '
             . '[0 => ["pipe", "r"], 1 => ["pipe", "w"], 2 => ["pipe", "w"]], $pipes); '
             . 'if (!is_resource($process)) { exit(31); } '
             . 'foreach ($pipes as $pipe) { fclose($pipe); } '
+            . '$deadline = microtime(true) + 3; '
+            . 'while (!is_file(%s) && microtime(true) < $deadline) { usleep(10000); } '
+            . 'if (!is_file(%s)) { proc_terminate($process, 9); proc_close($process); exit(34); } '
             . '$pid = (int) proc_get_status($process)["pid"]; '
             . '\PhpMake\Process\ProcessSupervisor::terminate($process, $pid, true, $pid); '
             . 'file_put_contents(%s, "release"); '
@@ -133,6 +136,10 @@ final class ProcessSupervisorFallbackTest extends TestCase
             var_export($setsid, true),
             var_export($parentCode, true),
             var_export($marker, true),
+            var_export($readyFile, true),
+            var_export($releaseFile, true),
+            var_export($readyFile, true),
+            var_export($readyFile, true),
             var_export($releaseFile, true),
             var_export($marker, true)
         );
