@@ -144,8 +144,10 @@ final class ExecTask extends BaseTask
                 $status = proc_get_status($process);
                 if (
                     PHP_OS_FAMILY === 'Windows'
-                    && strlen($stdout) >= self::MAX_CAPTURE_BYTES
-                    || PHP_OS_FAMILY === 'Windows' && strlen($stderr) >= self::MAX_CAPTURE_BYTES
+                    && (
+                        strlen($stdout) >= self::MAX_CAPTURE_BYTES
+                        || strlen($stderr) >= self::MAX_CAPTURE_BYTES
+                    )
                 ) {
                     // The Windows Job Object wrapper can take a short moment
                     // to finish after its child closes the output handles.
