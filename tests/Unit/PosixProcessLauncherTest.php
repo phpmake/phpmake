@@ -59,9 +59,9 @@ final class PosixProcessLauncherTest extends TestCase
         }
 
         $arguments = [PHP_BINARY, '-r', 'echo "fallback";'];
-        $result = $this->runPhpWithoutExtensions($this->buildPreparationScript(), $arguments);
 
         // Act
+        $result = $this->runPhpWithoutExtensions($this->buildPreparationScript(), $arguments);
         $payload = json_decode($result['stdout'], true, 512, JSON_THROW_ON_ERROR);
 
         try {
@@ -97,13 +97,12 @@ final class PosixProcessLauncherTest extends TestCase
         $arguments = [PHP_BINARY, '-r', 'echo "unchanged";'];
 
         try {
+            // Act
             $result = $this->runPhpWithoutExtensions(
                 $this->buildPreparationScript(),
                 $arguments,
                 $directory
             );
-
-            // Act
             $payload = json_decode($result['stdout'], true, 512, JSON_THROW_ON_ERROR);
 
             // Assert
