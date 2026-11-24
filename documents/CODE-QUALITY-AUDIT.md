@@ -20,9 +20,20 @@ The Composer scripts provide:
 - PHPStan: `composer analyse`
 - PHP-CS-Fixer check: `composer format-check`
 - Rector dry run: `composer refactor-check`
+- Coverage enforcement: `composer coverage-check` (after generating a Clover report with Xdebug)
 - Performance measurements: `composer benchmark`
 
-CI also validates YAML, XML, and JSON files; Composer metadata and dependency declarations; dependency advisories; and a clean Composer consumer installation.
+CI also validates YAML, XML, and JSON files; Composer metadata and dependency declarations; unused Composer dependencies (`composer-unused`); dependency advisories; and a clean Composer consumer installation.
+
+## Cleanup findings
+
+- Removed the unused `ConsoleOutput::stderr()` wrapper; error output is already centralized by `ConsoleOutput::error()`.
+- Removed the one-call `ZipTask::publishArchive()` wrapper and call the shared atomic publisher directly.
+- Consolidated task-level link/junction detection and removal in `FilesystemTree`, eliminating duplicate platform-specific logic from `BaseTask`.
+- Simplified test bootstrap autoload path construction; `addslashes()` was not needed for a literal filesystem path.
+- Reviewed private/protected source methods for unreferenced declarations. No additional unused private/protected methods were identified.
+- Reviewed overlapping tests. The similar-looking publisher, filesystem-task, and helper tests exercise different layers or failure guarantees, so they were retained rather than deleting useful regression coverage.
+- The current test inventory contains 272 test methods across 45 PHPUnit test files; the 50 PHP files under `tests/` also include support scripts, helpers, and the bootstrap.
 
 ## Confirmed test-quality baseline
 

@@ -7,11 +7,11 @@
 ## Audit baseline
 
 - 50 PHP files under `tests/` were included in the source inventory.
-- The prior structural audit counted 268 test methods with explicit Arrange, Act, and Assert sections. This phase adds two tests, bringing the audited total to 271 test methods.
-- The prior audit found no PHPUnit mock objects, mock-builder usage, Mockery, or Prophecy references. This phase introduces no mocks.
-- This is a source-level audit and targeted test improvement, not a fresh coverage measurement. No current line, branch, method, or class coverage percentage is claimed.
+- The current source inventory contains 272 PHPUnit test methods across the configured unit, integration, system, and smoke suites. All test methods have explicit Arrange / Act / Assert sections.
+- No PHPUnit mock objects, mock-builder usage, Mockery, or Prophecy references were found in the current test inventory.
+- The source inventory is a static audit, not a fresh coverage measurement. The latest numeric line-coverage baseline recorded below is historical; use the most recent successful CI Clover artifact for current line and branch percentages.
 
-## Changes in this phase
+## Recent test and maintenance changes
 
 - Improved the successful `ExecTask` test to assert the actual child-process output persisted by the logger, rather than only asserting a successful return value.
 - Improved the `EchoTask` test to assert the exact observable log message.
@@ -19,6 +19,7 @@
 - Improved malformed execution-order and task-list tests to assert their exact error output.
 - Added an exact 2 MiB `BuildLoader` input-boundary test and an exact 1 MiB `ExecTask` stdout capture-boundary test. Existing over-limit tests continue to verify rejection above both limits.
 - Added a task-definition registry contract test that checks all six identifiers, their concrete task classes, lookup consistency, and unknown-type behavior.
+- Added a regression test for `BaseTask` directory-link detection after consolidating link/junction handling in `FilesystemTree`.
 
 ## Source-to-test coverage findings
 
@@ -79,7 +80,7 @@ Other tests that assert only an exit code are retained where the test's contract
 
 ## Historical coverage evidence
 
-The latest numeric baseline previously recorded in this repository is from Phase 19:
+The older Phase 19 numeric baseline recorded in this repository is:
 
 | Metric | Recorded result |
 |---|---:|
@@ -90,16 +91,16 @@ The latest numeric baseline previously recorded in this repository is from Phase
 | Class coverage | 36.67% (11 / 30) |
 | Platform skips | 6 |
 
-This is historical, not a current measurement of merged `main` or this branch. CI generates JUnit, Clover, and HTML reports and publishes statement coverage. It does not currently publish branch coverage or enforce an 80% threshold.
+This Phase 19 result is historical and predates the current branch-coverage reporting and coverage gates. Current CI generates JUnit, Clover, and HTML reports, publishes line and branch coverage, enforces at least 80% overall executable-line coverage, and requires 100% line coverage in seven designated critical contract files. See `documents/CODE-COVERAGE.md` for the enforced list and current policy.
 
-## Coverage policy added in Phase 29
+## Current coverage policy
 
 - Overall executable-line coverage is enforced at a minimum of 80% by `tools/check-coverage.php`.
 - Xdebug branch coverage is collected in the dedicated PHP 8.3 coverage job and published separately in the CI summary and Clover report.
 - Seven critical contract files have a 100% executable-line coverage requirement enforced by the coverage gate. The exact list and rationale are documented in `documents/CODE-COVERAGE.md`.
 - Branch coverage is reported but does not yet have a project-wide percentage gate. The first stable branch measurement will be used to set a defensible target.
 - The available pre-Phase-28 Clover artifact measured 1,284 / 1,594 statements (80.55%). Branch coverage was not collected. This is a pre-additional-tests baseline, not the post-Phase-28 measurement.
-- The post-Phase-28 and branch-enabled measurement must be taken from the new CI artifact. No post-change percentage is claimed until that artifact is available.
+- A post-Phase-29/30 measurement must be taken from a successful CI coverage artifact. No current-main percentage is claimed until that artifact is available.
 
 ## Remaining work
 
@@ -108,7 +109,7 @@ This is historical, not a current measurement of merged `main` or this branch. C
 - Add deterministic tests for uncovered high-risk branches, especially process startup failures, archive resource limits, and rollback/cleanup failures.
 - Add Windows-specific filesystem failure tests where a deterministic Windows-native failure condition can be created without mocks.
 - Keep platform-specific tests assigned to the matching CI runner; do not count a skipped test as platform validation.
-- Define explicit coverage expectations for critical security and destructive filesystem paths.
+- Extend hard 100% file-level gates to additional security-critical filesystem, process, and archive paths as their tests reach the required coverage.
 
 ## Test requirements
 
@@ -126,6 +127,9 @@ composer lint
 composer analyse
 composer format-check
 composer refactor-check
+
+# After generating build/coverage.xml with Xdebug
+composer coverage-check
 ```
 
-The GitHub Actions workflow additionally validates Composer metadata and dependencies, performs a clean consumer installation, runs PHP 8.0–8.5 compatibility tests, and executes Windows filesystem/process tests.
+The GitHub Actions workflow additionally validates Composer metadata and dependencies, performs a clean consumer installation, runs PHP 8.0–8.5 compatibility tests, executes Windows filesystem/process tests, and collects branch coverage on PHP 8.3 with Xdebug.

@@ -120,19 +120,13 @@ final class ZipTask extends BaseTask
             }
         }
 
-        $this->publishArchive($temporaryArchive, $outputReal);
+        AtomicFilePublisher::publish($temporaryArchive, $outputReal);
 
         if ($debug) {
             $this->logger->debug(sprintf("Archived '%s' to '%s'.", $source, $output));
         }
 
         return true;
-    }
-
-    /** Publishes the completed archive and restores the previous output on failure. */
-    private function publishArchive(string $temporaryArchive, string $output): void
-    {
-        AtomicFilePublisher::publish($temporaryArchive, $output);
     }
 
     /** Adds source files to the archive using paths relative to its root. */

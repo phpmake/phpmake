@@ -13,12 +13,6 @@ final class ConsoleOutput
         echo $message;
     }
 
-    /** Writes a message to standard error. */
-    public function stderr(string $message): void
-    {
-        fwrite(STDERR, $message);
-    }
-
     /** Writes one informational line. */
     public function info(string $message): void
     {
