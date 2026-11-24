@@ -142,6 +142,21 @@ final class ExecTask extends BaseTask
                 // Once the child has exited, no overflow byte can arrive, and
                 // probing an empty Windows anonymous pipe can block forever.
                 $status = proc_get_status($process);
+                if (
+                    PHP_OS_FAMILY === 'Windows'
+                    && strlen($stdout) >= self::MAX_CAPTURE_BYTES
+                    || PHP_OS_FAMILY === 'Windows' && strlen($stderr) >= self::MAX_CAPTURE_BYTES
+                ) {
+                    // The Windows Job Object wrapper can take a short moment
+                    // to finish after its child closes the output handles.
+                    // Let it exit before attempting the one-byte overflow probe.
+                    $settleDeadline = hrtime(true) + 100_000_000;
+                    while ($status['running'] && hrtime(true) < $settleDeadline) {
+                        usleep(1000);
+                        $status = proc_get_status($process);
+                    }
+                }
+
                 if (!$status['running']) {
                     $observedExitCode = $status['exitcode'];
                     $stdoutLimitExceeded = self::captureAvailableOutput($pipes[1], $stdout, false);
