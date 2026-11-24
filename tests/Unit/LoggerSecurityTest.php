@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhpMake\Tests\Unit;
 
+use PhpMake\Filesystem\FilesystemTree;
 use PhpMake\Utilities\Logger;
 use PHPUnit\Framework\TestCase;
 
@@ -30,7 +31,7 @@ final class LoggerSecurityTest extends TestCase
     {
         chdir($this->previousDirectory);
         if (!FilesystemTree::remove($this->temporaryDirectory)) {
-            throw new \\RuntimeException(sprintf('Unable to remove logger security test directory "%s".', $this->temporaryDirectory));
+            throw new \RuntimeException(sprintf('Unable to remove logger security test directory "%s".', $this->temporaryDirectory));
         }
         parent::tearDown();
     }
