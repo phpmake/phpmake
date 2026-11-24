@@ -29,7 +29,10 @@ final class AtomicPublisherValidationTest extends TestCase
     /** Removes the temporary publication fixtures after each test. */
     protected function tearDown(): void
     {
-        FilesystemTree::remove($this->base);
+        if (!FilesystemTree::remove($this->base)) {
+            throw new \RuntimeException(sprintf('Unable to remove publisher validation test directory "%s".', $this->base));
+        }
+
         parent::tearDown();
     }
 
@@ -139,10 +142,6 @@ final class AtomicPublisherValidationTest extends TestCase
     public function testFilePublisherRejectsStagedFileLink(): void
     {
         // Arrange
-        if (PHP_OS_FAMILY === 'Windows') {
-            self::markTestSkipped('File symbolic-link creation is not assumed on Windows.');
-        }
-
         $target = $this->base . DIRECTORY_SEPARATOR . 'target.txt';
         $staged = $this->base . DIRECTORY_SEPARATOR . 'staged-link.txt';
         $destination = $this->base . DIRECTORY_SEPARATOR . 'destination.txt';
@@ -169,10 +168,6 @@ final class AtomicPublisherValidationTest extends TestCase
     public function testFilePublisherRejectsDestinationFileLink(): void
     {
         // Arrange
-        if (PHP_OS_FAMILY === 'Windows') {
-            self::markTestSkipped('File symbolic-link creation is not assumed on Windows.');
-        }
-
         $staged = $this->base . DIRECTORY_SEPARATOR . 'staged.txt';
         $target = $this->base . DIRECTORY_SEPARATOR . 'target.txt';
         $destination = $this->base . DIRECTORY_SEPARATOR . 'destination-link.txt';
