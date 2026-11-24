@@ -271,12 +271,12 @@ final class ZipTaskTest extends TestCase
 
             foreach ([$output, $source] as $path) {
                 if (is_file($path) && !unlink($path)) {
-                    throw new \\RuntimeException(sprintf('Unable to remove ZIP test fixture "%s".', $path));
+                    throw new \RuntimeException(sprintf('Unable to remove ZIP test fixture "%s".', $path));
                 }
             }
 
             if (is_dir($root) && !rmdir($root)) {
-                throw new \\RuntimeException(sprintf('Unable to remove ZIP test directory "%s".', $root));
+                throw new \RuntimeException(sprintf('Unable to remove ZIP test directory "%s".', $root));
             }
         }
     }
