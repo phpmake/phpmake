@@ -10,6 +10,25 @@ use PHPUnit\Framework\TestCase;
 /** Tests the shared CLI output boundary. */
 final class ConsoleOutputTest extends TestCase
 {
+    /** Writes raw output to standard output without adding a line ending. */
+    public function testStdoutWritesExactMessageWithoutLineEnding(): void
+    {
+        // Arrange
+        $output = new ConsoleOutput();
+
+        // Act
+        ob_start();
+        try {
+            $output->stdout('raw output');
+            $actual = ob_get_contents();
+        } finally {
+            ob_end_clean();
+        }
+
+        // Assert
+        self::assertSame('raw output', $actual);
+    }
+
     /** Writes informational output to standard output with one line ending. */
     public function testInfoWritesOneOutputLine(): void
     {
