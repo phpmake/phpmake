@@ -82,6 +82,7 @@ Run performance benchmarks with `composer benchmark`.
 ## Documentation
 
 - [User Guide](documents/USER-GUIDE.md) — configuration, tasks, CLI, troubleshooting.
+- [Architecture](documents/ARCHITECTURE.md) — internal components and execution flow.
 - [FAQ](documents/FAQ.txt)
 - [Security Policy](SECURITY.md)
 - [Security Review](documents/SECURITY-REVIEW.md)
