@@ -2,37 +2,28 @@
 
 ## Supported versions
 
-| Version | Security fixes |
-|---|---|
-| 2.x | Supported |
-
-Report issues against the latest available 2.x release or current `main`.
+The latest 2.x release and current `main` receive security fixes.
 
 ## Security model
 
-PHPMake is a local build automation tool, not a sandbox. A `build.json` file is executable input: its `exec` task can launch arbitrary programs with the permissions and inherited environment of the PHPMake process.
+PHPMake is a build runner, not a sandbox. A build file is executable input: `exec` launches arbitrary programs with the permissions and environment of the PHPMake process.
 
-Built-in filesystem tasks enforce project-directory path boundaries and reject symlink/junction escapes. Those checks do not constrain commands started by `exec`. PHPMake does not isolate credentials, restrict network egress, enforce DNS policies, or provide OS-level process containment.
+Built-in filesystem tasks enforce working-directory boundaries and reject symlink/junction escapes. These controls do not restrict child-process filesystem or network access, isolate credentials, or provide OS-level containment.
 
-## Deployment guidance
+## Deployment
 
-- Execute only build configurations from trusted sources.
-- Run builds as a least-privilege user.
-- Do not expose deployment credentials or secrets to untrusted pull requests.
-- Use disposable, isolated CI runners or containers for third-party build logic.
-- Apply filesystem and outbound-network restrictions at the runner/container/host layer.
-- Treat process-tree cleanup as best-effort; detached descendants may escape cleanup.
-- Treat generated ZIP files as untrusted at extraction boundaries. The extracting application must enforce path, link, and decompressed-size limits.
-- Review build output before retaining logs; child-process output and exception messages may contain secrets. Use `--no-log` when persistent logs are not appropriate.
+- Run only trusted build files.
+- Use least-privilege, disposable CI runners for untrusted contributions.
+- Do not expose deployment secrets to untrusted builds.
+- Apply filesystem and network restrictions outside PHPMake.
+- Treat process-tree cleanup as best-effort.
+- Validate ZIP files at extraction time; extraction safety belongs to the consumer.
+- Review logs before retaining them. Child output may contain secrets; use `--no-log` when appropriate.
 
-See [the security review](documents/SECURITY-REVIEW.md) for implementation details and residual limitations.
+See [the security review](documents/SECURITY-REVIEW.md) for implementation details.
 
 ## Report a vulnerability
 
-Email **phpmake.github@gmail.com** with:
-- A concise description and affected version/commit.
-- Security impact and attack prerequisites.
-- Reproduction steps or a proof of concept.
-- Any suggested mitigation.
+Email **phpmake.github@gmail.com** with the affected version/commit, impact, prerequisites, reproduction steps, and suggested mitigation.
 
-Do not publish exploit details or open a public issue before maintainers have had an opportunity to investigate and coordinate disclosure. Avoid sending real credentials or sensitive production data.
+Do not publish exploit details or open a public issue before maintainers can investigate. Do not include real credentials or production data.
