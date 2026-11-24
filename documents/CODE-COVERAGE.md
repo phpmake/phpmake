@@ -9,7 +9,7 @@ The dedicated GitHub Actions coverage job runs PHPUnit on PHP 8.3 with Xdebug en
 - JUnit test report at `build/junit.xml`
 - GitHub Actions summary with line and branch metrics
 
-The coverage job enables PHPUnit's `--branch-coverage` option. Branch coverage requires Xdebug; PCOV alone is not sufficient. The PHP 8.0–8.5 compatibility jobs continue to run the test suite without changing the supported PHP matrix.
+The coverage job resolves PHPUnit 10.5 on PHP 8.3 and enables `--path-coverage`, which requires Xdebug; PCOV alone is not sufficient. PHPUnit 9.6, used by the PHP 8.0 compatibility jobs, does not provide path coverage. The normal PHP 8.0–8.5 compatibility matrix is unchanged.
 
 ## Enforced thresholds
 
