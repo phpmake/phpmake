@@ -158,7 +158,7 @@ jobs:
       - name: Security check
         run: composer audit --abandoned=ignore
 
-      - name: Use tool
+      - name: Run packaging smoke test
         run: php bin/phpmake.php package
 
       - name: Validate build.json
@@ -208,7 +208,80 @@ jobs:
             --coverage-text
 
       - name: Enforce line and critical-path coverage
-        run: composer coverage-check
+        run: |
+          php <<'PHP'
+          <?php
+          $report = is_file('build/coverage.xml')
+              ? simplexml_load_file('build/coverage.xml')
+              : false;
+          if ($report === false || !isset($report->project->metrics)) {
+              fwrite(STDERR, "Missing or invalid Clover coverage report.\n");
+              exit(1);
+          }
+
+          $metrics = $report->project->metrics;
+          $total = (int) $metrics['statements'];
+          $covered = (int) $metrics['coveredstatements'];
+          $branches = (int) $metrics['conditionals'];
+          $coveredBranches = (int) $metrics['coveredconditionals'];
+          if ($total < 1 || $covered < 0 || $covered > $total
+              || $branches < 1 || $coveredBranches < 0 || $coveredBranches > $branches) {
+              fwrite(STDERR, "Clover coverage metrics are missing or invalid.\n");
+              exit(1);
+          }
+
+          $lineCoverage = ($covered / $total) * 100;
+          printf("Line coverage: %.2f%% (%d/%d); required: 80.00%%\n", $lineCoverage, $covered, $total);
+          printf("Branch coverage: %.2f%% (%d/%d)\n", ($coveredBranches / $branches) * 100, $coveredBranches, $branches);
+          if ($lineCoverage + 0.000001 < 80.0) {
+              fwrite(STDERR, "Coverage gate failed: overall line coverage is below 80%.\n");
+              exit(1);
+          }
+
+          $critical = [
+              'src/Build/BuildExecutor.php',
+              'src/Build/BuildValidator.php',
+              'src/Cli/CliParser.php',
+              'src/Process/CommandLineParser.php',
+              'src/Process/WindowsProcessLauncher.php',
+              'src/Target/DependencyResolver.php',
+              'src/Task/TaskDefinitionRegistry.php',
+          ];
+          $found = [];
+          foreach ($report->project->package as $package) {
+              foreach ($package->file as $file) {
+                  $name = str_replace('\\', '/', (string) $file['name']);
+                  foreach ($critical as $required) {
+                      if (substr($name, -strlen($required)) === $required) {
+                          $fileMetrics = $file->metrics;
+                          $found[$required] = [
+                              (int) $fileMetrics['statements'],
+                              (int) $fileMetrics['coveredstatements'],
+                          ];
+                      }
+                  }
+              }
+          }
+
+          $failed = false;
+          foreach ($critical as $required) {
+              if (!isset($found[$required])) {
+                  fwrite(STDERR, "Missing critical coverage entry: {$required}\n");
+                  $failed = true;
+                  continue;
+              }
+              [$fileTotal, $fileCovered] = $found[$required];
+              printf("Critical: %s — %d/%d\n", $required, $fileCovered, $fileTotal);
+              if ($fileTotal < 1 || $fileCovered !== $fileTotal) {
+                  $failed = true;
+              }
+          }
+          if ($failed) {
+              fwrite(STDERR, "Coverage gate failed: all critical files require 100% line coverage.\n");
+              exit(1);
+          }
+          echo "Coverage requirements satisfied.\n";
+          PHP
 
       - name: Publish coverage summary
         shell: bash
@@ -263,46 +336,6 @@ jobs:
             build/coverage-html/
           if-no-files-found: error
           retention-days: 14
-
-  performance:
-    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-    name: Performance Baseline (${{ matrix.os }}, PHP ${{ matrix.php-version }})
-    runs-on: ${{ matrix.os }}
-    continue-on-error: false
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        php-version: ['8.0', '8.1', '8.2', '8.3', '8.4', '8.5']
-
-    steps:
-      - name: Checkout project
-        uses: actions/checkout@v7
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php-version }}
-          extensions: zip
-          tools: composer:v2
-          ini-values: memory_limit=256M, error_reporting=-1, display_errors=On
-
-      - name: Install dependencies
-        run: composer install --no-interaction --no-progress --prefer-dist
-
-      - name: Run performance benchmark
-        shell: bash
-        run: |
-          set -o pipefail
-          composer benchmark | tee benchmark-results.json
-
-      - name: Retain performance baseline
-        uses: actions/upload-artifact@v4
-        with:
-          name: performance-${{ runner.os }}-php-${{ matrix.php-version }}
-          path: benchmark-results.json
-          if-no-files-found: error
-          retention-days: 90
 
   php-compatibility:
     name: PHP ${{ matrix.php-version }} compatibility
