@@ -1,56 +1,33 @@
-# Frequently Asked Questions
+# FAQ
 
-**What does PHPMake require?**  
-PHP 8.0+, Composer 2+, and the `ctype`, `json`, and `zip` extensions.
+**Requirements?** PHP 8.0+, Composer 2+, and `ctype`, `json`, and `zip`. Windows and GNU/Linux are supported.
 
-**Which operating systems are supported?**  
-Microsoft Windows and GNU/Linux.
-
-**How do I install it?**
+**Install?**
 ```sh
 composer require --dev phpmake/phpmake
 ```
 
-**How do I create and validate a build file?**
+**Create and validate a build file?**
 ```sh
 php vendor/bin/phpmake.php --init
 php vendor/bin/phpmake.php --validate-build
 ```
 
-**How do I run a target?**
+**Run a target?**
 ```sh
 php vendor/bin/phpmake.php target_name
 ```
 
-**What is the build-file version?**  
-The `version` field in `build.json` describes the project/build configuration. It is independent of the PHPMake package version.
+**Built-in tasks?** `create_directory`, `delete`, `copy`, `exec`, `echo`, and `archive`. See [USER-GUIDE.md](USER-GUIDE.md).
 
-**Which tasks are built in?**  
-`create_directory`, `delete`, `copy`, `exec`, `echo`, and `archive`. See [USER-GUIDE.md](USER-GUIDE.md) for parameters and behavior.
+**Where are paths resolved?** From the process working directory. Built-in filesystem tasks cannot escape it.
 
-**Can filesystem tasks access paths outside the project?**  
-No. Resolved paths must remain inside the current working directory. Symlink/junction escapes are rejected, and destructive tasks cannot target the project root.
+**Does exec use a shell or sandbox?** No. It starts the executable directly with the caller's permissions and environment. Explicitly invoke a shell if needed; run only trusted build files.
 
-**Does exec use a shell?**  
-No. It launches a process using an argument vector. Shell operators and expansions are not interpreted unless you explicitly launch a shell.
+**Limits?** Process timeout defaults to 300 seconds (maximum 86,400); stdout and stderr are limited to 1 MiB each. ZIP input is limited to 10,000 files, 20,000 entries, depth 256, 512 MiB per file, and 2 GiB total.
 
-**What are the process limits?**  
-The default timeout is 300 seconds (maximum 86,400 seconds). Captured stdout and stderr are each limited to 1 MiB. Process-tree cleanup is best-effort and is not a sandbox.
+**Where are logs?** `build.log` in the working directory. Use `--no-log` to disable persistent logging.
 
-**What are the ZIP limits?**  
-10,000 files, 20,000 filesystem entries, directory depth 256, 512 MiB per input file, and 2 GiB total uncompressed input.
+**Can I add a task plugin?** No runtime registration API exists. New built-in tasks are added to PHPMake's registry and JSON Schema.
 
-**Is exec sandboxed?**  
-No. It runs programs with PHPMake's permissions and inherited environment. Only execute trusted build configurations; isolate CI jobs and protect secrets.
-
-**Where are logs written?**  
-By default, `build.log` in the current working directory. Use `--no-log` to disable file logging.
-
-**How do I enable diagnostics?**  
-Use `--debug` for detailed diagnostics or `--diagnostics` for PHP/runtime information.
-
-**Can I add a third-party task plugin?**  
-No runtime registration API is currently provided. New task types are contributed to PHPMake itself through `TaskDefinitionRegistry` and `schema/build-schema.json`.
-
-**Where do I report bugs or vulnerabilities?**  
-Use [GitHub Issues](https://github.com/phpmake/phpmake/issues) for bugs and feature requests. Report suspected vulnerabilities privately using [SECURITY.md](../SECURITY.md).
+**Report bugs or vulnerabilities?** [GitHub Issues](https://github.com/phpmake/phpmake/issues) for bugs; use [SECURITY.md](../SECURITY.md) for private vulnerability reports.
