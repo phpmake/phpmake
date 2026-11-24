@@ -161,7 +161,7 @@ final class PosixProcessLauncherTest extends TestCase
         );
 
         if ($result['timedOut']) {
-            throw new \\RuntimeException('The POSIX launcher subprocess exceeded its six-second timeout.');
+            throw new \RuntimeException('The POSIX launcher subprocess exceeded its six-second timeout.');
         }
 
         return [
