@@ -161,8 +161,8 @@ final class ExecTask extends BaseTask
 
                 if (!$status['running']) {
                     $observedExitCode = $status['exitcode'];
-                    $stdoutLimitExceeded = self::captureAvailableOutput($pipes[1], $stdout, false);
-                    $stderrLimitExceeded = self::captureAvailableOutput($pipes[2], $stderr, false);
+                    $stdoutLimitExceeded = self::captureAvailableOutput($pipes[1], $stdout);
+                    $stderrLimitExceeded = self::captureAvailableOutput($pipes[2], $stderr);
                     $outputLimitExceeded = $stdoutLimitExceeded || $stderrLimitExceeded;
                     break;
                 }
@@ -257,14 +257,12 @@ final class ExecTask extends BaseTask
      * Captures currently available pipe data without allowing either stream
      * buffer to exceed MAX_CAPTURE_BYTES. No output is spooled to disk.
      */
-    private static function captureAvailableOutput($pipe, string &$buffer, bool $probeOverflow = true): bool
+    private static function captureAvailableOutput($pipe, string &$buffer): bool
     {
-        // A process that has exited cannot produce more output. Avoid the
-        // one-byte overflow probe when the buffer is exactly full: on Windows,
-        // reading an empty anonymous pipe can block despite non-blocking mode.
-        if (!$probeOverflow && strlen($buffer) >= self::MAX_CAPTURE_BYTES) {
-            return false;
-        }
+        // The caller only performs the final drain after the launcher exits,
+        // so the pipe has reached EOF and the one-byte overflow probe cannot
+        // wait for a future writer. Keep this probe to detect output beyond
+        // the limit even when the child exits before the next polling cycle.
 
         // A non-blocking pipe may temporarily have no bytes available while
         // its writer is still active. Do not use feof() as a read-loop guard:
