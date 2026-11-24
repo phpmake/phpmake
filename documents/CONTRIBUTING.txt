@@ -96,6 +96,6 @@ Before requesting review:
 
 ## Architecture and task extensions
 
-The [User Guide](USER-GUIDE.md) documents the supported build-file format and the built-in task extension process. The [Architecture Refactor](ARCHITECTURE-REFACTOR.md) describes internal boundaries. In brief, task metadata belongs in `TaskDefinitionRegistry`, the published contract belongs in `schema/build-schema.json`, and parity is protected by `BuildSchemaParityTest`.
+The [User Guide](USER-GUIDE.md) documents the supported build-file format and the built-in task extension process. The [Architecture](ARCHITECTURE.md) document describes internal boundaries. In brief, task metadata belongs in `TaskDefinitionRegistry`, the published contract belongs in `schema/build-schema.json`, and parity is protected by `BuildSchemaParityTest`.
 
 Contributors should not bypass path-safety, process-launch, output-limit, or atomic-publication helpers when changing filesystem or process behavior.
