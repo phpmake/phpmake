@@ -203,6 +203,7 @@ jobs:
         run: |
           mkdir -p build
           vendor/bin/phpunit --configuration phpunit-coverage.xml \
+            --path-coverage \
             --log-junit=build/junit.xml \
             --coverage-clover=build/coverage.xml \
             --coverage-html=build/coverage-html \
@@ -249,6 +250,7 @@ jobs:
               . "| Covered statements | {$covered} / {$statements} |\n"
               . "| Line coverage | {$percentage}% (minimum 80%) |\n"
               . "| Covered branches | "
+              . "{$coveredConditionals} / {$conditionals} |\n"
               . "| Branch coverage | {$branchPercentage}% |\n"
           );
           '
