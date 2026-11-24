@@ -109,7 +109,8 @@ final class ProcessSupervisorFallbackTest extends TestCase
             . 'foreach ($pipes as $pipe) { fclose($pipe); } '
             . '$deadline = microtime(true) + 3; '
             . 'while (!is_file($argv[2]) && microtime(true) < $deadline) { usleep(10000); } '
-            . 'if (!is_file($argv[2])) { exit(33); }';
+            . 'if (!is_file($argv[2])) { exit(33); } '
+            . 'while (!is_file($argv[3])) { usleep(10000); }';
 
         return sprintf(
             'require %s; require %s; '
