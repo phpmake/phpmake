@@ -106,12 +106,18 @@ final class ZipTaskTest extends TestCase
 
             // Assert
             $zip = new \ZipArchive();
-            self::assertTrue($zip->open($configuredOutput));
-            self::assertSame($pathsAlias ? 1 : 2, $zip->numFiles);
-            self::assertNotFalse($zip->locateName('input.txt'));
-            self::assertFalse($zip->locateName('ARCHIVE.ZIP'));
-            self::assertSame($pathsAlias, $zip->locateName('archive.zip') === false);
-            $zip->close();
+            $opened = $zip->open($configuredOutput);
+            try {
+                self::assertTrue($opened);
+                self::assertSame($pathsAlias ? 1 : 2, $zip->numFiles);
+                self::assertNotFalse($zip->locateName('input.txt'));
+                self::assertFalse($zip->locateName('ARCHIVE.ZIP'));
+                self::assertSame($pathsAlias, $zip->locateName('archive.zip') === false);
+            } finally {
+                if ($opened === true && !$zip->close()) {
+                    throw new \RuntimeException('Unable to close the ZIP archive used by the case-alias test.');
+                }
+            }
         } finally {
             foreach ([$configuredOutput, $actualOutput, $root . DIRECTORY_SEPARATOR . 'input.txt'] as $path) {
                 if (is_file($path) && !unlink($path)) {
