@@ -69,7 +69,7 @@ final class ConsoleOutputTest extends TestCase
         );
 
         if (!is_resource($process)) {
-            throw new \\RuntimeException('Unable to start the PHP subprocess.');
+            throw new \RuntimeException('Unable to start the PHP subprocess.');
         }
 
         fclose($pipes[0]);
