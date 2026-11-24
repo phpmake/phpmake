@@ -85,16 +85,12 @@ final class ZipTaskTest extends TestCase
         // Arrange
         self::assertTrue(class_exists(\ZipArchive::class), 'ext-zip is a required runtime dependency.');
 
-        if (PHP_OS_FAMILY !== 'Windows') {
-            self::markTestSkipped('Case-variant filesystem test requires a case-insensitive filesystem.');
-        }
-
         $root = $this->root . DIRECTORY_SEPARATOR . 'case';
         self::assertTrue(mkdir($root));
-        file_put_contents($root . DIRECTORY_SEPARATOR . 'input.txt', 'content');
+        self::assertSame(7, file_put_contents($root . DIRECTORY_SEPARATOR . 'input.txt', 'content'));
         $actualOutput = $root . DIRECTORY_SEPARATOR . 'archive.zip';
         $configuredOutput = $root . DIRECTORY_SEPARATOR . 'ARCHIVE.ZIP';
-        file_put_contents($actualOutput, '');
+        self::assertSame(0, file_put_contents($actualOutput, ''));
         $actualStat = @stat($actualOutput);
         $configuredStat = @stat($configuredOutput);
         $pathsAlias = is_array($actualStat)
@@ -110,27 +106,27 @@ final class ZipTaskTest extends TestCase
 
             // Assert
             $zip = new \ZipArchive();
-            self::assertTrue($zip->open($configuredOutput));
-            self::assertSame($pathsAlias ? 1 : 2, $zip->numFiles);
-            self::assertNotFalse($zip->locateName('input.txt'));
-            self::assertFalse($zip->locateName('ARCHIVE.ZIP'));
-            self::assertSame($pathsAlias, $zip->locateName('archive.zip') === false);
-            $zip->close();
+            $opened = $zip->open($configuredOutput);
+            try {
+                self::assertTrue($opened);
+                self::assertSame($pathsAlias ? 1 : 2, $zip->numFiles);
+                self::assertNotFalse($zip->locateName('input.txt'));
+                self::assertFalse($zip->locateName('ARCHIVE.ZIP'));
+                self::assertSame($pathsAlias, $zip->locateName('archive.zip') === false);
+            } finally {
+                if ($opened === true && !$zip->close()) {
+                    throw new \RuntimeException('Unable to close the ZIP archive used by the case-alias test.');
+                }
+            }
         } finally {
-            if (file_exists($configuredOutput)) {
-                unlink($configuredOutput);
+            foreach ([$configuredOutput, $actualOutput, $root . DIRECTORY_SEPARATOR . 'input.txt'] as $path) {
+                if (is_file($path) && !unlink($path)) {
+                    throw new \RuntimeException(sprintf('Unable to remove ZIP case-alias fixture "%s".', $path));
+                }
             }
 
-            if (file_exists($actualOutput)) {
-                unlink($actualOutput);
-            }
-
-            if (file_exists($root . DIRECTORY_SEPARATOR . 'input.txt')) {
-                unlink($root . DIRECTORY_SEPARATOR . 'input.txt');
-            }
-
-            if (is_dir($root)) {
-                rmdir($root);
+            if (is_dir($root) && !rmdir($root)) {
+                throw new \RuntimeException(sprintf('Unable to remove ZIP case-alias test directory "%s".', $root));
             }
         }
     }
@@ -268,19 +264,19 @@ final class ZipTaskTest extends TestCase
             self::assertSame([], glob($root . DIRECTORY_SEPARATOR . '.phpmake-archive-input-*') ?: []);
         } finally {
             foreach (glob($root . DIRECTORY_SEPARATOR . '.phpmake-archive-input-*') ?: [] as $snapshot) {
-                @unlink($snapshot);
+                if (is_file($snapshot) && !unlink($snapshot)) {
+                    throw new \RuntimeException(sprintf('Unable to remove ZIP input snapshot "%s".', $snapshot));
+                }
             }
 
-            if (is_file($output)) {
-                unlink($output);
+            foreach ([$output, $source] as $path) {
+                if (is_file($path) && !unlink($path)) {
+                    throw new \RuntimeException(sprintf('Unable to remove ZIP test fixture "%s".', $path));
+                }
             }
 
-            if (is_file($source)) {
-                unlink($source);
-            }
-
-            if (is_dir($root)) {
-                rmdir($root);
+            if (is_dir($root) && !rmdir($root)) {
+                throw new \RuntimeException(sprintf('Unable to remove ZIP test directory "%s".', $root));
             }
         }
     }

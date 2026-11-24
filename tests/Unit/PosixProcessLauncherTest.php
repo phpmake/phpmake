@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace PhpMake\Tests\Unit;
 
 use PhpMake\Process\PosixProcessLauncher;
+use PhpMake\Tests\Support\ProcessTestHelper;
 use PHPUnit\Framework\TestCase;
 
 /** Tests POSIX process-group launcher preparation using real subprocesses and utilities. */
 final class PosixProcessLauncherTest extends TestCase
 {
+    use ProcessTestHelper;
     /** Prepares valid launcher metadata and preserves the original argv payload. */
     public function testPrepareReturnsConsistentProcessGroupMetadata(): void
     {
@@ -40,8 +42,8 @@ final class PosixProcessLauncherTest extends TestCase
                 self::assertNull($prepared['pidPath']);
             }
         } finally {
-            if (is_string($prepared['pidPath']) && is_file($prepared['pidPath'])) {
-                unlink($prepared['pidPath']);
+            if (is_string($prepared['pidPath'])) {
+                $this->removeTestFile($prepared['pidPath']);
             }
         }
     }
@@ -77,8 +79,8 @@ final class PosixProcessLauncherTest extends TestCase
             );
         } finally {
             $pidPath = $payload['result']['pidPath'] ?? null;
-            if (is_string($pidPath) && is_file($pidPath)) {
-                unlink($pidPath);
+            if (is_string($pidPath)) {
+                $this->removeTestFile($pidPath);
             }
         }
     }
@@ -113,7 +115,9 @@ final class PosixProcessLauncherTest extends TestCase
             self::assertNull($payload['result']['pidPath']);
             self::assertSame($arguments, $payload['result']['argv']);
         } finally {
-            rmdir($directory);
+            if (is_dir($directory) && !rmdir($directory)) {
+                throw new \RuntimeException(sprintf('Unable to remove temporary PATH directory "%s".', $directory));
+            }
         }
     }
 
@@ -143,33 +147,27 @@ final class PosixProcessLauncherTest extends TestCase
      */
     private function runPhpWithoutExtensions(string $script, array $arguments, ?string $path = null): array
     {
-        $process = proc_open(
-            [PHP_BINARY, '-n', '-r', $script, base64_encode(json_encode($arguments, JSON_THROW_ON_ERROR))],
+        $result = $this->runTestProcess(
             [
-                0 => ['pipe', 'r'],
-                1 => ['pipe', 'w'],
-                2 => ['pipe', 'w'],
+                PHP_BINARY,
+                '-n',
+                '-r',
+                $script,
+                base64_encode(json_encode($arguments, JSON_THROW_ON_ERROR)),
             ],
-            $pipes,
             dirname(__DIR__, 2),
-            $path === null ? null : ['PATH' => $path],
-            ['bypass_shell' => true]
+            6.0,
+            $path === null ? null : ['PATH' => $path]
         );
 
-        if (!is_resource($process)) {
-            throw new \RuntimeException('Unable to start the PHP subprocess.');
+        if ($result['timedOut']) {
+            throw new \RuntimeException('The POSIX launcher subprocess exceeded its six-second timeout.');
         }
 
-        fclose($pipes[0]);
-        $stdout = stream_get_contents($pipes[1]);
-        fclose($pipes[1]);
-        $stderr = stream_get_contents($pipes[2]);
-        fclose($pipes[2]);
-
         return [
-            'exitCode' => proc_close($process),
-            'stdout' => $stdout === false ? '' : $stdout,
-            'stderr' => $stderr === false ? '' : $stderr,
+            'exitCode' => $result['exitCode'],
+            'stdout' => trim($result['stdout']),
+            'stderr' => trim($result['stderr']),
         ];
     }
 

@@ -14,9 +14,10 @@ trait ProcessTestHelper
      * Runs a subprocess with file-backed output capture to avoid pipe-buffer deadlocks.
      *
      * @param list<string> $command
+     * @param array<string, string>|null $environment Environment overrides for the child process.
      * @return array{exitCode: int, stdout: string, stderr: string, timedOut: bool}
      */
-    private function runTestProcess(array $command, string $workingDirectory, float $timeoutSeconds = 15.0): array
+    private function runTestProcess(array $command, string $workingDirectory, float $timeoutSeconds = 15.0, ?array $environment = null): array
     {
         if ($command === [] || array_values($command) !== $command || $command[0] === '') {
             throw new \InvalidArgumentException('The subprocess command must be a non-empty list of strings.');
@@ -51,6 +52,7 @@ trait ProcessTestHelper
             throw new \RuntimeException('Unable to create temporary subprocess output files.');
         }
 
+        $processEnvironment = $environment === null ? null : array_merge(getenv(), $environment);
         $process = null;
         $pidPath = null;
         $processGroupCreated = false;
@@ -71,7 +73,7 @@ trait ProcessTestHelper
                 ],
                 $pipes,
                 $workingDirectory,
-                null,
+                $processEnvironment,
                 ['bypass_shell' => true]
             );
 
@@ -141,12 +143,20 @@ trait ProcessTestHelper
                 proc_close($process);
             }
 
-            if (is_string($pidPath) && is_file($pidPath)) {
-                unlink($pidPath);
+            if (is_string($pidPath)) {
+                $this->removeTestFile($pidPath);
             }
 
-            unlink($stdoutPath);
-            unlink($stderrPath);
+            $this->removeTestFile($stdoutPath);
+            $this->removeTestFile($stderrPath);
+        }
+    }
+
+    /** Removes a test-owned file or link and reports cleanup failures. */
+    private function removeTestFile(string $path): void
+    {
+        if ((file_exists($path) || is_link($path)) && !unlink($path)) {
+            throw new \RuntimeException(sprintf('Unable to remove test file "%s".', $path));
         }
     }
 
