@@ -222,12 +222,19 @@ jobs:
           }
           $conditionals = (int) $metrics["conditionals"];
           $coveredConditionals = (int) $metrics["coveredconditionals"];
-          if ($conditionals < 1 || $coveredConditionals < 0 || $coveredConditionals > $conditionals) {
+          if (
+              $conditionals < 1
+              || $coveredConditionals < 0
+              || $coveredConditionals > $conditionals
+          ) {
               fwrite(STDERR, "Invalid Clover branch metrics.\n");
               exit(1);
           }
           $percentage = number_format(($covered / $statements) * 100, 2);
-          $branchPercentage = number_format(($coveredConditionals / $conditionals) * 100, 2);
+          $branchPercentage = number_format(
+              ($coveredConditionals / $conditionals) * 100,
+              2
+          );
           file_put_contents(
               getenv("GITHUB_STEP_SUMMARY"),
               "## PHPUnit coverage\n\n"
