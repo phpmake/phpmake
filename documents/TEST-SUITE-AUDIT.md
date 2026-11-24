@@ -6,8 +6,8 @@
 
 ## Audit baseline
 
-- 50 PHP files under `tests/` are included in the source inventory.
-- The current source inventory contains 273 PHPUnit test methods across the configured unit, integration, system, and smoke suites. All test methods use explicit Arrange / Act / Assert sections.
+- 52 PHP files under `tests/` are included in the source inventory.
+- The current source inventory contains 279 PHPUnit test methods across the configured unit, integration, system, and smoke suites. All test methods use explicit Arrange / Act / Assert sections.
 - No PHPUnit mock objects, mock-builder usage, Mockery, or Prophecy references were found in the current test inventory.
 - The source inventory is a static audit, not a fresh coverage measurement. Use the most recent successful CI Clover artifact for current line and branch percentages.
 
@@ -21,6 +21,9 @@
 - Added a task-definition registry contract test that checks all six identifiers, their concrete task classes, lookup consistency, and unknown-type behavior.
 - Added a regression test for `BaseTask` directory-link detection after consolidating link/junction handling in `FilesystemTree`.
 - Added a subprocess regression test for `ConsoleOutput::error()` to verify errors go to STDERR and do not contaminate STDOUT.
+- Added direct tests for raw `ConsoleOutput::stdout()` output and `PlatformSupport::assertSupported()` on the current runtime.
+- Added direct POSIX launcher tests for normal metadata, the no-`ext-posix` utility fallback, and the no-utility fallback.
+- Added real-subprocess tests for `ProcessSupervisor::signalProcess()` and `signalProcessGroup()` fallback behavior without `ext-posix`.
 
 ## Source-to-test coverage findings
 
@@ -32,12 +35,12 @@ The source inventory contains 33 production PHP files. Most public behavior has 
 | `BuildLoader::load()` | Valid/invalid JSON shapes, missing file, malformed JSON, over-limit file, exact-limit file | Unreadable/open/read-stream failure paths are difficult to induce portably without mocks |
 | `FilesystemIdentity::sameFile()` | Same and different file identity; exercised by copy/archive/publisher tests | Stat-failure fallback and Windows case-insensitive fallback are not exhaustively isolated |
 | `FilesystemTree` and atomic publishers | Copy/remove/link/path, collision, rollback, and failure-path tests | OS-specific permission failures are not portable; some cleanup and rollback failure combinations remain difficult to induce deterministically |
-| `ProcessSupervisor` | Real process termination, descendant discovery, tracked descendants, PATH-unavailable behavior | Linux process-table and signal branches are Linux-only; Windows Job Object behavior is tested separately |
-| `PosixProcessLauncher` | Current-platform launcher test and no-`ext-posix` fallback smoke test in CI | Not every PATH/setsid/kill availability combination has an isolated assertion |
+| `ProcessSupervisor` | Real process termination, descendant discovery, tracked descendants, PATH-unavailable behavior, and no-`ext-posix` single-process/process-group signal fallbacks | Linux process-table and signal branches are Linux-only; Windows Job Object behavior is tested separately |
+| `PosixProcessLauncher` | Direct metadata test, no-`ext-posix` `setsid`/`kill` fallback, and empty-PATH fallback | Not every partial PATH/setsid/kill availability combination has an isolated assertion |
 | `WindowsProcessLauncher` | PowerShell argument payload and command construction test | Actual Job Object process-tree behavior can only execute on Windows CI |
 | `ExecTask` | Success, non-zero exit, timeout, stdout/stderr overflow, cancellation, process-tree cleanup, argument secrecy | Process-start failure and every exact capture-buffer boundary are not independently isolated |
 | `ZipTask` | Archive contents, output-inside-source, input limit, snapshots, cleanup, preservation of previous output | Not every archive count/depth/per-file/aggregate-size boundary is independently tested |
-| `ConsoleOutput` | Informational/success output and task-level error output, plus isolated STDERR routing | Direct tests for every low-level stream method are not comprehensive |
+| `ConsoleOutput` | Direct raw stdout, informational/success output, and isolated STDERR routing | All public output methods have direct tests |
 
 The table identifies remaining test depth, not confirmed production defects. The fresh CI coverage artifact should be used to refine this inventory before treating any method as untested.
 
@@ -47,11 +50,10 @@ The following methods or branches should be treated as coverage gaps until the c
 
 - `BuildLoader::load()`: failure to open an existing file and a failed stream read are not deterministically induced by the current portable tests.
 - `FilesystemIdentity::sameFile()`: the stat-failure fallback and Windows case-insensitive fallback are not isolated in dedicated tests.
-- `PosixProcessLauncher::findExecutable()`: the fallback smoke test covers the no-`ext-posix` route, but not every combination of missing `setsid`, `kill`, and PATH entries.
-- `ProcessSupervisor::signalProcess()` and `signalProcessGroup()`: utility-based signaling fallback combinations are not independently covered for every unavailable-tool/error condition.
+- `PosixProcessLauncher::findExecutable()`: the no-`ext-posix` tests cover executable discovery and an empty PATH; partial `setsid`/`kill` availability combinations remain untested.
+- `ProcessSupervisor::signalProcess()` and `signalProcessGroup()`: real subprocess tests now cover both utility-based fallbacks without `ext-posix`; missing-utility and command-failure conditions remain untested.
 - `AtomicFilePublisher::publish()` and `AtomicDirectoryPublisher::publish()`: the most severe double-failure paths, where publication and rollback both fail and a recovery backup must be retained, lack deterministic end-to-end tests.
 - `ZipTask::addFilesToZip()`: all archive limits (file count, total entries, depth, per-file bytes, and aggregate bytes) are not each tested at both their exact boundary and one unit beyond.
-- `ConsoleOutput::stdout()`: output is exercised through the higher-level logger/task output contract; direct tests for every low-level stream method are not comprehensive.
 
 These are prioritized test gaps, not claims that the methods are untested at every level. Several are exercised indirectly through integration tests or adjacent failure-path tests.
 
