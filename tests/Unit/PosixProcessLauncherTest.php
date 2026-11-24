@@ -42,8 +42,8 @@ final class PosixProcessLauncherTest extends TestCase
                 self::assertNull($prepared['pidPath']);
             }
         } finally {
-            if (is_string($prepared['pidPath']) && is_file($prepared['pidPath']) && !unlink($prepared['pidPath'])) {
-                throw new \RuntimeException(sprintf('Unable to remove process launcher PID file "%s".', $prepared['pidPath']));
+            if (is_string($prepared['pidPath'])) {
+                $this->removeTestFile($prepared['pidPath']);
             }
         }
     }
@@ -79,8 +79,8 @@ final class PosixProcessLauncherTest extends TestCase
             );
         } finally {
             $pidPath = $payload['result']['pidPath'] ?? null;
-            if (is_string($pidPath) && is_file($pidPath) && !unlink($pidPath)) {
-                throw new \RuntimeException(sprintf('Unable to remove process launcher PID file "%s".', $pidPath));
+            if (is_string($pidPath)) {
+                $this->removeTestFile($pidPath);
             }
         }
     }
