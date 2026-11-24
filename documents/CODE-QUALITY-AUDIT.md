@@ -8,7 +8,7 @@
 - `BuildConfiguration` and `TaskConfiguration` define typed configuration boundaries.
 - `FilesystemIdentity`, `FilesystemTree`, and the atomic publishers centralize shared filesystem operations.
 - `CommandLineParser`, platform process launchers, and `ProcessSupervisor` separate command parsing and process lifecycle concerns.
-- `ConsoleOutput` centralizes CLI output; `Logger` handles persistent logging and rotation.
+- `ConsoleOutput` centralizes stdout/stderr writes; `Logger` handles persistent logging and rotation.
 - `DependencyResolver` keeps traversal state local to each resolution call.
 
 ## Quality controls
@@ -27,13 +27,13 @@ CI also validates YAML, XML, and JSON files; Composer metadata and dependency de
 
 ## Cleanup findings
 
-- Removed the unused `ConsoleOutput::stderr()` wrapper; error output is already centralized by `ConsoleOutput::error()`.
+- Fixed `ConsoleOutput::error()` to write directly to `STDERR`. The removed `stderr()` wrapper was still referenced, which caused error reporting to fail with an undefined-method error. Added a subprocess regression test that verifies stderr content, empty stdout, and a successful exit code.
 - Removed the one-call `ZipTask::publishArchive()` wrapper and call the shared atomic publisher directly.
 - Consolidated task-level link/junction detection and removal in `FilesystemTree`, eliminating duplicate platform-specific logic from `BaseTask`.
 - Simplified test bootstrap autoload path construction; `addslashes()` was not needed for a literal filesystem path.
 - Reviewed private/protected source methods for unreferenced declarations. No additional unused private/protected methods were identified.
 - Reviewed overlapping tests. The similar-looking publisher, filesystem-task, and helper tests exercise different layers or failure guarantees, so they were retained rather than deleting useful regression coverage.
-- The current test inventory contains 272 test methods across 45 PHPUnit test files; the 50 PHP files under `tests/` also include support scripts, helpers, and the bootstrap.
+- The current test inventory contains 273 test methods across 45 PHPUnit test files; the 50 PHP files under `tests/` also include support scripts, helpers, and the bootstrap.
 
 ## Confirmed test-quality baseline
 
