@@ -286,7 +286,7 @@ To contribute a new built-in task to PHPMake itself:
 6. Update this guide, the README task summary, and FAQ when the user-visible contract changes.
 7. Run the full test and quality-check commands described in [Contributing](CONTRIBUTING.txt).
 
-The current architecture is described in [Architecture Refactor](ARCHITECTURE-REFACTOR.md). It covers task registration, shared filesystem primitives, process launch/supervision, typed configuration, CLI output, and operational benchmarking.
+The current architecture is described in [Architecture](ARCHITECTURE.md). It covers task registration, shared filesystem primitives, process launch/supervision, typed configuration, CLI output, and operational benchmarking.
 
 ## 7. Security and trust boundary
 

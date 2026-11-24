@@ -69,4 +69,10 @@ Processes are launched without shell interpretation. Windows uses Job Objects fo
 
 ## Quality assurance
 
-CI validates PHP 8.0–8.5 on Linux and runs Windows filesystem/process tests for PHP 8.0–8.5. The workflow includes PHPUnit, syntax/style/static checks, Composer validation and dependency checks, a clean consumer install, and a coverage report. Coverage reporting currently publishes statement coverage; branch coverage and an enforced 80% threshold are not yet configured.
+- CI runs PHP 8.0–8.5 compatibility tests on Linux and Windows.
+- The workflow runs PHPUnit, syntax/style/static checks, Composer validation and dependency checks, a clean consumer install, and performance benchmarks.
+- The dedicated PHP 8.3 coverage job uses Xdebug to publish line and branch coverage.
+- Overall executable-line coverage must be at least 80%; seven designated critical files require 100% executable-line coverage.
+- Branch coverage is reported but has no project-wide percentage threshold yet.
+
+See [CODE-COVERAGE.md](CODE-COVERAGE.md) for the enforced coverage policy and critical-file list.

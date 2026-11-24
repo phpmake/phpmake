@@ -190,12 +190,20 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
 
+      - name: Enable PHPUnit path coverage
+        run: |
+          composer require --dev --no-interaction --no-progress \
+            --with-all-dependencies phpunit/phpunit:^10.5
+          sed 's#9.6/phpunit.xsd#10.5/phpunit.xsd#' \
+            phpunit.xml > phpunit-coverage.xml
+
       - name: Generate PHPUnit test and coverage reports
         env:
           XDEBUG_MODE: coverage
         run: |
           mkdir -p build
-          vendor/bin/phpunit --configuration phpunit.xml --branch-coverage \
+          vendor/bin/phpunit --configuration phpunit-coverage.xml \
+            --path-coverage \
             --log-junit=build/junit.xml \
             --coverage-clover=build/coverage.xml \
             --coverage-html=build/coverage-html \
@@ -222,19 +230,27 @@ jobs:
           }
           $conditionals = (int) $metrics["conditionals"];
           $coveredConditionals = (int) $metrics["coveredconditionals"];
-          if ($conditionals < 1 || $coveredConditionals < 0 || $coveredConditionals > $conditionals) {
+          if (
+              $conditionals < 1
+              || $coveredConditionals < 0
+              || $coveredConditionals > $conditionals
+          ) {
               fwrite(STDERR, "Invalid Clover branch metrics.\n");
               exit(1);
           }
           $percentage = number_format(($covered / $statements) * 100, 2);
-          $branchPercentage = number_format(($coveredConditionals / $conditionals) * 100, 2);
+          $branchPercentage = number_format(
+              ($coveredConditionals / $conditionals) * 100,
+              2
+          );
           file_put_contents(
               getenv("GITHUB_STEP_SUMMARY"),
               "## PHPUnit coverage\n\n"
               . "| Metric | Result |\n|---|---:|\n"
               . "| Covered statements | {$covered} / {$statements} |\n"
               . "| Line coverage | {$percentage}% (minimum 80%) |\n"
-              . "| Covered branches | {$coveredConditionals} / {$conditionals} |\n"
+              . "| Covered branches | "
+              . "{$coveredConditionals} / {$conditionals} |\n"
               . "| Branch coverage | {$branchPercentage}% |\n"
           );
           '

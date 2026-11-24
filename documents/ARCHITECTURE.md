@@ -32,7 +32,7 @@ Commands are launched without shell interpretation. Windows cleanup and POSIX pr
 ## Configuration and output
 
 - `BuildConfiguration` and `TaskConfiguration` provide typed configuration boundaries.
-- `ConsoleOutput` centralizes stdout/stderr writes.
+- `ConsoleOutput` writes informational/success messages to stdout and errors to stderr.
 - `Logger` provides persistent logging, locking, and rotation.
 - `DependencyResolver` keeps dependency traversal state local to each invocation.
 

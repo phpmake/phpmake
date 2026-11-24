@@ -38,20 +38,24 @@ composer lint
 composer refactor-check
 ```
 
-To generate line and branch coverage locally, install Xdebug and run PHPUnit with coverage enabled, then apply the same threshold gate used by CI:
+To generate line and branch coverage locally, use PHP 8.1 or newer and install Xdebug. Resolve PHPUnit 10.5 for the coverage run; PHPUnit 9.6 (used on PHP 8.0) does not support path coverage. The following commands update the local development dependency and create a PHPUnit 10.5-compatible configuration:
 
 ```sh
+composer require --dev --no-interaction --no-progress --with-all-dependencies phpunit/phpunit:^10.5
+sed 's#9.6/phpunit.xsd#10.5/phpunit.xsd#' phpunit.xml > phpunit-coverage.xml
 mkdir -p build
-XDEBUG_MODE=coverage vendor/bin/phpunit --configuration phpunit.xml --branch-coverage --coverage-clover=build/coverage.xml
+XDEBUG_MODE=coverage vendor/bin/phpunit --configuration phpunit-coverage.xml --path-coverage --coverage-clover=build/coverage.xml
 composer coverage-check
 ```
 
 On PowerShell, use:
 
 ```powershell
+composer require --dev --no-interaction --no-progress --with-all-dependencies phpunit/phpunit:^10.5
+(Get-Content phpunit.xml -Raw) -replace '9.6/phpunit.xsd', '10.5/phpunit.xsd' | Set-Content phpunit-coverage.xml
 New-Item -ItemType Directory -Force build | Out-Null
 $env:XDEBUG_MODE = "coverage"
-vendor/bin/phpunit --configuration phpunit.xml --branch-coverage --coverage-clover=build/coverage.xml
+vendor/bin/phpunit --configuration phpunit-coverage.xml --path-coverage --coverage-clover=build/coverage.xml
 composer coverage-check
 ```
 
@@ -96,6 +100,6 @@ Before requesting review:
 
 ## Architecture and task extensions
 
-The [User Guide](USER-GUIDE.md) documents the supported build-file format and the built-in task extension process. The [Architecture Refactor](ARCHITECTURE-REFACTOR.md) describes internal boundaries. In brief, task metadata belongs in `TaskDefinitionRegistry`, the published contract belongs in `schema/build-schema.json`, and parity is protected by `BuildSchemaParityTest`.
+The [User Guide](USER-GUIDE.md) documents the supported build-file format and the built-in task extension process. The [Architecture](ARCHITECTURE.md) document describes internal boundaries. In brief, task metadata belongs in `TaskDefinitionRegistry`, the published contract belongs in `schema/build-schema.json`, and parity is protected by `BuildSchemaParityTest`.
 
 Contributors should not bypass path-safety, process-launch, output-limit, or atomic-publication helpers when changing filesystem or process behavior.

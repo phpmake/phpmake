@@ -9,6 +9,13 @@ PHPMake - Unreleased
 * Add PHP 8.0–8.5 Linux compatibility and Windows filesystem/process CI coverage; consolidate release validation and publishing in the default workflow.
 * Synchronize user, security, compatibility, contributor, release, and coverage documentation with the current PHP ^8.0, Windows/Linux, task, and coverage contracts.
 * Remove duplicate task-level link/junction handling by reusing the shared filesystem implementation; simplify test bootstrap path loading and expand link-detection regression coverage.
+* Fix CLI error reporting: write error messages to STDERR instead of calling the removed ConsoleOutput::stderr() method.
+* Add a subprocess regression test proving errors are written to STDERR without contaminating STDOUT.
+* Rename the architecture document to ARCHITECTURE.md and synchronize all references.
+* Correct the technical specification's coverage description to match the active Xdebug branch-coverage job and enforced line-coverage thresholds.
+* Reconcile current test inventory counts across the test-suite and code-quality audits.
+* Retain tests that cover distinct behavior/failure guarantees; no overlapping tests or private/protected production methods were identified as safe deletion candidates.
+* Keep PHP ^8.0 compatibility, PHPUnit, the no-mocks rule, and Windows/Linux support unchanged.
 
 PHPMake 2.0.2 - 2026-11-07
 -------------------------
