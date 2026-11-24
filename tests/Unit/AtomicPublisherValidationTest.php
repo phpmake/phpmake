@@ -29,7 +29,10 @@ final class AtomicPublisherValidationTest extends TestCase
     /** Removes the temporary publication fixtures after each test. */
     protected function tearDown(): void
     {
-        FilesystemTree::remove($this->base);
+        if (!FilesystemTree::remove($this->base)) {
+            throw new \\RuntimeException(sprintf('Unable to remove publisher validation test directory "%s".', $this->base));
+        }
+
         parent::tearDown();
     }
 
