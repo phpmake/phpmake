@@ -30,7 +30,7 @@ final class AtomicPublisherValidationTest extends TestCase
     protected function tearDown(): void
     {
         if (!FilesystemTree::remove($this->base)) {
-            throw new \\RuntimeException(sprintf('Unable to remove publisher validation test directory "%s".', $this->base));
+            throw new \RuntimeException(sprintf('Unable to remove publisher validation test directory "%s".', $this->base));
         }
 
         parent::tearDown();
