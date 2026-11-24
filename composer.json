@@ -78,8 +78,6 @@
     },
     "scripts": {
         "analyse": "phpstan analyse --configuration=phpstan.neon --no-progress",
-        "benchmark": "php benchmarks/run.php",
-        "coverage-check": "php tools/check-coverage.php build/coverage.xml",
         "format-check": "php-cs-fixer check --diff",
         "lint": "phplint",
         "refactor": "rector process",
@@ -89,8 +87,6 @@
     },
     "scripts-descriptions": {
         "analyse": "Run PHPStan static analysis on the source tree.",
-        "benchmark": "Measure process startup, concurrent execution, file writes, ZIP throughput, and peak memory.",
-        "coverage-check": "Enforce line and critical-path coverage requirements from a Clover report.",
         "format-check": "Check coding style issues.",
         "lint": "Check PHP files for syntax errors.",
         "refactor": "Apply code refactoring.",

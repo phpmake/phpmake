@@ -1,61 +1,29 @@
-# PHPMake Security Review
+# Security Review
 
-**Scope:** Source-level review of the local build tool, its filesystem tasks, external process execution, archive creation, configuration validation, and logging.
-
-**Review type:** Independent review of the implementation and its regression-test strategy. This is not a third-party penetration test, formal security certification, or review of the host operating system.
+**Scope:** source-level review of configuration validation, filesystem tasks, process execution, ZIP creation, and logging. This is not an external penetration test or security certification.
 
 ## Security model
 
-PHPMake executes build definitions supplied by the operator. The `exec` task intentionally launches arbitrary programs with the current user's privileges. A build definition must therefore be treated as trusted code. PHPMake is not a sandbox and does not make an untrusted `build.json` safe to execute.
+A build file is trusted executable input. The `exec` task launches arbitrary programs with PHPMake's permissions and inherited environment. PHPMake is not a sandbox and does not isolate credentials or restrict network access.
 
-The project protects its own filesystem task operations and attempts to contain process trees. It does not provide OS-level isolation, network egress filtering, credential isolation, or privilege separation.
+## Controls
 
-## Review findings
+- Filesystem paths are checked against the working directory; symlink/junction escapes and destructive project-root targets are rejected.
+- Copy and archive output use staged/atomic publication where supported.
+- ZIP creation rejects links and enforces file-count, entry-count, depth, per-file, and total-size limits.
+- Commands use argument vectors, bounded stdout/stderr, and timeouts.
+- Windows cleanup uses Job Objects; Linux uses process groups and documented fallbacks.
+- Logger writes are serialized and rotated; local log/lock paths are checked for unsafe filesystem entries.
+- CI runs dependency audit and cross-platform regression tests.
 
-| Area | Assessment | Remaining limitation |
-| --- | --- | --- |
-| External process invocation | Argument-vector execution without shell interpretation; debug logs omit command arguments to reduce accidental credential disclosure | The launched program still has the invoking user's permissions and inherited environment; process output can still contain secrets |
-| Windows process containment | Job Object with kill-on-close; target starts suspended and is assigned before resume | Requires Windows PowerShell and permission to create/assign a Job Object; assignment failure is fail-closed |
-| POSIX process containment | Dedicated process group plus descendant sampling and individual termination | A narrow fork-and-exit race remains; without process-group support, fallback is direct-process termination |
-| Filesystem task boundaries | Canonical path checks, link/junction boundary checks, and pre-execution revalidation | Filesystem races cannot be eliminated completely in user space |
-| Copy operations | Staged/transactional publication | Host-level failures and filesystem semantics remain relevant |
-| ZIP creation | Rejects links, snapshots bounded input files before deferred ZIP reads, and removes partial output on failure | Extraction safety belongs to the downstream extractor; consumers must defend against traversal, symlink, and decompression-bomb attacks |
-| Logging | Serialized writes and rotation; local log and lock paths reject symlinks, hardlinks, and special files, and opened handles are checked against path metadata | Build output and error messages may still contain secrets; log permissions, retention, and use of `--no-log` remain deployment responsibilities |
-| Dependency integrity | Composer audit is run in CI | CI audit is point-in-time and does not replace ongoing dependency review |
+## Limitations
 
-## Scope boundaries
+Filesystem races cannot be eliminated completely in user space. POSIX process cleanup has a narrow fork/exit race; without process-group support, only the direct process can be terminated. Detached descendants may escape cleanup. Child output and exception messages may contain secrets. ZIP extraction safety belongs to downstream consumers.
 
-PHPMake does not implement HTTP clients, remote authentication, credential storage, or network service integrations. SSRF checks and application-level authentication controls therefore have no direct PHPMake request path to protect. A configured `exec` command can still make arbitrary network requests with the caller's privileges; enforce outbound network policy at the runner, container, or infrastructure boundary.
+## Operational guidance
 
-Credential isolation is also an execution-environment responsibility. Child processes inherit the PHPMake process environment. Do not expose deployment credentials to untrusted build definitions. Use disposable, least-privilege runners with restricted secrets and network access. Debug command arguments are omitted from logs, but child stdout/stderr and other build log messages may still disclose secrets; use `--no-log` for sensitive builds where persistent output is not required.
+Use trusted build files, least-privilege accounts, disposable CI runners, restricted secrets, and infrastructure-level network controls. Review logs before retaining them. Use an extractor that rejects traversal and links and enforces decompression limits.
 
-## Dynamic regression coverage
+## Validation
 
-The test suite exercises the following security-sensitive behavior:
-
-- Rejecting filesystem paths that traverse symlink/junction boundaries.
-- Revalidating paths immediately before filesystem task execution.
-- Preserving existing destinations when copy/archive operations fail.
-- Rejecting ZIP inputs that contain links.
-- Enforcing process timeouts and per-stream output limits.
-- Terminating child processes on timeout and output overflow.
-- Terminating Windows background descendants when the configured command exits, through Job Object close semantics.
-- Exercising POSIX descendant cleanup, including descendants that create a new session.
-- Exercising concurrent and partial logger writes.
-- Rejecting local log and lock symlinks, hardlinks, and special files.
-- Verifying that debug output does not persist command-line arguments that may contain credentials.
-
-CI runs PHP compatibility tests on Linux and process/filesystem tests on Windows across PHP 8.0–8.5. These jobs provide repeatable dynamic regression evidence; results must be checked on the pull request before the changes are considered validated.
-
-## Residual risks and recommendations
-
-1. Run PHPMake only with trusted build definitions. For untrusted contributions, execute in a disposable VM/container with restricted credentials, filesystem mounts, and network access.
-2. Apply network egress restrictions at the OS/container/CI runner layer. PHPMake does not implement a network sandbox.
-3. Keep POSIX process-tree cleanup documented as best-effort until a stronger OS-native containment mechanism is available.
-4. Treat archives as untrusted at extraction boundaries. Use an extractor that rejects path traversal and symlinks and enforces decompressed-size/file-count limits.
-5. Use `--no-log` when build output may contain credentials and persistent logs are not required.
-6. Perform a third-party penetration test if PHPMake is deployed to process build definitions from less-trusted users.
-
-## Validation status
-
-The Windows Job Object changes are covered by automated regression tests and Windows CI jobs. A successful CI run is required before claiming the dynamic validation is complete. No external penetration test is claimed by this review.
+The PHPUnit and CI suites cover filesystem boundaries, publication failures, process limits/cleanup, archive limits, and logger safety. Review the successful workflow for the exact commit before claiming validation. No third-party penetration test is claimed.

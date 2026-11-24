@@ -5,64 +5,53 @@
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-617CBE)](https://php.net/)
 [![License](https://img.shields.io/github/license/phpmake/phpmake)](LICENSE)
 
-PHPMake is a lightweight PHP build automation tool. Define named targets, dependencies, and tasks in a JSON file, then run them from the command line.
+PHPMake runs repeatable project workflows from a JSON build file.
 
-## Requirements and support
+## Requirements
 
-- PHP **8.0 or newer** (Composer constraint: `^8.0`).
-- Composer 2 or newer.
-- PHP extensions: `ctype`, `json`, and `zip`.
-- Supported operating systems: **Windows and GNU/Linux**.
-- CI matrix: PHP 8.0–8.5 on Linux and Windows.
+- PHP 8.0+ and Composer 2+
+- PHP extensions: `ctype`, `json`, `zip`
+- Windows or GNU/Linux
 
-## Install
-
-Project-local: `composer require --dev phpmake/phpmake`
-
-Global: `composer global require phpmake/phpmake`
-
-## Quick start
-
-Create a sample `build.json` in the current working directory:
+## Install and run
 
 ```sh
+composer require --dev phpmake/phpmake
 php vendor/bin/phpmake.php --init
 php vendor/bin/phpmake.php --validate-build
 php vendor/bin/phpmake.php
 php vendor/bin/phpmake.php build
 ```
 
-PHPMake reads `build.json` and resolves filesystem task paths relative to the process's current working directory.
+PHPMake reads `build.json` from the current working directory. Filesystem task paths are resolved relative to that directory.
 
-## Built-in tasks
+## Tasks
 
-| Task | Purpose | Parameters |
+| Task | Parameters | Purpose |
 |---|---|---|
-| `create_directory` | Create a directory | `name` |
-| `delete` | Delete a file or directory tree | `path` |
-| `copy` | Copy a file or directory tree | `source`, `dest` |
-| `exec` | Run a process without a shell | `command`, optional `args`, `timeout` |
-| `echo` | Write a message | `message` |
-| `archive` | Create a ZIP archive | `source`, `output` |
+| `create_directory` | `name` | Create a directory |
+| `delete` | `path` | Delete a file or directory tree |
+| `copy` | `source`, `dest` | Copy files or directories |
+| `exec` | `command`, `args?`, `timeout?` | Run a process without a shell |
+| `echo` | `message` | Write a message |
+| `archive` | `source`, `output` | Create a ZIP archive |
 
-Filesystem tasks require paths to remain inside the working directory. Symlink/junction escapes are rejected, and destructive tasks cannot target the project root.
+Filesystem tasks cannot escape the working directory; destructive tasks cannot target its root. ZIP creation is bounded to 10,000 files, 20,000 entries, depth 256, 512 MiB per file, and 2 GiB total input.
 
-The `exec` task passes arguments directly; shell operators and expansions are not interpreted. Its default timeout is 300 seconds (maximum 86,400 seconds). Captured stdout and stderr are each limited to 1 MiB. Process-tree cleanup is platform-dependent and best-effort, not a security sandbox.
+The `exec` task runs trusted programs with the caller's permissions. Its default timeout is 300 seconds (maximum 86,400); captured stdout and stderr are limited to 1 MiB each. Process cleanup is best-effort, not a sandbox.
 
-ZIP creation is bounded to 10,000 files, 20,000 filesystem entries, depth 256, 512 MiB per input file, and 2 GiB total uncompressed input. Build configuration files are limited to 2 MiB.
+## CLI
 
-## CLI options
-
-| Option | Alias | Purpose |
-|---|---|---|
-| `--help` | `-h` | Show usage |
-| `--version` | `-v` | Show version |
-| `--diagnostics` | — | Show runtime information |
-| `--validate-build` | `-vb` | Validate `build.json` |
-| `--debug` | `-d` | Enable debug diagnostics |
-| `--silent` | `-s` | Suppress normal output; errors remain on STDERR |
-| `--no-log` | `-nl` | Disable file logging |
-| `--init` | — | Create a sample configuration without overwriting an existing file |
+| Option | Purpose |
+|---|---|
+| `--help`, `-h` | Show usage |
+| `--version`, `-v` | Show version |
+| `--init` | Create a sample build file without overwriting |
+| `--validate-build`, `-vb` | Validate the build file |
+| `--diagnostics` | Show runtime information |
+| `--debug`, `-d` | Enable diagnostics |
+| `--silent`, `-s` | Suppress normal output; errors remain on STDERR |
+| `--no-log`, `-nl` | Disable file logging |
 
 ## Development
 
@@ -75,31 +64,20 @@ composer format-check
 composer refactor-check
 ```
 
-For coverage, use PHPUnit 10.5+ with Xdebug and `--path-coverage --coverage-clover=build/coverage.xml`, then enforce the project thresholds with `composer coverage-check`. The CI coverage job selects PHPUnit 10.5 on PHP 8.3; the PHP 8.0–8.5 compatibility matrix retains the project's normal PHPUnit dependency resolution. See the [Code Coverage Policy](documents/CODE-COVERAGE.md).
-
-Run performance benchmarks with `composer benchmark`.
+See [Contributing](documents/CONTRIBUTING.txt) and the [User Guide](documents/USER-GUIDE.md).
 
 ## Documentation
 
-- [User Guide](documents/USER-GUIDE.md) — configuration, tasks, CLI, troubleshooting.
-- [Architecture](documents/ARCHITECTURE.md) — internal components and execution flow.
+- [User Guide](documents/USER-GUIDE.md)
 - [FAQ](documents/FAQ.txt)
-- [Security Policy](SECURITY.md)
-- [Security Review](documents/SECURITY-REVIEW.md)
-- [API Compatibility](documents/API-COMPATIBILITY.md)
-- [Code Coverage Policy](documents/CODE-COVERAGE.md)
-- [Migration Guide](documents/MIGRATION-GUIDE.md)
-- [Contributing](documents/CONTRIBUTING.txt)
-- [Release Checklist](documents/RELEASE-CHECKLIST.txt)
-- [Release Process](documents/RELEASE-PROCESS.md)
+- [Architecture](documents/ARCHITECTURE.md)
+- [API compatibility](documents/API-COMPATIBILITY.md)
+- [Migration guide](documents/MIGRATION-GUIDE.md)
+- [Security policy](SECURITY.md) and [security review](documents/SECURITY-REVIEW.md)
+- [Coverage policy](documents/CODE-COVERAGE.md)
+- [Release process](documents/RELEASE-PROCESS.md) and [checklist](documents/RELEASE-CHECKLIST.txt)
 - [Changelog](documents/CHANGELOG.txt)
 
-## Security
+A build file is executable input. Run only trusted configurations; see [SECURITY.md](SECURITY.md).
 
-A build configuration is executable input. The `exec` task can launch arbitrary programs with the permissions and environment of PHPMake. Run only trusted configurations, use least-privilege isolated runners, and do not expose secrets to untrusted builds. See [SECURITY.md](SECURITY.md).
-
-## Support and license
-
-Report bugs and request features through [GitHub Issues](https://github.com/phpmake/phpmake/issues). Report vulnerabilities using the private process in [SECURITY.md](SECURITY.md).
-
-PHPMake is distributed under [GPL-3.0-only](LICENSE).
+Report bugs through [GitHub Issues](https://github.com/phpmake/phpmake/issues). Report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).

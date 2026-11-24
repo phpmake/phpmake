@@ -1,4 +1,3 @@
-* POSIX timeout cleanup samples descendants every 50 ms and terminates tracked PIDs, including descendants that create a new session. A narrow fork-and-exit race remains; eliminating it portably requires OS-native process containment (for example, a subreaper or cgroup).
-* Windows CLI execution now handles Ctrl+C and Ctrl+Break cooperatively and terminates the launched Job Object process tree. Non-CLI hosts do not receive this console-event integration.
-* CI retains JSON performance baselines for Windows and Linux across PHP 8.0–8.5 for 90 days. Establish regression thresholds only after collecting enough runs to account for shared-runner variance.
-* Consider stronger OS-native process containment for workloads that require guarantees beyond best-effort portable process supervision.
+* Reduce the remaining POSIX fork-and-exit race with stronger OS-native process containment if platform requirements justify it.
+* Review Windows filesystem failure paths using deterministic NTFS-native conditions; do not assume POSIX permission semantics.
+* Use current CI coverage reports to expand critical-file gates only when the relevant code reaches 100% line coverage.

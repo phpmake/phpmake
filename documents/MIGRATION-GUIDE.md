@@ -1,104 +1,39 @@
-# Migration Guide: PHPMake 2.0.2 to the Next 2.x Release
+# Migration Guide
 
-This guide records compatibility-sensitive behavior added after the 2.0.2 baseline.
-It does not assume a release version or date; those are selected during final release
-preparation.
+The 2.x package remains `phpmake/phpmake`, requires PHP `^8.0`, Composer 2+, and extensions `ctype`, `json`, and `zip`.
 
-## PHP and installation
+## Configuration
 
-- PHP 8.0 or newer remains supported.
-- Composer 2 or newer is required.
-- Runtime PHP extensions remain `ctype`, `json`, and `zip`.
-- The Composer package remains `phpmake/phpmake`; the CLI entry point remains
-  `vendor/bin/phpmake.php` (or the global Composer binary).
+Validation rejects malformed JSON shapes, unknown properties, task types, and parameters. Build files are limited to 2 MiB.
 
-No Composer package rename or PHP minimum-version increase is planned by this release
-readiness work.
+Validate before upgrading:
 
-## Build configuration validation
+```sh
+php vendor/bin/phpmake.php --validate-build
+```
 
-Build files are now checked more strictly against the JSON object/array shapes expected
-by the schema and runtime:
+## Filesystem tasks
 
-- The top-level build configuration must be a JSON object, not an array.
-- `targets` must be a JSON object; each target must be a JSON object.
-- `depends` and `tasks` must be JSON arrays.
-- Each task must be a JSON object and its `params` must be a JSON object.
-- `exec.params.args`, when present, must be a JSON array.
-- Unknown top-level, target, task, and task-parameter properties are rejected.
-- Required task parameters and their value types are validated before execution.
-- Build configuration files are limited to 2 MiB.
+Paths are resolved from the process working directory and must remain inside it after normalization and link/junction checks. Destructive tasks cannot target the project root. Review paths used by `copy`, `delete`, `create_directory`, and `archive`.
 
-**Action:** Run `php vendor/bin/phpmake.php --validate-build` before upgrading a
-build pipeline. Correct malformed JSON shapes, unsupported fields, and task parameters
-reported by validation.
+## Process execution
 
-## Filesystem task boundaries
+`exec` does not interpret shell syntax. Put arguments in `args`; explicitly invoke a shell only when needed. The default timeout is 300 seconds, maximum 86,400; stdout and stderr are limited to 1 MiB each. Process-tree cleanup is platform-dependent and best-effort.
 
-Filesystem task paths are interpreted relative to the process working directory and
-must remain within that project directory after normalization and link/junction checks.
-UNC and drive-relative Windows paths are rejected. A `..` segment is accepted only
-when its normalized destination remains inside the project directory. Destructive tasks
-cannot target the project root.
+## ZIP creation
 
-**Action:** Run PHPMake from the intended project directory and review all paths in
-`copy`, `delete`, `create_directory`, and `archive` tasks. Do not rely on symlinks
-or junctions to access locations outside the project directory.
+ZIP inputs are limited to 10,000 files, 20,000 entries, depth 256, 512 MiB per file, and 2 GiB total uncompressed input. PHPMake creates archives; extraction safety belongs to the consumer.
 
-## Archive limits
+## PHP API
 
-ZIP creation rejects link inputs and enforces these limits:
+The stable PHP extension point is `PhpMake\\Task\\TaskInterface`. No runtime third-party task registration API exists. See [API-COMPATIBILITY.md](API-COMPATIBILITY.md).
 
-| Limit | Maximum |
-|---|---:|
-| Files | 10,000 |
-| Filesystem entries | 20,000 |
-| Directory depth | 256 |
-| Individual input file | 512 MiB |
-| Total uncompressed input | 2 GiB |
+## Upgrade
 
-Archives are staged and published only after successful completion; an existing output
-archive is preserved when creation fails.
-
-**Action:** Split very large packaging jobs into smaller archives if they exceed these
-limits. Ensure downstream extraction tools also defend against traversal, symlink, and
-decompression-bomb attacks.
-
-## External process execution
-
-The `exec` task passes an argument vector directly to the process; it does not perform
-shell expansion, pipelines, or shell redirection. The default timeout is 300 seconds,
-the maximum is 86,400 seconds, and each captured output stream is limited to 1 MiB.
-Windows process cleanup uses Job Objects. Linux uses a POSIX process group when
-available, with a `setsid`/`kill` fallback; otherwise only the direct process can be
-terminated. Descendants that deliberately detach may escape cleanup.
-
-**Action:** Review `exec` commands that depended on implicit shell syntax. Invoke the
-required shell explicitly when shell features are genuinely needed, and do not treat
-process cleanup as a sandbox or security boundary.
-
-## PHP API and extension points
-
-The documented stable PHP interface is `PhpMake\\Task\\TaskInterface`. The built-in
-task registry is static and does not expose a runtime registration method. Implementing
-`TaskInterface` or extending `BaseTask` does not register a third-party task type.
-
-**Action:** Treat custom task implementation instructions as contribution guidance for
-PHPMake itself, not as a supported third-party plugin API. Review
-[API and Backward Compatibility](API-COMPATIBILITY.md) before depending on implementation
-classes.
-
-## Migration summary
-
-A valid existing build that already uses the documented task identifiers, parameter
-names, JSON shapes, project-contained filesystem paths, and bounded archive/process
-inputs should not require a structural migration. The safest upgrade path is:
-
-1. Back up the current build configuration.
-2. Install the new PHPMake version in a test environment.
+1. Back up `build.json`.
+2. Install the new package in a test environment.
 3. Run `--validate-build`.
-4. Run the default target and package target with non-production inputs.
-5. Review logs and generated archives before promoting the upgrade.
+4. Run the default and packaging targets with non-production inputs.
+5. Review output and archives before deployment.
 
-PHPMake does not sandbox `exec`; continue to run only trusted build configurations with
-least-privilege credentials and appropriate CI runner isolation.
+Never run untrusted build files with privileged credentials. PHPMake is not a sandbox.

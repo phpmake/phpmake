@@ -1,49 +1,27 @@
 # API and Compatibility
 
-**Package:** `phpmake/phpmake`  
-**Current source version:** `2.0.2` (`VERSION.txt`)  
-**Compatibility line:** 2.x
+## Supported contract
 
-## Supported integration contract
+The stable integration surface is:
 
-The supported user-facing integration points are:
+- CLI options, output streams, target selection, and exit status.
+- `build.json` structure and the six task types in `schema/build-schema.json`.
+- Composer package `phpmake/phpmake`, executable `bin/phpmake.php`, and namespace `PhpMake\\`.
+- `PhpMake\\Task\\TaskInterface`: `execute(bool $debug, bool $silent): bool` and `getType(): string`.
+- `PhpMake\\Config::TOOL_VERSION`, which must match `VERSION.txt`.
 
-- **CLI:** Composer-installed `phpmake` executable, documented options, target selection, output/error behavior, and exit status.
-- **Build configuration:** JSON structure and six task identifiers defined by `schema/build-schema.json` and the runtime task registry.
-- **Composer:** package `phpmake/phpmake`, PSR-4 namespace `PhpMake\\` mapped to `src/`, executable `bin/phpmake.php`, PHP `^8.0`, and extensions `ext-ctype`, `ext-json`, and `ext-zip`.
-- **Task interface:** `PhpMake\\Task\\TaskInterface`, with `execute(bool $debug, bool $silent): bool` and `getType(): string`.
-- **Version:** `PhpMake\\Config::TOOL_VERSION`, which must match `VERSION.txt`.
-
-The CLI and build-file format are the primary public APIs. `TaskInterface` is the only designated stable PHP extension interface.
-
-## Task extension boundary
-
-PHPMake currently supports six built-in task types. `TaskDefinitionRegistry` is static and does not provide runtime registration. Extending `BaseTask` or implementing `TaskInterface` does not register a third-party task type.
-
-Instructions for adding a task describe contributions to PHPMake itself, not a third-party plugin API. A plugin API would require a separately designed registration, validation, schema, and compatibility contract.
+The task registry is static. Implementing `TaskInterface` or extending `BaseTask` does not register a third-party task.
 
 ## Compatibility policy
 
-- Changes within 2.x must be additive or backward-compatible for the supported contract.
-- Breaking changes to the supported contract require a new major version and migration guidance.
-- Deprecate supported APIs before removal when practical.
-- Security fixes may require exceptional behavior changes; document impact and mitigation.
-- Changes to task identifiers/parameters, JSON structure, CLI options, exit behavior, Composer metadata, or `TaskInterface` require compatibility review and regression tests.
+- PHP `^8.0`, Composer 2+, and extensions `ctype`, `json`, and `zip`.
+- CI tests PHP 8.0–8.5 on Windows and Linux.
+- Prefer additive changes within 2.x. Breaking public-contract changes require a major release and migration notes.
+- Security fixes may require documented behavior changes.
+- Changes to task names, parameters, schema, CLI behavior, Composer metadata, or `TaskInterface` require regression tests.
 
-Implementation classes are not stable APIs merely because they are public or autoloadable.
+Implementation classes are not stable APIs unless listed above.
 
-## Runtime and platforms
+## Validation
 
-- PHP constraint: `^8.0`.
-- CI currently tests PHP 8.0–8.5.
-- Supported operating systems: Windows and GNU/Linux.
-- Required extensions: `ctype`, `json`, and `zip`.
-- Composer 2 or newer is required for installation and development workflows.
-
-The PHP constraint and CI matrix are different things: the package declares PHP `^8.0`; the currently exercised matrix is PHP 8.0–8.5.
-
-## Compatibility checks
-
-The test suite protects Composer metadata, platform support, the stable task interface, schema/registry parity, CLI behavior, and clean Composer consumer installation. GitHub Actions runs PHP compatibility tests on Linux and filesystem/process tests on Windows for PHP 8.0–8.5.
-
-Update this document, the User Guide, schema, and changelog whenever the supported contract changes.
+`BuildSchemaParityTest` checks the schema against `TaskDefinitionRegistry`. Update the schema, User Guide, README, FAQ, migration guide, and changelog when the build-file contract changes.
