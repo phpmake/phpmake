@@ -14,6 +14,7 @@ trait ProcessTestHelper
      * Runs a subprocess with file-backed output capture to avoid pipe-buffer deadlocks.
      *
      * @param list<string> $command
+     * @param array<string, string>|null $environment Environment overrides for the child process.
      * @return array{exitCode: int, stdout: string, stderr: string, timedOut: bool}
      */
     private function runTestProcess(array $command, string $workingDirectory, float $timeoutSeconds = 15.0, ?array $environment = null): array
@@ -51,6 +52,7 @@ trait ProcessTestHelper
             throw new \RuntimeException('Unable to create temporary subprocess output files.');
         }
 
+        $processEnvironment = $environment === null ? null : array_merge(getenv(), $environment);
         $process = null;
         $pidPath = null;
         $processGroupCreated = false;
@@ -71,7 +73,7 @@ trait ProcessTestHelper
                 ],
                 $pipes,
                 $workingDirectory,
-                $environment,
+                $processEnvironment,
                 ['bypass_shell' => true]
             );
 
