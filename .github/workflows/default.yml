@@ -190,12 +190,19 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
 
+      - name: Enable PHPUnit path coverage
+        run: |
+          composer require --dev --no-interaction --no-progress \
+            --with-all-dependencies phpunit/phpunit:^10.5
+          sed 's#schema.phpunit.de/9.6/phpunit.xsd#schema.phpunit.de/10.5/phpunit.xsd#' \
+            phpunit.xml > phpunit-coverage.xml
+
       - name: Generate PHPUnit test and coverage reports
         env:
           XDEBUG_MODE: coverage
         run: |
           mkdir -p build
-          vendor/bin/phpunit --configuration phpunit.xml --branch-coverage \
+          vendor/bin/phpunit --configuration phpunit-coverage.xml --path-coverage \
             --log-junit=build/junit.xml \
             --coverage-clover=build/coverage.xml \
             --coverage-html=build/coverage-html \
