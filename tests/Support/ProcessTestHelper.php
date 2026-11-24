@@ -143,12 +143,20 @@ trait ProcessTestHelper
                 proc_close($process);
             }
 
-            if (is_string($pidPath) && is_file($pidPath)) {
-                unlink($pidPath);
+            if (is_string($pidPath)) {
+                $this->removeTestFile($pidPath);
             }
 
-            unlink($stdoutPath);
-            unlink($stderrPath);
+            $this->removeTestFile($stdoutPath);
+            $this->removeTestFile($stderrPath);
+        }
+    }
+
+    /** Removes a test-owned file or link and reports cleanup failures. */
+    private function removeTestFile(string $path): void
+    {
+        if ((file_exists($path) || is_link($path)) && !unlink($path)) {
+            throw new \\RuntimeException(sprintf('Unable to remove test file "%s".', $path));
         }
     }
 
