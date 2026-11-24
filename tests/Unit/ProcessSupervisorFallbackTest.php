@@ -55,8 +55,8 @@ final class ProcessSupervisorFallbackTest extends TestCase
             $result = $this->runPhpWithoutExtensions($script);
         } finally {
             foreach ([$marker, $marker . '.ready', $marker . '.release'] as $path) {
-                if ($path !== '' && is_file($path)) {
-                    unlink($path);
+                if ($path !== '') {
+                    $this->removeTestFile($path);
                 }
             }
         }
