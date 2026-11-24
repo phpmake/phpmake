@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PhpMake\Tests\Unit;
+namespace PhpMake\\Tests\\Unit;
 
-use PhpMake\Cli\ConsoleOutput;
-use PHPUnit\Framework\TestCase;
+use PhpMake\\Cli\\ConsoleOutput;
+use PHPUnit\\Framework\\TestCase;
 
 /** Tests the shared CLI output boundary. */
 final class ConsoleOutputTest extends TestCase
@@ -46,5 +46,41 @@ final class ConsoleOutputTest extends TestCase
 
         // Assert
         self::assertSame('Task completed' . PHP_EOL, $actual);
+    }
+
+    /** Writes error output to standard error without contaminating standard output. */
+    public function testErrorWritesOneErrorLineToStandardError(): void
+    {
+        // Arrange
+        $sourcePath = dirname(__DIR__, 2) . '/src/Cli/ConsoleOutput.php';
+        $script = sprintf(
+            'require %s; (new \\PhpMake\\Cli\\ConsoleOutput())->error(%s);',
+            var_export($sourcePath, true),
+            var_export('Build failed', true)
+        );
+        $process = proc_open(
+            [PHP_BINARY, '-r', $script],
+            [
+                0 => ['pipe', 'r'],
+                1 => ['pipe', 'w'],
+                2 => ['pipe', 'w'],
+            ],
+            $pipes
+        );
+
+        self::assertIsResource($process);
+        fclose($pipes[0]);
+
+        // Act
+        $stdout = stream_get_contents($pipes[1]);
+        fclose($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[2]);
+        $exitCode = proc_close($process);
+
+        // Assert
+        self::assertSame(0, $exitCode);
+        self::assertSame('', $stdout);
+        self::assertSame('Build failed' . PHP_EOL, $stderr);
     }
 }
