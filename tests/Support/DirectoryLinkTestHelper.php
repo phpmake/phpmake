@@ -105,6 +105,18 @@ trait DirectoryLinkTestHelper
         }
 
         if (PHP_OS_FAMILY === 'Windows') {
+            $details = trim($junctionOutput . PHP_EOL . $junctionError);
+
+            // Some Windows CI temporary volumes do not support NTFS reparse
+            // points. Treat that filesystem capability as an environment
+            // limitation, not as a failure of the code under test.
+            if (stripos($details, 'Incorrect function') !== false
+                || stripos($details, 'The request is not supported') !== false
+                || stripos($details, 'not supported') !== false
+            ) {
+                self::markTestSkipped('The Windows temporary filesystem does not support directory junctions.');
+            }
+
             self::fail(sprintf(
                 'Unable to create a directory junction or symlink from "%s" to "%s". PowerShell exit code: %d; stdout: %s; stderr: %s',
                 $link,

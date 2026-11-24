@@ -168,17 +168,21 @@ final class TaskExecutionTest extends TestCase
             'build'
         );
 
-        ob_start();
+        $stderr = fopen('php://memory', 'w+');
+        self::assertIsResource($stderr);
+        $executor = new \PhpMake\Task\TaskExecutor(new \PhpMake\Cli\ConsoleOutput($stderr));
 
         // Act
-        $exitCode = (new \PhpMake\Task\TaskExecutor())->executeTasks(
+        $exitCode = $executor->executeTasks(
             $config,
             ['missing'],
             new \PhpMake\Task\TaskFactory($this->logger),
             false,
             true
         );
-        $output = ob_get_clean();
+        rewind($stderr);
+        $output = stream_get_contents($stderr);
+        fclose($stderr);
 
         // Assert
         self::assertSame(1, $exitCode);
@@ -197,17 +201,21 @@ final class TaskExecutionTest extends TestCase
             'build'
         );
 
-        ob_start();
+        $stderr = fopen('php://memory', 'w+');
+        self::assertIsResource($stderr);
+        $executor = new \PhpMake\Task\TaskExecutor(new \PhpMake\Cli\ConsoleOutput($stderr));
 
         // Act
-        $exitCode = (new \PhpMake\Task\TaskExecutor())->executeTasks(
+        $exitCode = $executor->executeTasks(
             $config,
             ['build'],
             new \PhpMake\Task\TaskFactory($this->logger),
             false,
             true
         );
-        $output = ob_get_clean();
+        rewind($stderr);
+        $output = stream_get_contents($stderr);
+        fclose($stderr);
 
         // Assert
         self::assertSame(1, $exitCode);

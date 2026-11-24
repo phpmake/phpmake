@@ -7,6 +7,19 @@ namespace PhpMake\Cli;
 /** Centralizes writes to the process standard output and error streams. */
 final class ConsoleOutput
 {
+    /** @var resource */
+    private $stderr;
+
+    /** Initializes the error stream, defaulting to the process STDERR stream. */
+    public function __construct($stderr = null)
+    {
+        if ($stderr !== null && !is_resource($stderr)) {
+            throw new \InvalidArgumentException('The error output stream must be a valid resource.');
+        }
+
+        $this->stderr = $stderr ?? STDERR;
+    }
+
     /** Writes a message to standard output. */
     public function stdout(string $message): void
     {
@@ -22,7 +35,7 @@ final class ConsoleOutput
     /** Writes one error line to standard error. */
     public function error(string $message): void
     {
-        fwrite(STDERR, $message . PHP_EOL);
+        fwrite($this->stderr, $message . PHP_EOL);
     }
 
     /** Writes one successful task status line. */
