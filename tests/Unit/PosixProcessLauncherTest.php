@@ -116,7 +116,7 @@ final class PosixProcessLauncherTest extends TestCase
             self::assertSame($arguments, $payload['result']['argv']);
         } finally {
             if (is_dir($directory) && !rmdir($directory)) {
-                throw new \\RuntimeException(sprintf('Unable to remove temporary PATH directory "%s".', $directory));
+                throw new \RuntimeException(sprintf('Unable to remove temporary PATH directory "%s".', $directory));
             }
         }
     }
