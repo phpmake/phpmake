@@ -138,6 +138,35 @@ final class ExecTask extends BaseTask
                     }
                 }
 
+                // Check process state before probing a full output buffer.
+                // Once the child has exited, no overflow byte can arrive, and
+                // probing an empty Windows anonymous pipe can block forever.
+                $status = proc_get_status($process);
+                if (
+                    PHP_OS_FAMILY === 'Windows'
+                    && (
+                        strlen($stdout) >= self::MAX_CAPTURE_BYTES
+                        || strlen($stderr) >= self::MAX_CAPTURE_BYTES
+                    )
+                ) {
+                    // The Windows Job Object wrapper can take a short moment
+                    // to finish after its child closes the output handles.
+                    // Let it exit before attempting the one-byte overflow probe.
+                    $settleDeadline = hrtime(true) + 100_000_000;
+                    while ($status['running'] && hrtime(true) < $settleDeadline) {
+                        usleep(1000);
+                        $status = proc_get_status($process);
+                    }
+                }
+
+                if (!$status['running']) {
+                    $observedExitCode = $status['exitcode'];
+                    $stdoutLimitExceeded = self::captureAvailableOutput($pipes[1], $stdout, false);
+                    $stderrLimitExceeded = self::captureAvailableOutput($pipes[2], $stderr, false);
+                    $outputLimitExceeded = $stdoutLimitExceeded || $stderrLimitExceeded;
+                    break;
+                }
+
                 // Drain both streams on every pass so one full pipe cannot
                 // block the child while the other stream is ignored.
                 $stdoutLimitExceeded = self::captureAvailableOutput($pipes[1], $stdout);
@@ -153,18 +182,9 @@ final class ExecTask extends BaseTask
                     break;
                 }
 
-                $status = proc_get_status($process);
                 if ((hrtime(true) - $start) / 1_000_000_000 > $timeout) {
                     $timedOut = true;
                     ProcessSupervisor::terminate($process, $processPid, $processGroupCreated, $launcherPid, $trackedDescendantPids);
-                    break;
-                }
-
-                if (!$status['running']) {
-                    $observedExitCode = $status['exitcode'];
-                    $stdoutLimitExceeded = self::captureAvailableOutput($pipes[1], $stdout);
-                    $stderrLimitExceeded = self::captureAvailableOutput($pipes[2], $stderr);
-                    $outputLimitExceeded = $stdoutLimitExceeded || $stderrLimitExceeded;
                     break;
                 }
 
@@ -237,8 +257,15 @@ final class ExecTask extends BaseTask
      * Captures currently available pipe data without allowing either stream
      * buffer to exceed MAX_CAPTURE_BYTES. No output is spooled to disk.
      */
-    private static function captureAvailableOutput($pipe, string &$buffer): bool
+    private static function captureAvailableOutput($pipe, string &$buffer, bool $probeOverflow = true): bool
     {
+        // A process that has exited cannot produce more output. Avoid the
+        // one-byte overflow probe when the buffer is exactly full: on Windows,
+        // reading an empty anonymous pipe can block despite non-blocking mode.
+        if (!$probeOverflow && strlen($buffer) >= self::MAX_CAPTURE_BYTES) {
+            return false;
+        }
+
         // A non-blocking pipe may temporarily have no bytes available while
         // its writer is still active. Do not use feof() as a read-loop guard:
         // on Windows it can report EOF between writes and stop future draining.
