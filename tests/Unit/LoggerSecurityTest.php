@@ -29,15 +29,9 @@ final class LoggerSecurityTest extends TestCase
     protected function tearDown(): void
     {
         chdir($this->previousDirectory);
-        foreach (scandir($this->temporaryDirectory) ?: [] as $entry) {
-            if ($entry === '.' || $entry === '..') {
-                continue;
-            }
-
-            @unlink($this->temporaryDirectory . DIRECTORY_SEPARATOR . $entry);
+        if (!FilesystemTree::remove($this->temporaryDirectory)) {
+            throw new \\RuntimeException(sprintf('Unable to remove logger security test directory "%s".', $this->temporaryDirectory));
         }
-
-        @rmdir($this->temporaryDirectory);
         parent::tearDown();
     }
 
@@ -45,10 +39,6 @@ final class LoggerSecurityTest extends TestCase
     public function testLoggerDoesNotFollowSymbolicLogOrLockFiles(): void
     {
         // Arrange
-        if (PHP_OS_FAMILY === 'Windows') {
-            self::markTestSkipped('POSIX file symbolic-link creation is not assumed on Windows.');
-        }
-
         $target = $this->temporaryDirectory . DIRECTORY_SEPARATOR . 'protected.txt';
         self::assertSame(8, file_put_contents($target, 'original'));
         if (!@symlink($target, 'linked.log')) {
@@ -74,10 +64,6 @@ final class LoggerSecurityTest extends TestCase
     public function testLoggerDoesNotAppendThroughHardlinkedLogFile(): void
     {
         // Arrange
-        if (PHP_OS_FAMILY === 'Windows') {
-            self::markTestSkipped('POSIX hardlink semantics are not assumed on Windows.');
-        }
-
         $target = $this->temporaryDirectory . DIRECTORY_SEPARATOR . 'protected.txt';
         self::assertSame(8, file_put_contents($target, 'original'));
         if (!@link($target, 'linked.log')) {
