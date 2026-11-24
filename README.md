@@ -1,5 +1,6 @@
 # PHPMake
 
+[![Packagist](https://img.shields.io/packagist/v/phpmake/phpmake.svg)](https://packagist.org/packages/phpmake/phpmake)
 [![Build and Test](https://github.com/phpmake/phpmake/actions/workflows/default.yml/badge.svg?branch=main)](https://github.com/phpmake/phpmake/actions/workflows/default.yml)
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-617CBE)](https://php.net/)
 [![License](https://img.shields.io/github/license/phpmake/phpmake)](LICENSE)
