@@ -1,62 +1,32 @@
-# PHPMake Release Checklist
+# Release Checklist
 
-A release must be validated against the exact candidate commit. Do not treat missing,
-skipped, queued, or cancelled mandatory jobs as successful evidence.
+Validate the exact candidate commit. Queued, skipped, cancelled, or missing mandatory jobs are not passes.
 
 ## Candidate
 
-- [ ] Candidate is based on reviewed `main`.
-- [ ] Working tree contains only intended source, test, and documentation changes.
-- [ ] No credentials, local configuration, logs, or generated test artifacts are included.
-- [ ] Selected stable SemVer version is not already tagged or published.
-- [ ] `VERSION.txt` and `PhpMake\\Config::TOOL_VERSION` match.
-- [ ] Changelog contains a release section for the selected version.
-- [ ] Composer metadata is valid; PHP `^8.0` and required extensions match documentation.
+- [ ] Based on reviewed `main`; only intended changes are included.
+- [ ] Stable SemVer version is unused.
+- [ ] `VERSION.txt`, `Config::TOOL_VERSION`, and changelog agree.
+- [ ] Composer metadata validates; PHP `^8.0` and extensions match documentation.
 
-## Automated validation
+## Quality and platform
 
 - [ ] `composer validate --strict`
-- [ ] `composer lint`
-- [ ] `composer analyse`
-- [ ] `composer format-check`
-- [ ] `composer refactor-check`
-- [ ] `vendor/bin/composer-unused`
-- [ ] `vendor/bin/composer-require-checker check`
-- [ ] `composer normalize --dry-run`
-- [ ] `composer test` with no failures, errors, or risky tests; review all skips and justify platform prerequisites.
-- [ ] `composer audit --abandoned=ignore`
-- [ ] Clean Composer consumer installation and executable-proxy smoke test.
-- [ ] Sample configuration validation and default/package target smoke tests.
-- [ ] Xdebug line/branch coverage report generated; `composer coverage-check` passes the 80% overall and critical-file 100% gates.
+- [ ] `composer lint`, `composer analyse`, `composer format-check`, `composer refactor-check`
+- [ ] Dependency checks and `composer audit --abandoned=ignore`
+- [ ] `composer test` passes; review platform-specific skips.
+- [ ] Clean Composer consumer install and CLI smoke test pass.
+- [ ] Coverage job passes 80% overall and 100% for designated critical files.
+- [ ] Linux PHP 8.0–8.5 and Windows PHP 8.0–8.5 jobs pass.
 
-## Platform matrix
+## Review and publish
 
-- [ ] Linux PHP 8.0, 8.1, 8.2, 8.3, 8.4, and 8.5 compatibility jobs pass.
-- [ ] Windows filesystem/process tests pass for PHP 8.0–8.5.
-- [ ] Performance jobs complete on Windows and Linux for PHP 8.0–8.5.
-- [ ] Review platform-specific skips; every supported platform path must be exercised by at least one applicable job.
-- [ ] Record workflow URL and candidate commit SHA.
+- [ ] Review filesystem boundaries, process execution, ZIP limits, and logging.
+- [ ] Synchronize README, User Guide, FAQ, schema, compatibility notes, and changelog.
+- [ ] Verify examples and documentation links.
+- [ ] Merge the candidate and confirm the main-branch workflow passes.
+- [ ] Push an annotated stable SemVer tag; confirm the tag workflow passes.
+- [ ] Verify release archives, checksums, manifest, notes, and Packagist installation.
+- [ ] Record commit SHA and workflow URL.
 
-## Security and documentation
-
-- [ ] Review path containment, symlink/junction handling, destructive operations, and transactional publication.
-- [ ] Review process invocation, timeout, output limits, cancellation, and cleanup behavior.
-- [ ] Review ZIP input validation and resource limits.
-- [ ] Review build JSON validation and Composer audit results.
-- [ ] Review `SECURITY.md` and the security review; do not claim an external penetration test unless one occurred.
-- [ ] Synchronize README, FAQ, User Guide, schema, API compatibility, migration notes, and changelog.
-- [ ] Verify examples and internal links.
-
-## Publish
-
-- [ ] Merge the reviewed candidate into `main`.
-- [ ] Confirm the push-triggered workflow passes for the exact main commit.
-- [ ] Create and push an annotated stable SemVer tag matching the source version.
-- [ ] Confirm the tag-triggered release workflow passes all required build, coverage, Linux, and Windows jobs.
-- [ ] Verify GitHub Release archives, checksums, manifest, and release notes.
-- [ ] Verify Packagist synchronization and installation in a clean consumer project.
-- [ ] Verify the README badge and installed `--version` output.
-- [ ] Retain CI, coverage, dependency-audit, and consumer-install evidence.
-
-The release workflow publishes GitHub Releases from annotated tags. It does not choose
-or bump versions, create tags, or publish directly to Packagist.
+The workflow publishes GitHub Releases. It does not choose versions, create tags, or publish to Packagist.
