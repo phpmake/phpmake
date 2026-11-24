@@ -33,7 +33,8 @@ CI also validates YAML, XML, and JSON files; Composer metadata and dependency de
 - Simplified test bootstrap autoload path construction; `addslashes()` was not needed for a literal filesystem path.
 - Reviewed private/protected source methods for unreferenced declarations. No additional unused private/protected methods were identified.
 - Reviewed overlapping tests. The similar-looking publisher, filesystem-task, and helper tests exercise different layers or failure guarantees, so they were retained rather than deleting useful regression coverage.
-- The current test inventory contains 273 test methods across 45 PHPUnit test files; the 50 PHP files under `tests/` also include support scripts, helpers, and the bootstrap.
+- Added direct method tests for raw console output and current-platform validation, plus real-subprocess coverage for POSIX launcher and process-signal utility fallbacks without mocks.
+- The current test inventory contains 279 test methods across 47 PHPUnit test files; the 52 PHP files under `tests/` also include support scripts, helpers, and the bootstrap.
 
 ## Confirmed test-quality baseline
 

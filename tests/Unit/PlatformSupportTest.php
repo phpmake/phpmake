@@ -32,6 +32,19 @@ final class PlatformSupportTest extends TestCase
         self::assertSame([false, false, false], $unsupportedResults);
     }
 
+    /** Accepts the operating-system family used by the current supported runtime. */
+    public function testAssertSupportedAcceptsCurrentOperatingSystem(): void
+    {
+        // Arrange
+        $currentFamily = PHP_OS_FAMILY;
+
+        // Act
+        PlatformSupport::assertSupported();
+
+        // Assert
+        self::assertTrue(PlatformSupport::isSupportedFamily($currentFamily));
+    }
+
     /** Rejects an operating-system family outside the supported matrix. */
     public function testUnsupportedOperatingSystemIsRejected(): void
     {
