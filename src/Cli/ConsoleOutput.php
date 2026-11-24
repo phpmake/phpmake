@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PhpMake\Cli;
+namespace PhpMake\\Cli;
 
 /** Centralizes writes to the process standard output and error streams. */
 final class ConsoleOutput
@@ -19,10 +19,10 @@ final class ConsoleOutput
         $this->stdout($message . PHP_EOL);
     }
 
-    /** Writes one error line. */
+    /** Writes one error line to standard error. */
     public function error(string $message): void
     {
-        $this->stderr($message . PHP_EOL);
+        fwrite(STDERR, $message . PHP_EOL);
     }
 
     /** Writes one successful task status line. */
