@@ -194,7 +194,7 @@ jobs:
         run: |
           composer require --dev --no-interaction --no-progress \
             --with-all-dependencies phpunit/phpunit:^10.5
-          sed 's#schema.phpunit.de/9.6/phpunit.xsd#schema.phpunit.de/10.5/phpunit.xsd#' \
+          sed 's#9.6/phpunit.xsd#10.5/phpunit.xsd#' \
             phpunit.xml > phpunit-coverage.xml
 
       - name: Generate PHPUnit test and coverage reports
@@ -202,7 +202,7 @@ jobs:
           XDEBUG_MODE: coverage
         run: |
           mkdir -p build
-          vendor/bin/phpunit --configuration phpunit-coverage.xml --path-coverage \
+          vendor/bin/phpunit --configuration phpunit-coverage.xml \
             --log-junit=build/junit.xml \
             --coverage-clover=build/coverage.xml \
             --coverage-html=build/coverage-html \
@@ -248,7 +248,7 @@ jobs:
               . "| Metric | Result |\n|---|---:|\n"
               . "| Covered statements | {$covered} / {$statements} |\n"
               . "| Line coverage | {$percentage}% (minimum 80%) |\n"
-              . "| Covered branches | {$coveredConditionals} / {$conditionals} |\n"
+              . "| Covered branches | "
               . "| Branch coverage | {$branchPercentage}% |\n"
           );
           '
