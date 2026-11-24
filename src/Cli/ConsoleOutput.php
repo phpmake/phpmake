@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace PhpMake\\Cli;
+namespace PhpMake\Cli;
 
 /** Centralizes writes to the process standard output and error streams. */
 final class ConsoleOutput
