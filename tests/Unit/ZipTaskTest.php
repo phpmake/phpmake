@@ -265,7 +265,7 @@ final class ZipTaskTest extends TestCase
         } finally {
             foreach (glob($root . DIRECTORY_SEPARATOR . '.phpmake-archive-input-*') ?: [] as $snapshot) {
                 if (is_file($snapshot) && !unlink($snapshot)) {
-                    throw new \\RuntimeException(sprintf('Unable to remove ZIP input snapshot "%s".', $snapshot));
+                    throw new \RuntimeException(sprintf('Unable to remove ZIP input snapshot "%s".', $snapshot));
                 }
             }
 
