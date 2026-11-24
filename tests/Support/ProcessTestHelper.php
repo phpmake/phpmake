@@ -16,7 +16,7 @@ trait ProcessTestHelper
      * @param list<string> $command
      * @return array{exitCode: int, stdout: string, stderr: string, timedOut: bool}
      */
-    private function runTestProcess(array $command, string $workingDirectory, float $timeoutSeconds = 15.0): array
+    private function runTestProcess(array $command, string $workingDirectory, float $timeoutSeconds = 15.0, ?array $environment = null): array
     {
         if ($command === [] || array_values($command) !== $command || $command[0] === '') {
             throw new \InvalidArgumentException('The subprocess command must be a non-empty list of strings.');
@@ -71,7 +71,7 @@ trait ProcessTestHelper
                 ],
                 $pipes,
                 $workingDirectory,
-                null,
+                $environment,
                 ['bypass_shell' => true]
             );
 
