@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace PhpMake\\Tests\\Unit;
+namespace PhpMake\Tests\Unit;
 
-use PhpMake\\Cli\\ConsoleOutput;
-use PHPUnit\\Framework\\TestCase;
+use PhpMake\Cli\ConsoleOutput;
+use PHPUnit\Framework\TestCase;
 
 /** Tests the shared CLI output boundary. */
 final class ConsoleOutputTest extends TestCase
@@ -68,7 +68,10 @@ final class ConsoleOutputTest extends TestCase
             $pipes
         );
 
-        self::assertIsResource($process);
+        if (!is_resource($process)) {
+            throw new \\RuntimeException('Unable to start the PHP subprocess.');
+        }
+
         fclose($pipes[0]);
 
         // Act
