@@ -53,9 +53,12 @@ final class ProcessTestHelperTest extends TestCase
         // Arrange
         $pidFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-child-' . bin2hex(random_bytes(8)) . '.pid';
         $marker = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-child-marker-' . bin2hex(random_bytes(8));
-        $childCode = 'usleep(5000000); file_put_contents($argv[1], "survived");';
+        $releaseFile = $marker . '.release';
+        $childCode = 'while (!is_file($argv[2])) { usleep(10000); } '
+            . 'file_put_contents($argv[1], "survived");';
         $parentCode = '$pipes = []; '
-            . '$child = proc_open([PHP_BINARY, "-r", ' . var_export($childCode, true) . ', ' . var_export($marker, true) . '], '
+            . '$child = proc_open([PHP_BINARY, "-r", ' . var_export($childCode, true) . ', '
+            . var_export($marker, true) . ', ' . var_export($releaseFile, true) . '], '
             . '[0 => ["pipe", "r"], 1 => ["pipe", "w"], 2 => ["pipe", "w"]], $pipes); '
             . 'if (!is_resource($child)) { exit(9); } '
             . 'foreach ($pipes as $pipe) { fclose($pipe); } '
@@ -67,9 +70,13 @@ final class ProcessTestHelperTest extends TestCase
             $result = $this->runTestProcess(
                 [PHP_BINARY, '-r', $parentCode],
                 getcwd() ?: sys_get_temp_dir(),
-                3.0
+                0.5
             );
-            usleep(5500000);
+            self::assertTrue(touch($releaseFile));
+            $deadline = hrtime(true) + 1_000_000_000;
+            while (!is_file($marker) && hrtime(true) < $deadline) {
+                usleep(10000);
+            }
 
             // Assert
             self::assertTrue($result['timedOut']);
@@ -85,10 +92,33 @@ final class ProcessTestHelperTest extends TestCase
                 unlink($pidFile);
             }
 
-            if (is_file($marker)) {
-                unlink($marker);
+            foreach ([$marker, $releaseFile] as $path) {
+                if (is_file($path)) {
+                    unlink($path);
+                }
             }
         }
+    }
+
+    /** Passes an explicitly supplied environment to the child process. */
+    public function testRunTestProcessPassesExplicitEnvironment(): void
+    {
+        // Arrange
+        $code = 'echo getenv("PHPMAKE_TEST_VALUE");';
+
+        // Act
+        $result = $this->runTestProcess(
+            [PHP_BINARY, '-r', $code],
+            getcwd() ?: sys_get_temp_dir(),
+            5.0,
+            ['PHPMAKE_TEST_VALUE' => 'isolated-value']
+        );
+
+        // Assert
+        self::assertFalse($result['timedOut']);
+        self::assertSame(0, $result['exitCode']);
+        self::assertSame('isolated-value', $result['stdout']);
+        self::assertSame('', $result['stderr']);
     }
 
     /** Rejects zero and non-finite subprocess deadlines before launching a process. */
