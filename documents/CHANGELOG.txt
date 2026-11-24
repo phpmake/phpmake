@@ -1,14 +1,12 @@
 PHPMake - Unreleased
 --------------------
-* Harden filesystem operations with project-boundary checks, symlink/junction revalidation, transactional copy/archive publication, and bounded ZIP inputs.
-* Harden process execution with shell-free argument vectors, bounded stdout/stderr capture, timeouts, cooperative cancellation, and platform-specific process-tree cleanup.
-* Validate JSON object/array shapes and task parameters against centralized task metadata and the published JSON Schema.
-* Improve CLI parsing/output, exception diagnostics, logger concurrency, and bounded log rotation.
-* Expand PHPUnit coverage for filesystem failure paths, process behavior, configuration validation, logging, and Composer-installed CLI usage.
-* Standardize the audited test suite on Arrange / Act / Assert; retain PHPUnit without mocks.
-* Add PHP 8.0–8.5 Linux compatibility and Windows filesystem/process CI coverage; consolidate release validation and publishing in the default workflow.
-* Synchronize user, security, compatibility, contributor, release, and coverage documentation with the current PHP ^8.0, Windows/Linux, task, and coverage contracts.
-* Remove duplicate task-level link/junction handling by reusing the shared filesystem implementation; simplify test bootstrap path loading and expand link-detection regression coverage.
+* Fix CLI error reporting: write error messages to STDERR instead of calling the removed ConsoleOutput::stderr() method.
+* Add a subprocess regression test proving errors are written to STDERR without contaminating STDOUT.
+* Remove the stale "Refactor" suffix from the architecture document filename and synchronize all links to the renamed Architecture document.
+* Correct the technical specification's coverage description to match the active Xdebug branch-coverage job and enforced line-coverage thresholds.
+* Reconcile current test inventory counts across the test-suite and code-quality audits.
+* Retain tests that cover distinct behavior/failure guarantees; no overlapping tests or private/protected production methods were identified as safe deletion candidates.
+* Keep PHP ^8.0 compatibility, PHPUnit, the no-mocks rule, and Windows/Linux support unchanged.
 
 PHPMake 2.0.2 - 2026-11-07
 -------------------------
