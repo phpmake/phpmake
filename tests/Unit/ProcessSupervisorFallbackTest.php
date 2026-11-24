@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace PhpMake\Tests\Unit;
 
+use PhpMake\Tests\Support\ProcessTestHelper;
 use PHPUnit\Framework\TestCase;
 
 /** Exercises process-signal utility fallbacks with real PHP subprocesses and no POSIX extension. */
 final class ProcessSupervisorFallbackTest extends TestCase
 {
+    use ProcessTestHelper;
     /** Uses the kill utility to terminate a tracked process when posix_kill is unavailable. */
     public function testTerminateUsesKillUtilityWithoutPosixExtension(): void
     {
@@ -45,10 +47,19 @@ final class ProcessSupervisorFallbackTest extends TestCase
             self::markTestSkipped('The setsid and kill utilities are required for this fallback test.');
         }
 
-        $script = $this->buildProcessGroupSignalScript($setsid);
+        $marker = '';
+        $script = $this->buildProcessGroupSignalScript($setsid, $marker);
 
         // Act
-        $result = $this->runPhpWithoutExtensions($script);
+        try {
+            $result = $this->runPhpWithoutExtensions($script);
+        } finally {
+            foreach ([$marker, $marker . '.ready', $marker . '.release'] as $path) {
+                if ($path !== '' && is_file($path)) {
+                    unlink($path);
+                }
+            }
+        }
 
         // Assert
         self::assertSame(0, $result['exitCode'], $result['stderr']);
@@ -80,19 +91,25 @@ final class ProcessSupervisorFallbackTest extends TestCase
     }
 
     /** Builds a subprocess script that verifies group signaling also stops its child. */
-    private function buildProcessGroupSignalScript(string $setsid): string
+    private function buildProcessGroupSignalScript(string $setsid, string &$marker): string
     {
         $root = dirname(__DIR__, 2);
         $marker = sys_get_temp_dir() . DIRECTORY_SEPARATOR
             . 'phpmake-group-fallback-' . bin2hex(random_bytes(8));
-        $childCode = 'usleep(1200000); file_put_contents($argv[1], "survived");';
+        $readyFile = $marker . '.ready';
+        $releaseFile = $marker . '.release';
+        $childCode = 'file_put_contents($argv[2], "ready"); '
+            . 'while (!is_file($argv[3])) { usleep(10000); } '
+            . 'file_put_contents($argv[1], "survived");';
         $parentCode = '$pipes = []; '
             . '$child = proc_open([PHP_BINARY, "-n", "-r", '
-            . var_export($childCode, true) . ', $argv[1]], '
+            . var_export($childCode, true) . ', $argv[1], $argv[2], $argv[3]], '
             . '[0 => ["pipe", "r"], 1 => ["pipe", "w"], 2 => ["pipe", "w"]], $pipes); '
             . 'if (!is_resource($child)) { exit(30); } '
             . 'foreach ($pipes as $pipe) { fclose($pipe); } '
-            . 'sleep(10);';
+            . '$deadline = microtime(true) + 3; '
+            . 'while (!is_file($argv[2]) && microtime(true) < $deadline) { usleep(10000); } '
+            . 'if (!is_file($argv[2])) { exit(33); }';
 
         return sprintf(
             'require %s; require %s; '
@@ -102,19 +119,21 @@ final class ProcessSupervisorFallbackTest extends TestCase
             . 'foreach ($pipes as $pipe) { fclose($pipe); } '
             . '$pid = (int) proc_get_status($process)["pid"]; '
             . '\PhpMake\Process\ProcessSupervisor::terminate($process, $pid, true, $pid); '
-            . 'usleep(1500000); '
+            . 'file_put_contents(%s, "release"); '
+            . '$deadline = microtime(true) + 1; '
+            . 'while (!is_file(%s) && microtime(true) < $deadline) { usleep(10000); } '
             . '$survived = is_file(%s); '
             . '$running = (bool) (proc_get_status($process)["running"] ?? false); '
             . 'if ($running) { proc_terminate($process, 9); } '
             . 'proc_close($process); '
-            . 'if ($survived) { @unlink(%s); exit(32); } '
+            . 'if ($survived) { exit(32); } '
             . 'echo "group-terminated";',
             var_export($root . '/src/PlatformSupport.php', true),
             var_export($root . '/src/Process/ProcessSupervisor.php', true),
             var_export($setsid, true),
             var_export($parentCode, true),
             var_export($marker, true),
-            var_export($marker, true),
+            var_export($releaseFile, true),
             var_export($marker, true)
         );
     }
@@ -126,33 +145,20 @@ final class ProcessSupervisorFallbackTest extends TestCase
      */
     private function runPhpWithoutExtensions(string $script): array
     {
-        $process = proc_open(
+        $result = $this->runTestProcess(
             [PHP_BINARY, '-n', '-r', $script],
-            [
-                0 => ['pipe', 'r'],
-                1 => ['pipe', 'w'],
-                2 => ['pipe', 'w'],
-            ],
-            $pipes,
             dirname(__DIR__, 2),
-            null,
-            ['bypass_shell' => true]
+            6.0
         );
 
-        if (!is_resource($process)) {
-            throw new \RuntimeException('Unable to start the PHP subprocess.');
+        if ($result['timedOut']) {
+            throw new \\RuntimeException('The PHP fallback subprocess exceeded its six-second timeout.');
         }
 
-        fclose($pipes[0]);
-        $stdout = stream_get_contents($pipes[1]);
-        fclose($pipes[1]);
-        $stderr = stream_get_contents($pipes[2]);
-        fclose($pipes[2]);
-
         return [
-            'exitCode' => proc_close($process),
-            'stdout' => $stdout === false ? '' : trim($stdout),
-            'stderr' => $stderr === false ? '' : trim($stderr),
+            'exitCode' => $result['exitCode'],
+            'stdout' => trim($result['stdout']),
+            'stderr' => trim($result['stderr']),
         ];
     }
 
