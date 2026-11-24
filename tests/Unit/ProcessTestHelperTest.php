@@ -89,12 +89,12 @@ final class ProcessTestHelperTest extends TestCase
                     @posix_kill($childPid, 9);
                 }
 
-                unlink($pidFile);
+                $this->removeTestFile($pidFile);
             }
 
             foreach ([$marker, $releaseFile] as $path) {
                 if (is_file($path)) {
-                    unlink($path);
+                    $this->removeTestFile($path);
                 }
             }
         }
