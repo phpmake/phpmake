@@ -381,7 +381,7 @@ final class TaskExecutionTest extends TestCase
         $payload = str_repeat('x', 1048576);
         $task = new ExecTask([
             'command' => PHP_BINARY,
-            'args' => ['-r', 'echo str_repeat("x", 1048576);'],
+            'args' => ['-r', 'echo str_repeat("x", 1048576); usleep(50000);'],
             'timeout' => 15,
         ], $logger);
 
