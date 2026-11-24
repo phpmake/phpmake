@@ -114,10 +114,6 @@ final class CopyTaskSafetyTest extends TestCase
     public function testCopyFileRejectsDestinationSymbolicLink(): void
     {
         // Arrange
-        if (PHP_OS_FAMILY === 'Windows') {
-            self::markTestSkipped('File symbolic-link creation is not assumed on Windows.');
-        }
-
         $source = $this->root . DIRECTORY_SEPARATOR . 'source.txt';
         $target = $this->root . DIRECTORY_SEPARATOR . 'target.txt';
         $destination = $this->root . DIRECTORY_SEPARATOR . 'destination-link.txt';
