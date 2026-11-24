@@ -70,8 +70,9 @@ final class ProcessTestHelperTest extends TestCase
             $result = $this->runTestProcess(
                 [PHP_BINARY, '-r', $parentCode],
                 getcwd() ?: sys_get_temp_dir(),
-                0.5
+                5.0
             );
+            self::assertFileExists($pidFile, 'The child process must start and publish its PID before the timeout.');
             self::assertTrue(touch($releaseFile));
             $deadline = hrtime(true) + 1_000_000_000;
             while (!is_file($marker) && hrtime(true) < $deadline) {
@@ -80,7 +81,6 @@ final class ProcessTestHelperTest extends TestCase
 
             // Assert
             self::assertTrue($result['timedOut']);
-            self::assertFileExists($pidFile);
             self::assertFileDoesNotExist($marker);
         } finally {
             if (is_file($pidFile)) {
