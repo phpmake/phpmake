@@ -75,7 +75,7 @@ composer format-check
 composer refactor-check
 ```
 
-For coverage, run PHPUnit with Xdebug and `--branch-coverage --coverage-clover=build/coverage.xml`, then enforce the project thresholds with `composer coverage-check`. See the [Code Coverage Policy](documents/CODE-COVERAGE.md).
+For coverage, use PHPUnit 10.5+ with Xdebug and `--path-coverage --coverage-clover=build/coverage.xml`, then enforce the project thresholds with `composer coverage-check`. The CI coverage job selects PHPUnit 10.5 on PHP 8.3; the PHP 8.0–8.5 compatibility matrix retains the project's normal PHPUnit dependency resolution. See the [Code Coverage Policy](documents/CODE-COVERAGE.md).
 
 Run performance benchmarks with `composer benchmark`.
 
