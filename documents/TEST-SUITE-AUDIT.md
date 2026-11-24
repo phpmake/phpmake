@@ -6,10 +6,10 @@
 
 ## Audit baseline
 
-- 50 PHP files under `tests/` were included in the source inventory.
-- The current source inventory contains 272 PHPUnit test methods across the configured unit, integration, system, and smoke suites. All test methods have explicit Arrange / Act / Assert sections.
+- 50 PHP files under `tests/` are included in the source inventory.
+- The current source inventory contains 273 PHPUnit test methods across the configured unit, integration, system, and smoke suites. All test methods use explicit Arrange / Act / Assert sections.
 - No PHPUnit mock objects, mock-builder usage, Mockery, or Prophecy references were found in the current test inventory.
-- The source inventory is a static audit, not a fresh coverage measurement. The latest numeric line-coverage baseline recorded below is historical; use the most recent successful CI Clover artifact for current line and branch percentages.
+- The source inventory is a static audit, not a fresh coverage measurement. Use the most recent successful CI Clover artifact for current line and branch percentages.
 
 ## Recent test and maintenance changes
 
@@ -17,9 +17,10 @@
 - Improved the `EchoTask` test to assert the exact observable log message.
 - Improved the timeout test to assert the timeout diagnostic, not just a false return value.
 - Improved malformed execution-order and task-list tests to assert their exact error output.
-- Added an exact 2 MiB `BuildLoader` input-boundary test and an exact 1 MiB `ExecTask` stdout capture-boundary test. Existing over-limit tests continue to verify rejection above both limits.
+- Added exact 2 MiB `BuildLoader` input-boundary and 1 MiB `ExecTask` stdout capture-boundary tests. Existing over-limit tests continue to verify rejection above both limits.
 - Added a task-definition registry contract test that checks all six identifiers, their concrete task classes, lookup consistency, and unknown-type behavior.
 - Added a regression test for `BaseTask` directory-link detection after consolidating link/junction handling in `FilesystemTree`.
+- Added a subprocess regression test for `ConsoleOutput::error()` to verify errors go to STDERR and do not contaminate STDOUT.
 
 ## Source-to-test coverage findings
 
@@ -36,7 +37,7 @@ The source inventory contains 33 production PHP files. Most public behavior has 
 | `WindowsProcessLauncher` | PowerShell argument payload and command construction test | Actual Job Object process-tree behavior can only execute on Windows CI |
 | `ExecTask` | Success, non-zero exit, timeout, stdout/stderr overflow, cancellation, process-tree cleanup, argument secrecy | Process-start failure and every exact capture-buffer boundary are not independently isolated |
 | `ZipTask` | Archive contents, output-inside-source, input limit, snapshots, cleanup, preservation of previous output | Not every archive count/depth/per-file/aggregate-size boundary is independently tested |
-| `ConsoleOutput` | Informational/success output and task-level error output | Direct tests for every low-level stream method are not comprehensive |
+| `ConsoleOutput` | Informational/success output and task-level error output, plus isolated STDERR routing | Direct tests for every low-level stream method are not comprehensive |
 
 The table identifies remaining test depth, not confirmed production defects. The fresh CI coverage artifact should be used to refine this inventory before treating any method as untested.
 
@@ -50,7 +51,7 @@ The following methods or branches should be treated as coverage gaps until the c
 - `ProcessSupervisor::signalProcess()` and `signalProcessGroup()`: utility-based signaling fallback combinations are not independently covered for every unavailable-tool/error condition.
 - `AtomicFilePublisher::publish()` and `AtomicDirectoryPublisher::publish()`: the most severe double-failure paths, where publication and rollback both fail and a recovery backup must be retained, lack deterministic end-to-end tests.
 - `ZipTask::addFilesToZip()`: all archive limits (file count, total entries, depth, per-file bytes, and aggregate bytes) are not each tested at both their exact boundary and one unit beyond.
-- `ConsoleOutput::stdout()` and `stderr()`: most verification is through the higher-level logger/task output contract rather than isolated stream-method tests.
+- `ConsoleOutput::stdout()`: output is exercised through the higher-level logger/task output contract; direct tests for every low-level stream method are not comprehensive.
 
 These are prioritized test gaps, not claims that the methods are untested at every level. Several are exercised indirectly through integration tests or adjacent failure-path tests.
 
@@ -74,7 +75,7 @@ These skips are not evidence that the behavior passed on the skipped platform. T
 
 ## Assertion quality findings
 
-The earlier suite included tests that asserted only a success boolean even when the behavior produced observable output. This phase strengthens the ExecTask and EchoTask tests to verify the actual output, strengthens timeout and task-executor failure tests to verify diagnostics, and adds registry and size-boundary assertions.
+The earlier suite included tests that asserted only a success boolean even when the behavior produced observable output. The ExecTask and EchoTask tests now verify actual output, timeout and task-executor failure tests verify diagnostics, and registry and size-boundary assertions cover explicit contracts.
 
 Other tests that assert only an exit code are retained where the test's contract is the process result and the same behavior is verified more deeply by integration tests. Future additions should assert resulting files, archive entries, process state, preserved data, emitted diagnostics, or other observable outcomes whenever those are the actual contract.
 
@@ -91,16 +92,16 @@ The older Phase 19 numeric baseline recorded in this repository is:
 | Class coverage | 36.67% (11 / 30) |
 | Platform skips | 6 |
 
-This Phase 19 result is historical and predates the current branch-coverage reporting and coverage gates. Current CI generates JUnit, Clover, and HTML reports, publishes line and branch coverage, enforces at least 80% overall executable-line coverage, and requires 100% line coverage in seven designated critical contract files. See `documents/CODE-COVERAGE.md` for the enforced list and current policy.
+This Phase 19 result is historical and predates the current branch-coverage reporting and coverage gates. Current CI generates JUnit, Clover, and HTML reports, publishes line and branch coverage, enforces at least 80% overall executable-line coverage, and requires 100% line coverage in seven designated critical contract files. See `CODE-COVERAGE.md` for the enforced list and current policy.
 
 ## Current coverage policy
 
 - Overall executable-line coverage is enforced at a minimum of 80% by `tools/check-coverage.php`.
 - Xdebug branch coverage is collected in the dedicated PHP 8.3 coverage job and published separately in the CI summary and Clover report.
-- Seven critical contract files have a 100% executable-line coverage requirement enforced by the coverage gate. The exact list and rationale are documented in `documents/CODE-COVERAGE.md`.
+- Seven critical contract files have a 100% executable-line coverage requirement enforced by the coverage gate. The exact list and rationale are documented in `CODE-COVERAGE.md`.
 - Branch coverage is reported but does not yet have a project-wide percentage gate. The first stable branch measurement will be used to set a defensible target.
-- The available pre-Phase-28 Clover artifact measured 1,284 / 1,594 statements (80.55%). Branch coverage was not collected. This is a pre-additional-tests baseline, not the post-Phase-28 measurement.
-- A post-Phase-29/30 measurement must be taken from a successful CI coverage artifact. No current-main percentage is claimed until that artifact is available.
+- A pre-Phase-28 Clover artifact measured 1,284 / 1,594 statements (80.55%). Branch coverage was not collected. This is a historical baseline, not a current-main measurement.
+- A current-main percentage must be taken from a successful CI coverage artifact. No current-main percentage is claimed until that artifact is available.
 
 ## Remaining work
 
