@@ -8,13 +8,11 @@ permissions:
   push:
     branches:
       - main
-      - 'quality/**'
     tags:
       - '*.*.*'
   pull_request:
     branches:
       - main
-      - 'quality/**'
   workflow_dispatch:
 
 env:
