@@ -165,10 +165,6 @@ final class AtomicPublisherValidationTest extends TestCase
     public function testFilePublisherRejectsDestinationFileLink(): void
     {
         // Arrange
-        if (PHP_OS_FAMILY === 'Windows') {
-            self::markTestSkipped('File symbolic-link creation is not assumed on Windows.');
-        }
-
         $staged = $this->base . DIRECTORY_SEPARATOR . 'staged.txt';
         $target = $this->base . DIRECTORY_SEPARATOR . 'target.txt';
         $destination = $this->base . DIRECTORY_SEPARATOR . 'destination-link.txt';
