@@ -87,10 +87,10 @@ final class ZipTaskTest extends TestCase
 
         $root = $this->root . DIRECTORY_SEPARATOR . 'case';
         self::assertTrue(mkdir($root));
-        file_put_contents($root . DIRECTORY_SEPARATOR . 'input.txt', 'content');
+        self::assertSame(7, file_put_contents($root . DIRECTORY_SEPARATOR . 'input.txt', 'content'));
         $actualOutput = $root . DIRECTORY_SEPARATOR . 'archive.zip';
         $configuredOutput = $root . DIRECTORY_SEPARATOR . 'ARCHIVE.ZIP';
-        file_put_contents($actualOutput, '');
+        self::assertSame(0, file_put_contents($actualOutput, ''));
         $actualStat = @stat($actualOutput);
         $configuredStat = @stat($configuredOutput);
         $pathsAlias = is_array($actualStat)
@@ -113,20 +113,14 @@ final class ZipTaskTest extends TestCase
             self::assertSame($pathsAlias, $zip->locateName('archive.zip') === false);
             $zip->close();
         } finally {
-            if (file_exists($configuredOutput)) {
-                unlink($configuredOutput);
+            foreach ([$configuredOutput, $actualOutput, $root . DIRECTORY_SEPARATOR . 'input.txt'] as $path) {
+                if (is_file($path) && !unlink($path)) {
+                    throw new \\RuntimeException(sprintf('Unable to remove ZIP case-alias fixture "%s".', $path));
+                }
             }
 
-            if (file_exists($actualOutput)) {
-                unlink($actualOutput);
-            }
-
-            if (file_exists($root . DIRECTORY_SEPARATOR . 'input.txt')) {
-                unlink($root . DIRECTORY_SEPARATOR . 'input.txt');
-            }
-
-            if (is_dir($root)) {
-                rmdir($root);
+            if (is_dir($root) && !rmdir($root)) {
+                throw new \\RuntimeException(sprintf('Unable to remove ZIP case-alias test directory "%s".', $root));
             }
         }
     }
