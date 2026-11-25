@@ -4,10 +4,11 @@ The suite contains PHPUnit unit, integration, system, and smoke tests. CI exerci
 
 ## Test policy
 
-- Use Arrange / Act / Assert.
-- Do not use mocks or mocking frameworks.
-- Assert observable output, state, side effects, and failure behavior.
-- Keep tests deterministic, isolated, bounded, and platform-aware.
+- Apply Arrange / Act / Assert to every test method. Keep setup and input construction in Arrange, the operation under test in Act, and observable checks in Assert.
+- Do not use mocks or mocking frameworks. Use real objects, subprocesses, and temporary filesystem fixtures where appropriate.
+- Give every test class and method a short, standard PHPDoc summary. Add parameter and return annotations when they clarify the contract.
+- Assert observable output, state, side effects, and failure behavior rather than implementation details.
+- Keep tests deterministic, isolated, bounded, and platform-aware. Restore process-wide state and clean up temporary resources.
 - A skipped test is not evidence that the skipped behavior passed.
 
 ## Coverage

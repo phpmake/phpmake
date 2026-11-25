@@ -22,12 +22,14 @@ php vendor/bin/phpmake.php target_name
 
 **Where are paths resolved?** From the process working directory. Built-in filesystem tasks cannot escape it.
 
-**Does exec use a shell or sandbox?** No. It starts the executable directly with the caller's permissions and environment. Explicitly invoke a shell if needed; run only trusted build files.
+**Does exec use a shell or sandbox?** No. It starts the executable directly with the caller's permissions and environment. Put arguments in `args`; explicitly invoke a shell if needed. PHPMake is not a sandbox, so run only trusted build files.
 
 **Limits?** Process timeout defaults to 300 seconds (maximum 86,400); stdout and stderr are limited to 1 MiB each. ZIP input is limited to 10,000 files, 20,000 entries, depth 256, 512 MiB per file, and 2 GiB total.
 
 **Where are logs?** `build.log` in the working directory. Use `--no-log` to disable persistent logging.
 
-**Can I add a task plugin?** No runtime registration API exists. New built-in tasks are added to PHPMake's registry and JSON Schema.
+**Can I add a task plugin?** No third-party runtime registration API exists. New built-in tasks must be added to PHPMake's registry and JSON Schema, with PHPUnit tests and updated user documentation.
+
+**How do I run the test and quality checks?** Run `composer test`, `composer lint`, `composer analyse`, `composer format-check`, and `composer refactor-check`. Tests use PHPUnit, Arrange / Act / Assert, and no mocks; see [TEST-SUITE-AUDIT.md](TEST-SUITE-AUDIT.md).
 
 **Report bugs or vulnerabilities?** [GitHub Issues](https://github.com/phpmake/phpmake/issues) for bugs; use [SECURITY.md](../SECURITY.md) for private vulnerability reports.

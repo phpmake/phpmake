@@ -228,4 +228,47 @@ final class ProcessSupervisorTest extends TestCase
         }
     }
 
+
+    /** Ignores invalid tracked process identifiers without terminating the root process. */
+    public function testTerminateIgnoresInvalidTrackedDescendantIdentifiers(): void
+    {
+        // Arrange
+        $process = proc_open(
+            [PHP_BINARY, '-r', 'sleep(10);'],
+            [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+            $pipes,
+            getcwd(),
+            null,
+            ['bypass_shell' => true]
+        );
+        self::assertIsResource($process);
+        foreach ($pipes as $pipe) {
+            fclose($pipe);
+        }
+
+        try {
+            $status = proc_get_status($process);
+            self::assertTrue($status['running']);
+
+            // Act
+            ProcessSupervisor::terminate(
+                $process,
+                $status['pid'],
+                false,
+                null,
+                [0, -1, 'invalid']
+            );
+
+            // Assert
+            self::assertTrue(proc_get_status($process)['running']);
+        } finally {
+            $status = proc_get_status($process);
+            if ($status['running']) {
+                proc_terminate($process, 9);
+            }
+
+            proc_close($process);
+        }
+    }
+
 }

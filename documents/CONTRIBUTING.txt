@@ -23,12 +23,13 @@ CI tests PHP 8.0–8.5 on Linux and Windows. Preserve PHP 8.0 compatibility and 
 
 ## Tests and changes
 
-- Use PHPUnit and Arrange / Act / Assert.
-- Do not add mocks or mocking frameworks.
+- Use PHPUnit for all automated tests and structure every test with Arrange / Act / Assert.
+- Do not add mocks or mocking frameworks; exercise real behavior and assert observable results.
+- Give every test class and method a short, standard PHPDoc summary; document parameters and return values where useful.
 - Cover success, failure, boundaries, and platform behavior.
-- Keep tests deterministic, isolated, and time-bounded.
+- Keep tests deterministic, isolated, and time-bounded; mark capability-dependent skips explicitly.
 - Avoid new dependencies unless necessary.
-- Update the schema and user-facing docs when configuration behavior changes.
+- Update the schema and all affected user-facing docs when runtime or configuration behavior changes.
 - Never commit dependencies, credentials, local configuration, or generated reports.
 
 The Xdebug coverage job enforces [the coverage policy](CODE-COVERAGE.md). Use the successful CI artifact for current coverage figures.

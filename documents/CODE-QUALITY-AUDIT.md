@@ -22,6 +22,6 @@ CI also validates YAML, XML, JSON, Composer metadata, dependency declarations, a
 
 ## Test rules
 
-Use PHPUnit with Arrange / Act / Assert. Do not add mocks. Prefer deterministic tests that assert observable state and failure behavior. Keep tests bounded and portable.
+Use PHPUnit with Arrange / Act / Assert in every test method. Do not add mocks or mocking frameworks. Prefer deterministic tests that assert observable state and failure behavior. Keep tests bounded and portable. Every class and method must have a short, standard PHPDoc summary; add useful parameter and return annotations where applicable.
 
 See [CODE-COVERAGE.md](CODE-COVERAGE.md) for coverage gates. A CI check is complete only when its run succeeds.
