@@ -94,7 +94,7 @@ final class CreateDirectoryTaskTest extends TestCase
     public function testRejectsMissingName(): void
     {
         // Arrange
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Missing or invalid 'name' parameter");
 
         // Act
