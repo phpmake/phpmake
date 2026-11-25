@@ -197,7 +197,7 @@ final class TaskExecutorTest extends TestCase
             $exitCode = $executor->executeTasks(
                 $config,
                 ['build'],
-                new TaskFactory(new Logger(false, true, true)),
+                new TaskFactory(new Logger(false, true, true, 'build.log', new ConsoleOutput($errors))),
                 false,
                 false
             );
