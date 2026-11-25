@@ -1,19 +1,12 @@
 PHPMake - Unreleased
 --------------------
-* Harden process execution: launch trusted commands without shell interpolation, enforce timeout and output limits, drain Windows stdout/stderr pipes safely, and preserve overflow detection at process-exit boundaries.
-* Improve process supervision and cleanup with platform-aware process-tree handling, bounded subprocess tests, deterministic timeout behavior, isolated environment forwarding, and safer descendant termination.
-* Enforce the supported platform contract (Windows and GNU/Linux) consistently across CLI, task execution, filesystem primitives, process launchers, and tests; reject unsupported systems explicitly.
-* Harden filesystem operations against path traversal, symlink/junction traversal, unsafe deletion, external targets, and partial cleanup failures; report actionable filesystem errors.
-* Harden ZIP/archive creation and handling, including source/output path validation, self-inclusion prevention, entry and size bounds, archive-handle cleanup, and cross-filesystem alias regression coverage.
-* Improve build loading and validation: reject malformed configuration roots and task definitions, validate metadata and timeout bounds consistently, pre-validate runtime inputs, and fail clearly on missing dependencies and unreadable build files.
-* Improve CLI behavior and diagnostics, including consistent STDERR routing, throwable handling, validation output, silent-mode behavior, and actionable task failure diagnostics.
-* Improve logger reliability with synchronized writes and rotation, bounded backup retention, file locking, and failure-safe optional logging.
-* Expand behavioral, integration, process, filesystem, archive, CLI, and task tests; standardize Arrange / Act / Assert, remove mocks, document test classes and methods, and add coverage for boundary and failure paths.
-* Add enforceable line, branch, and critical-path coverage checks; normalize coverage paths across Windows and Linux and publish coverage results in CI.
-* Consolidate build, test, coverage, and release workflows; remove duplicate workflows, redundant benchmark tooling, and obsolete coverage scripts.
-* Add and enforce PHP coding-style checks, PHPStan analysis, Rector checks, Composer dependency validation, and PHP 8.0–8.5 compatibility checks.
-* Synchronize README, FAQ, security policy, user guide, architecture, API compatibility, migration, release, contribution, and quality-audit documentation with the implementation.
-* Keep PHP ^8.0, PHPUnit, the no-mocks test policy, and Windows/Linux support.
+* Harden process execution, timeouts, output handling, and cleanup.
+* Secure filesystem and ZIP operations against unsafe paths, links, and deletion.
+* Improve build validation, CLI errors, and logger reliability.
+* Enforce Windows/Linux support and PHP 8.0–8.5 compatibility.
+* Expand PHPUnit coverage; standardize AAA tests and PHPDoc.
+* Strengthen CI with coverage, formatting, static analysis, and release checks.
+* Update documentation to match current behavior.
 
 PHPMake 2.0.2 - 2026-11-07
 -------------------------
