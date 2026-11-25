@@ -64,7 +64,9 @@ composer format-check
 composer refactor-check
 ```
 
-See [Contributing](documents/CONTRIBUTING.txt) and the [User Guide](documents/USER-GUIDE.md).
+Tests use PHPUnit with Arrange / Act / Assert, real behavior, and no mocks. Classes and methods require short PHPDoc summaries. CI checks PHP 8.0–8.5 on Linux and Windows and enforces the coverage policy.
+
+See [Contributing](documents/CONTRIBUTING.txt), the [Test Suite Audit](documents/TEST-SUITE-AUDIT.md), the [Code Quality Audit](documents/CODE-QUALITY-AUDIT.md), and the [User Guide](documents/USER-GUIDE.md).
 
 ## Documentation
 
@@ -75,6 +77,7 @@ See [Contributing](documents/CONTRIBUTING.txt) and the [User Guide](documents/US
 - [Migration guide](documents/MIGRATION-GUIDE.md)
 - [Security policy](SECURITY.md) and [security review](documents/SECURITY-REVIEW.md)
 - [Coverage policy](documents/CODE-COVERAGE.md)
+- [Test suite and quality policies](documents/TEST-SUITE-AUDIT.md) and [quality audit](documents/CODE-QUALITY-AUDIT.md)
 - [Release process](documents/RELEASE-PROCESS.md) and [checklist](documents/RELEASE-CHECKLIST.txt)
 - [Changelog](documents/CHANGELOG.txt)
 
