@@ -33,4 +33,29 @@ final class EchoTaskOutputTest extends TestCase
         self::assertTrue($result);
         self::assertSame('Visible task output' . PHP_EOL, $output);
     }
+    /** Writes a debug diagnostic before the configured message when debug is enabled. */
+    public function testDebugModeWritesDiagnosticAndMessage(): void
+    {
+        // Arrange
+        $task = new EchoTask(
+            ['message' => 'Debug task output'],
+            new Logger(true, false, true)
+        );
+
+        // Act
+        ob_start();
+        try {
+            $result = $task->execute(true, false);
+            $output = ob_get_contents();
+        } finally {
+            ob_end_clean();
+        }
+
+        // Assert
+        self::assertTrue($result);
+        self::assertIsString($output);
+        self::assertStringContainsString('DEBUG: Echoing message: Debug task output.', $output);
+        self::assertStringContainsString('Debug task output', $output);
+    }
+
 }
