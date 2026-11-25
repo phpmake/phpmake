@@ -105,6 +105,7 @@ final class ConsoleOutputTest extends TestCase
         self::assertSame('', $stdout);
         self::assertSame('Build failed' . PHP_EOL, $stderr);
     }
+
     /** Rejects an invalid error stream instead of failing during later output. */
     public function testConstructorRejectsInvalidErrorStream(): void
     {
@@ -118,5 +119,4 @@ final class ConsoleOutputTest extends TestCase
         // Act
         new ConsoleOutput($invalidStream);
     }
-
 }
