@@ -238,7 +238,9 @@ final class AtomicFilePublisherTest extends TestCase
             // Act
             AtomicFilePublisher::publish($path, $path);
         } finally {
-            if (is_file($path)) { unlink($path); }
+            if (is_file($path)) {
+                unlink($path);
+            }
             rmdir($directory);
         }
     }
@@ -260,7 +262,9 @@ final class AtomicFilePublisherTest extends TestCase
             // Act
             AtomicFilePublisher::publish($staged, $destination);
         } finally {
-            if (is_file($staged)) { unlink($staged); }
+            if (is_file($staged)) {
+                unlink($staged);
+            }
             rmdir($stagingDirectory);
             rmdir($directory);
         }
