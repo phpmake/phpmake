@@ -305,7 +305,8 @@ jobs:
           if ($failed) {
               fwrite(
                   STDERR,
-                  "Coverage gate failed: all critical files require 100% line coverage.\n"
+                  "Coverage gate failed: all critical files require "
+                  . "100% line coverage.\n"
               );
               exit(1);
           }
