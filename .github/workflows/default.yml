@@ -225,16 +225,34 @@ jobs:
           $branches = (int) $metrics['conditionals'];
           $coveredBranches = (int) $metrics['coveredconditionals'];
           if ($total < 1 || $covered < 0 || $covered > $total
-              || $branches < 1 || $coveredBranches < 0 || $coveredBranches > $branches) {
-              fwrite(STDERR, "Clover coverage metrics are missing or invalid.\n");
+              || $branches < 1
+              || $coveredBranches < 0
+              || $coveredBranches > $branches) {
+              fwrite(
+                  STDERR,
+                  "Clover coverage metrics are missing or invalid.\n"
+              );
               exit(1);
           }
 
           $lineCoverage = ($covered / $total) * 100;
-          printf("Line coverage: %.2f%% (%d/%d); required: 80.00%%\n", $lineCoverage, $covered, $total);
-          printf("Branch coverage: %.2f%% (%d/%d)\n", ($coveredBranches / $branches) * 100, $coveredBranches, $branches);
+          printf(
+              "Line coverage: %.2f%% (%d/%d); required: 80.00%%\n",
+              $lineCoverage,
+              $covered,
+              $total
+          );
+          printf(
+              "Branch coverage: %.2f%% (%d/%d)\n",
+              ($coveredBranches / $branches) * 100,
+              $coveredBranches,
+              $branches
+          );
           if ($lineCoverage + 0.000001 < 80.0) {
-              fwrite(STDERR, "Coverage gate failed: overall line coverage is below 80%.\n");
+              fwrite(
+                  STDERR,
+                  "Coverage gate failed: overall line coverage is below 80%.\n"
+              );
               exit(1);
           }
 
@@ -266,18 +284,29 @@ jobs:
           $failed = false;
           foreach ($critical as $required) {
               if (!isset($found[$required])) {
-                  fwrite(STDERR, "Missing critical coverage entry: {$required}\n");
+                  fwrite(
+                      STDERR,
+                      "Missing critical coverage entry: {$required}\n"
+                  );
                   $failed = true;
                   continue;
               }
               [$fileTotal, $fileCovered] = $found[$required];
-              printf("Critical: %s — %d/%d\n", $required, $fileCovered, $fileTotal);
+              printf(
+                  "Critical: %s — %d/%d\n",
+                  $required,
+                  $fileCovered,
+                  $fileTotal
+              );
               if ($fileTotal < 1 || $fileCovered !== $fileTotal) {
                   $failed = true;
               }
           }
           if ($failed) {
-              fwrite(STDERR, "Coverage gate failed: all critical files require 100% line coverage.\n");
+              fwrite(
+                  STDERR,
+                  "Coverage gate failed: all critical files require 100% line coverage.\n"
+              );
               exit(1);
           }
           echo "Coverage requirements satisfied.\n";
