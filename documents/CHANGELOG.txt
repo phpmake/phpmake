@@ -5,6 +5,8 @@ PHPMake - Unreleased
 * Shorten and synchronize documentation with current runtime, task, security, and CI contracts.
 * Verify the published JSON Schema against TaskDefinitionRegistry; no schema contract change was required.
 * Keep PHP ^8.0, PHPUnit, the no-mocks test policy, and Windows/Linux support.
+* Standardize test structure, class/method PHPDoc, and contributor guidance; add missing task and CLI boundary coverage.
+* Synchronize README, test-suite audit, code-quality audit, and contribution requirements with the current test policy.
 
 PHPMake 2.0.2 - 2026-11-07
 -------------------------
