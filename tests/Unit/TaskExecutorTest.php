@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace PhpMake\Tests\Unit;
+
 use PhpMake\Build\BuildConfiguration;
 use PhpMake\Cli\ConsoleOutput;
 use PhpMake\Task\TaskExecutor;
