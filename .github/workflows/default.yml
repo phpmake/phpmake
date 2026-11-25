@@ -103,6 +103,9 @@ jobs:
       - name: Run PHPStan static analysis
         run: composer analyse
 
+      - name: Check PHP coding style
+        run: composer format-check
+
       - name: Verify POSIX process-group fallback without ext-posix
         run: php -n tests/Support/PosixProcessGroupFallbackSmoke.php
 
