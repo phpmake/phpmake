@@ -142,6 +142,7 @@ final class ProcessSupervisorFallbackTest extends TestCase
             var_export($readyFile, true),
             var_export($readyFile, true),
             var_export($releaseFile, true),
+            var_export($marker, true),
             var_export($marker, true)
         );
     }
