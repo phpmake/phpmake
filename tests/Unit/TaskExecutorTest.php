@@ -152,6 +152,71 @@ final class TaskExecutorTest extends TestCase
         self::assertStringContainsString("Task 'exec' failed", $message);
     }
 
+    /** Writes exception diagnostics to STDERR when debug output is visible and no logger is supplied. */
+    public function testReportsDiagnosticsToConsoleInVisibleDebugMode(): void
+    {
+        // Arrange
+        $errors = fopen('php://temp', 'w+');
+        self::assertIsResource($errors);
+        $executor = new TaskExecutor(new ConsoleOutput($errors));
+        $config = $this->createConfig([['type' => 'unknown', 'params' => []]]);
+
+        // Act
+        $exitCode = $executor->executeTasks(
+            $config,
+            ['build'],
+            new TaskFactory(new Logger(false, true, true)),
+            true,
+            false
+        );
+        rewind($errors);
+        $message = stream_get_contents($errors);
+        fclose($errors);
+
+        // Assert
+        self::assertSame(1, $exitCode);
+        self::assertIsString($message);
+        self::assertStringContainsString('Exception: InvalidArgumentException', $message);
+        self::assertStringContainsString("Unknown task type 'unknown'", $message);
+    }
+
+    /** Prints the failed-task status when a task fails in visible mode. */
+    public function testPrintsFailureStatusWhenTaskFailsAndOutputIsVisible(): void
+    {
+        // Arrange
+        $errors = fopen('php://temp', 'w+');
+        self::assertIsResource($errors);
+        $executor = new TaskExecutor(new ConsoleOutput($errors));
+        $config = $this->createConfig([
+            ['type' => 'exec', 'params' => ['command' => PHP_BINARY, 'args' => ['-r', 'exit(1);'], 'timeout' => 5]],
+        ]);
+
+        // Act
+        ob_start();
+        try {
+            $exitCode = $executor->executeTasks(
+                $config,
+                ['build'],
+                new TaskFactory(new Logger(false, true, true)),
+                false,
+                false
+            );
+            $output = ob_get_contents();
+        } finally {
+            ob_end_clean();
+            rewind($errors);
+            $message = stream_get_contents($errors);
+            fclose($errors);
+        }
+
+        // Assert
+        self::assertSame(1, $exitCode);
+        self::assertIsString($output);
+        self::assertStringContainsString('Task failed.', $output);
+        self::assertIsString($message);
+        self::assertStringContainsString("Task 'exec' failed", $message);
+    }
+
     /**
      * Creates a build configuration for the supplied task definitions.
      *
