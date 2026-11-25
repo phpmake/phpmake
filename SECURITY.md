@@ -20,7 +20,7 @@ Built-in filesystem tasks enforce working-directory boundaries and reject symlin
 - Validate ZIP files at extraction time; extraction safety belongs to the consumer.
 - Review logs before retaining them. Child output may contain secrets; use `--no-log` when appropriate.
 
-See [the security review](documents/SECURITY-REVIEW.md) for implementation details.
+See [the security review](documents/SECURITY-REVIEW.md) for implementation details. It is a source-level review, not an independent external penetration test or security certification.
 
 ## Report a vulnerability
 
