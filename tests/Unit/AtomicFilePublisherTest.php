@@ -205,6 +205,7 @@ final class AtomicFilePublisherTest extends TestCase
             rmdir($directory);
         }
     }
+
     /** Rejects a staged path that does not identify a regular file. */
     public function testPublishRejectsMissingStagedFile(): void
     {
