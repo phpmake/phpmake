@@ -33,6 +33,7 @@ final class EchoTaskOutputTest extends TestCase
         self::assertTrue($result);
         self::assertSame('Visible task output' . PHP_EOL, $output);
     }
+
     /** Writes a debug diagnostic before the configured message when debug is enabled. */
     public function testDebugModeWritesDiagnosticAndMessage(): void
     {
