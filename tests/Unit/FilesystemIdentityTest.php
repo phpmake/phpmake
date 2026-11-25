@@ -48,4 +48,22 @@ final class FilesystemIdentityTest extends TestCase
             unlink($second);
         }
     }
+    /** Compares path strings when neither filesystem entry exists. */
+    public function testSameFileFallsBackToPathComparisonForMissingEntries(): void
+    {
+        // Arrange
+        $path = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-missing-' . bin2hex(random_bytes(6));
+        $differentPath = $path . '-other';
+        self::assertFileDoesNotExist($path);
+        self::assertFileDoesNotExist($differentPath);
+
+        // Act
+        $same = FilesystemIdentity::sameFile($path, $path);
+        $different = FilesystemIdentity::sameFile($path, $differentPath);
+
+        // Assert
+        self::assertTrue($same);
+        self::assertFalse($different);
+    }
+
 }
