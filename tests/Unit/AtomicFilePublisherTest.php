@@ -205,4 +205,65 @@ final class AtomicFilePublisherTest extends TestCase
             rmdir($directory);
         }
     }
+    /** Rejects a staged path that does not identify a regular file. */
+    public function testPublishRejectsMissingStagedFile(): void
+    {
+        // Arrange
+        $directory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-publish-' . bin2hex(random_bytes(6));
+        self::assertTrue(mkdir($directory));
+        $staged = $directory . DIRECTORY_SEPARATOR . 'missing.tmp';
+        $destination = $directory . DIRECTORY_SEPARATOR . 'result.txt';
+        try {
+            // Assert
+            $this->expectException(\InvalidArgumentException::class);
+            // Act
+            AtomicFilePublisher::publish($staged, $destination);
+        } finally {
+            rmdir($directory);
+        }
+    }
+
+    /** Rejects using the same filesystem entry as staged file and destination. */
+    public function testPublishRejectsSameStagedFileAndDestination(): void
+    {
+        // Arrange
+        $directory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-publish-' . bin2hex(random_bytes(6));
+        self::assertTrue(mkdir($directory));
+        $path = $directory . DIRECTORY_SEPARATOR . 'same.txt';
+        self::assertSame(4, file_put_contents($path, 'keep'));
+        try {
+            // Assert
+            $this->expectException(\InvalidArgumentException::class);
+            $this->expectExceptionMessage('different filesystem entries');
+            // Act
+            AtomicFilePublisher::publish($path, $path);
+        } finally {
+            if (is_file($path)) { unlink($path); }
+            rmdir($directory);
+        }
+    }
+
+    /** Rejects staged and destination files located in different directories. */
+    public function testPublishRejectsDifferentParentDirectories(): void
+    {
+        // Arrange
+        $directory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'phpmake-publish-' . bin2hex(random_bytes(6));
+        $stagingDirectory = $directory . DIRECTORY_SEPARATOR . 'staging';
+        self::assertTrue(mkdir($stagingDirectory, 0777, true));
+        $staged = $stagingDirectory . DIRECTORY_SEPARATOR . 'staged.tmp';
+        $destination = $directory . DIRECTORY_SEPARATOR . 'result.txt';
+        self::assertSame(3, file_put_contents($staged, 'new'));
+        try {
+            // Assert
+            $this->expectException(\InvalidArgumentException::class);
+            $this->expectExceptionMessage('must share a directory');
+            // Act
+            AtomicFilePublisher::publish($staged, $destination);
+        } finally {
+            if (is_file($staged)) { unlink($staged); }
+            rmdir($stagingDirectory);
+            rmdir($directory);
+        }
+    }
+
 }
