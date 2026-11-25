@@ -177,6 +177,7 @@ final class LoggerPersistenceTest extends TestCase
         $autoload = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
         self::assertFileExists($autoload);
         $logFile = $this->temporaryDirectory . DIRECTORY_SEPARATOR . 'concurrent.log';
+        self::assertSame(0, file_put_contents($logFile . '.lock', ''));
         $workerCount = 6;
         $messagesPerWorker = 25;
         $workerCode = 'require $argv[1]; $logger = new \\PhpMake\\Utilities\\Logger(false, true, false, $argv[2]);'
