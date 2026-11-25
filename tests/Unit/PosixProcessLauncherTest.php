@@ -12,6 +12,7 @@ use PHPUnit\Framework\TestCase;
 final class PosixProcessLauncherTest extends TestCase
 {
     use ProcessTestHelper;
+
     /** Prepares valid launcher metadata and preserves the original argv payload. */
     public function testPrepareReturnsConsistentProcessGroupMetadata(): void
     {

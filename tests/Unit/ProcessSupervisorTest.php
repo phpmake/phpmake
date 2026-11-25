@@ -59,7 +59,7 @@ final class ProcessSupervisorTest extends TestCase
             self::assertGreaterThan(0, $childPid);
             self::assertContains($childPid, $descendants);
         } finally {
-            $rootPid = (int) (proc_get_status($process)['pid'] ?? 0);
+            $rootPid = proc_get_status($process)['pid'] ?? 0;
             $descendants = $rootPid > 0 ? ProcessSupervisor::getDescendantProcessIds($rootPid) : [];
             if (is_file($pidFile)) {
                 $childPid = (int) file_get_contents($pidFile);

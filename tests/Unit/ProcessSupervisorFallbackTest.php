@@ -11,6 +11,7 @@ use PHPUnit\Framework\TestCase;
 final class ProcessSupervisorFallbackTest extends TestCase
 {
     use ProcessTestHelper;
+
     /** Uses the kill utility to terminate a tracked process when posix_kill is unavailable. */
     public function testTerminateUsesKillUtilityWithoutPosixExtension(): void
     {
@@ -142,6 +143,7 @@ final class ProcessSupervisorFallbackTest extends TestCase
             var_export($readyFile, true),
             var_export($readyFile, true),
             var_export($releaseFile, true),
+            var_export($marker, true),
             var_export($marker, true)
         );
     }
