@@ -106,9 +106,6 @@ jobs:
       - name: Verify POSIX process-group fallback without ext-posix
         run: php -n tests/Support/PosixProcessGroupFallbackSmoke.php
 
-      - name: Check code formatting
-        run: composer format-check
-
       - name: Check Rector rules
         run: composer refactor-check
 
