@@ -57,5 +57,4 @@ final class EchoTaskOutputTest extends TestCase
         self::assertStringContainsString('DEBUG: Echoing message: Debug task output.', $output);
         self::assertStringContainsString('Debug task output', $output);
     }
-
 }
