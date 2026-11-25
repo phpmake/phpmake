@@ -113,7 +113,7 @@ final class ConsoleOutputTest extends TestCase
         $invalidStream = 'not a stream';
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('error output stream must be a valid resource');
 
         // Act
