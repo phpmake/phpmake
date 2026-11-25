@@ -10,7 +10,8 @@ static $rules = [
     '@PSR2' => true,
     '@PSR12' => true,
     '@PER-CS2.0' => true,
-    '@PHP8x0Migration' => true,
+    // PHP-CS-Fixer 3.66 uses the legacy alias; keep this compatible with PHP 8.0 tooling.
+    '@PHP80Migration' => true,
 ];
 
 static $excludeFolders = [
