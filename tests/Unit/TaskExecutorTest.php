@@ -1,12 +1,16 @@
 <?php
+
 declare(strict_types=1);
+
 namespace PhpMake\Tests\Unit;
+
 use PhpMake\Build\BuildConfiguration;
 use PhpMake\Cli\ConsoleOutput;
 use PhpMake\Task\TaskExecutor;
 use PhpMake\Task\TaskFactory;
 use PhpMake\Utilities\Logger;
 use PHPUnit\Framework\TestCase;
+
 /** Tests target task execution and CLI error reporting without mocks. */
 final class TaskExecutorTest extends TestCase
 {
