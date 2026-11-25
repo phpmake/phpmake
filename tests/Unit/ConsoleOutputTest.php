@@ -105,4 +105,18 @@ final class ConsoleOutputTest extends TestCase
         self::assertSame('', $stdout);
         self::assertSame('Build failed' . PHP_EOL, $stderr);
     }
+    /** Rejects a non-resource error stream during construction. */
+    public function testConstructorRejectsInvalidErrorStream(): void
+    {
+        // Arrange
+        $invalidStream = 'not a stream';
+
+        // Assert
+        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectExceptionMessage('The error output stream must be a valid resource.');
+
+        // Act
+        new ConsoleOutput($invalidStream);
+    }
+
 }
