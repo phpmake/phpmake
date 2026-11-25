@@ -99,7 +99,7 @@ final class CreateDirectoryTaskTest extends TestCase
         $logger = new Logger(false, true, true);
 
         // Assert
-        $this->expectException(\\InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage("Missing or invalid 'name' parameter");
 
         // Act
