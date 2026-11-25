@@ -48,6 +48,7 @@ final class FilesystemIdentityTest extends TestCase
             unlink($second);
         }
     }
+
     /** Compares path strings when neither filesystem entry exists. */
     public function testSameFileFallsBackToPathComparisonForMissingEntries(): void
     {
@@ -65,5 +66,4 @@ final class FilesystemIdentityTest extends TestCase
         self::assertTrue($same);
         self::assertFalse($different);
     }
-
 }
