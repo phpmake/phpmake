@@ -1,3 +1,2 @@
-* Reduce the remaining POSIX fork-and-exit race with stronger OS-native process containment if platform requirements justify it.
-* Review Windows filesystem failure paths using deterministic NTFS-native conditions; do not assume POSIX permission semantics.
-* Use current CI coverage reports to expand critical-file gates only when the relevant code reaches 100% line coverage.
+* Add more tasks.
+* Write more unit tests in all layers.

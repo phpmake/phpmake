@@ -1,32 +1,14 @@
-# Release Checklist
-
-Validate the exact candidate commit. Queued, skipped, cancelled, or missing mandatory jobs are not passes.
-
-## Candidate
-
-- [ ] Based on reviewed `main`; only intended changes are included.
-- [ ] Stable SemVer version is unused.
-- [ ] `VERSION.txt`, `Config::TOOL_VERSION`, and changelog agree.
-- [ ] Composer metadata validates; PHP `^8.0` and extensions match documentation.
-
-## Quality and platform
-
-- [ ] `composer validate --strict`
-- [ ] `composer lint`, `composer analyse`, `composer format-check`, `composer refactor-check`
-- [ ] Dependency checks and `composer audit --abandoned=ignore`
-- [ ] `composer test` passes; review platform-specific skips.
-- [ ] Clean Composer consumer install and CLI smoke test pass.
-- [ ] Coverage job passes 80% overall and 100% for designated critical files.
-- [ ] Linux PHP 8.0–8.5 and Windows PHP 8.0–8.5 jobs pass.
-
-## Review and publish
-
-- [ ] Review filesystem boundaries, process execution, ZIP limits, and logging.
-- [ ] Synchronize README, User Guide, FAQ, schema, compatibility notes, and changelog.
-- [ ] Verify examples and documentation links.
-- [ ] Merge the candidate and confirm the main-branch workflow passes.
-- [ ] Push an annotated stable SemVer tag; confirm the tag workflow passes.
-- [ ] Verify release archives, checksums, manifest, notes, and Packagist installation.
-- [ ] Record commit SHA and workflow URL.
-
-The workflow publishes GitHub Releases. It does not choose versions, create tags, or publish to Packagist.
+* Checkout target Git branch.
+* Update VERSION.txt file.
+* Update README.md file. (Badge, requirements, version)
+* Check/Update composer.json file.
+* Check/Update .php-cs-fixer.php
+* Check/Update rector.php
+* Run composer validate, composer lint, composer refactor, composer reformat
+* Update CHANGELOG.txt file.
+* Run composer test
+* Cleanup junk/cache/trash/temp/log files.
+* Update Checksums.sha256 file.
+* Commit changes with message: Release Major.Minor.Micro
+* Create a new version tag.
+* Push with tags.

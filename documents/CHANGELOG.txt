@@ -1,4 +1,4 @@
-PHPMake - Unreleased
+PHPMake 2.1.0 - 2026-11-26
 --------------------
 * Harden process execution, timeouts, output handling, and cleanup.
 * Secure filesystem and ZIP operations against unsafe paths, links, and deletion.

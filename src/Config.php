@@ -6,5 +6,5 @@ namespace PhpMake;
 final class Config
 {
     /** Current PHPMake release version. */
-    public const TOOL_VERSION = '2.0.2';
+    public const TOOL_VERSION = '2.1.0';
 }
