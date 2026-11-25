@@ -233,6 +233,12 @@ final class ProcessSupervisorTest extends TestCase
     public function testTerminateIgnoresInvalidTrackedDescendantIdentifiers(): void
     {
         // Arrange
+        if (PHP_OS_FAMILY === 'Windows') {
+            self::markTestSkipped(
+                'Windows termination always stops the root process; tracked descendant signaling is POSIX-only.'
+            );
+        }
+
         $process = proc_open(
             [PHP_BINARY, '-r', 'sleep(10);'],
             [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
