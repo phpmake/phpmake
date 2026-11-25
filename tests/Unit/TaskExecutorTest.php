@@ -25,6 +25,7 @@ final class TaskExecutorTest extends TestCase
             ['type' => 'echo', 'params' => ['message' => 'first']],
             ['type' => 'echo', 'params' => ['message' => 'second']],
         ]);
+
         // Act
         ob_start();
         try {
@@ -50,6 +51,7 @@ final class TaskExecutorTest extends TestCase
         self::assertIsResource($errors);
         $executor = new TaskExecutor(new ConsoleOutput($errors));
         $config = $this->createConfig([]);
+
         // Act
         $exitCode = $executor->executeTasks($config, ['missing'], new TaskFactory(new Logger(false, true, true)), false, true);
         rewind($errors);
@@ -88,6 +90,7 @@ final class TaskExecutorTest extends TestCase
         self::assertIsResource($errors);
         $executor = new TaskExecutor(new ConsoleOutput($errors));
         $config = $this->createConfig(['invalid']);
+
         // Act
         $exitCode = $executor->executeTasks($config, ['build'], new TaskFactory(new Logger(false, true, true)), false, true);
         rewind($errors);
@@ -107,6 +110,7 @@ final class TaskExecutorTest extends TestCase
         self::assertIsResource($errors);
         $executor = new TaskExecutor(new ConsoleOutput($errors));
         $config = $this->createConfig([['type' => 'unknown', 'params' => []]]);
+
         // Act
         $exitCode = $executor->executeTasks($config, ['build'], new TaskFactory(new Logger(false, true, true)), true, true);
         rewind($errors);
@@ -129,6 +133,7 @@ final class TaskExecutorTest extends TestCase
             ['type' => 'exec', 'params' => ['command' => PHP_BINARY, 'args' => ['-r', 'exit(1);'], 'timeout' => 5]],
             ['type' => 'echo', 'params' => ['message' => 'must not run']],
         ]);
+
         // Act
         ob_start();
         try {
@@ -147,7 +152,11 @@ final class TaskExecutorTest extends TestCase
         self::assertStringContainsString("Task 'exec' failed", $message);
     }
 
-    /** @param list<mixed> $tasks */
+    /**
+     * Creates a build configuration for the supplied task definitions.
+     *
+     * @param list<mixed> $tasks
+     */
     private function createConfig(array $tasks): BuildConfiguration
     {
         return new BuildConfiguration('TaskExecutorTest', 'Task executor behavior', '1.0.0', ['build' => ['tasks' => $tasks]], 'build');
