@@ -119,5 +119,4 @@ final class ConsoleOutputTest extends TestCase
         // Act
         new ConsoleOutput($invalidStream);
     }
-
 }
